@@ -989,6 +989,16 @@ void BattleEndRevertFormChange(struct BattleSystem *bw)
 void LONG_CALL ClearBattleMonFlags(struct BattleStruct *sp, int client)
 {
     int i;
+    // Double-KO: the faint path (ClearBattleMonFlags_hook2) can hand us BATTLER_NONE (0xFF)
+    // as the fainting battler when both opponents faint and the single-scalar replacement
+    // state (reshuffle_client) is re-entered with no third battler left. Indexing battlemon[]
+    // (and oneTurnFlag[]/protectSuccessTurns[]/binding_turns[]) with it writes far out of
+    // bounds and crashes. A valid battler is always 0..CLIENT_MAX-1, so short-circuit the
+    // sentinel and any other out-of-range index here; single-faint callers pass a real slot
+    // and are unaffected.
+    if (client < 0 || client >= CLIENT_MAX)
+        return;
+
     // code from aero's pr
     sp->battlemon[client].slow_start_flag = 0;
     sp->battlemon[client].slow_start_end_flag = 0;
