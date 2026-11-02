@@ -1457,7 +1457,11 @@ u16 LONG_CALL get_mon_ow_tag(u16 species, u32 form, u32 isFemale)
     }
     else if (form <= maxForm)
         ret += form;
-    else if (isFemale && gDimorphismTable[species-1])
+    // gDimorphismTable is 986 bytes (SPECIES_ARCEUS * 2), valid for species 1..986.
+    // The HoF overworld path can hand species up to MAX_MON_NUM (1075); clamp before
+    // the byte read to match does_species_have_dimorphism and avoid reading past the
+    // table into adjacent arm9 data.
+    else if (isFemale && species <= (SPECIES_ARCEUS * 2) && gDimorphismTable[species-1])
         ret += isFemale;
 
     return ret;
