@@ -1647,7 +1647,7 @@ int UNUSED CalcBaseDamage(void *bw, struct BattleStruct *sp, int moveno, u32 sid
                 speciesWithForm = PokeOtherFormMonsNoGet(sp->battlemon[defender].species, sp->battlemon[defender].form_no);
 
                 struct Evolution *evoTable;
-                evoTable = sys_AllocMemory(0, MAX_EVOS_PER_POKE * sizeof(struct Evolution));
+                evoTable = sys_AllocMemory(0, EVOLUTION_TABLE_FILE_SIZE);
                 ArchiveDataLoad(evoTable, ARC_EVOLUTIONS, speciesWithForm);
 
                 // If a Pokémon has any evolutions, there should be an entry at the top that isn't EVO_NONE.
