@@ -332,6 +332,7 @@ void ServerFieldConditionCheck(void *bw, struct BattleStruct *sp) {
                                     sp->mp.msg_para[0] = CreateNicknameTag(sp, futureCondition.affectedClient);
                                     sp->mp.msg_para[1] = sp->fcc.future_prediction_wazano[futureCondition.affectedClient];
                                     sp->battlerIdTemp = futureCondition.affectedClient;
+                                    ov12_02252D14(bw, sp); // reset damage, status
                                     sp->attack_client_work = sp->fcc.future_prediction_client_no[futureCondition.affectedClient];
                                     sp->waza_work = sp->fcc.future_prediction_wazano[futureCondition.affectedClient];
                                     sp->hp_calc_work = sp->fcc.future_prediction_damage[futureCondition.affectedClient];
@@ -339,6 +340,10 @@ void ServerFieldConditionCheck(void *bw, struct BattleStruct *sp) {
                                     sp->next_server_seq_no = sp->server_seq_no;
                                     sp->server_seq_no = CONTROLLER_COMMAND_RUN_SCRIPT;
                                     ret = 1;
+                                    sp->futureConditionQueue[sp->scc_work].conditionType.futureConditionType = FUTURE_CONDITION_NONE;
+                                } else if (sp->fcc.future_prediction_count[futureCondition.affectedClient] == 0) {
+                                    // the target fainted or its slot is empty: drop the hit instead of resolving it
+                                    sp->side_condition[IsClientEnemy(bw, futureCondition.affectedClient)] &= ~SIDE_STATUS_FUTURE_SIGHT;
                                     sp->futureConditionQueue[sp->scc_work].conditionType.futureConditionType = FUTURE_CONDITION_NONE;
                                 }
                             }
