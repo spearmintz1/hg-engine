@@ -9544,11 +9544,10 @@ evodata SPECIES_RIBOMBEE
 terminateevodata
 
 evodata SPECIES_ROCKRUFF
-    evolutionwithform EVO_STONE, ITEM_SUN_STONE, SPECIES_LYCANROC, 3
+    evolutionwithform EVO_STONE, ITEM_SUN_STONE, SPECIES_LYCANROC, 0
     evolutionwithform EVO_STONE, ITEM_MOON_STONE, SPECIES_LYCANROC, 1
     //evolutionwithform EVO_LEVEL_DUSK, 25, SPECIES_LYCANROC, 2 // only for own tempo rockruff
     evolutionwithform EVO_STONE, ITEM_DUSK_STONE, SPECIES_LYCANROC, 2
-    evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
@@ -10796,7 +10795,6 @@ terminateevodata
 evodata SPECIES_TOXEL
     evolution EVO_LEVEL_NATURE_AMPED, 30, SPECIES_TOXTRICITY
     evolutionwithform EVO_LEVEL_NATURE_LOW_KEY, 30, SPECIES_TOXTRICITY, 1
-    evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE

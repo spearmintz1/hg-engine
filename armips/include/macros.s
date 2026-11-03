@@ -163,6 +163,9 @@
 .endmacro
 
 .macro terminateevodata
+	.if . != MAX_EVOS_PER_POKE * 6 // 6 bytes per evolution row
+		.error "evodata entry must have exactly MAX_EVOS_PER_POKE evolution rows:  the game loads only that many, so extra rows overrun its heap"
+	.endif
 	.halfword 0
 
 	.close
