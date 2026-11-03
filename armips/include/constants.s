@@ -108,6 +108,9 @@
 .equ EVO_LEVEL_NATURE_LOW_KEY, 35
 .equ EVO_AMOUNT_OF_CRITICAL_HITS, 36
 .equ EVO_HURT_IN_BATTLE_AMOUNT, 37
+
+// rows in each evodata entry.  must match MAX_EVOS_PER_POKE in include/pokemon.h:  the game allocates exactly this many rows when it loads one
+.equ MAX_EVOS_PER_POKE, 9
 //EVO_DARK_SCROLL  // implemented through an item use forme-change-esque cut scene
 //EVO_WATER_SCROLL // implemented through an item use forme-change-esque cut scene
 
