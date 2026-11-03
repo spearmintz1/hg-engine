@@ -83,6 +83,12 @@
 // FANCY_PRINT_NICKNAME defines in progress implementations that may not necessarily function.
 // #define FANCY_PRINT_NICKNAME
 
+// DEBUG_BATTLE_SCENARIOS enables the headless battle test scenario system (data/battle_tests, scripts/run_tests.py).
+// It is defined by `make AUTO_TEST=Y` through CFLAGS, never uncomment it here for a normal ROM.
+
+// DEBUG_AUTO_CONTINUE_GAME skips the title screen and start menu to continue the loaded save.
+// It is defined by `make AUTO_TEST=Y` through CFLAGS, never uncomment it here for a normal ROM.
+
 // NOCASH_GBA_PRINT swaps from desmume prints with the syscall to NO$GBA-style prints for use with i.e. melonDS
 #define NOCASH_GBA_PRINT
 

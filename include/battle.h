@@ -3821,4 +3821,15 @@ BOOL LONG_CALL IsAnyBattleMonHit(struct BattleStruct* ctx);
 
 int GetSanitisedType(int type);
 
+u8 LONG_CALL GetMoveMaxPP(u16 moveId, u8 ppUps);
+u32 LONG_CALL MaskOfFlagNo(int flagno);
+BOOL LONG_CALL BattleBuffer_GetNext(struct BattleStruct *ctx, int battlerId);
+void LONG_CALL BattleController_EmitShowMonList(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int forceSwitch, int selectedMon, int blockedMon);
+void LONG_CALL BattleController_EmitShowWaitMessage(struct BattleSystem *bsys, int battlerId);
+void LONG_CALL ov12_0223BDDC(struct BattleSystem *bsys, int battlerId, int selectedMon);
+
+#ifdef DEBUG_BATTLE_SCENARIOS
+BOOL LONG_CALL CheckTrainerMessage(struct BattleSystem *bw, struct BattleStruct *sp);
+#endif
+
 #endif // BATTLE_H

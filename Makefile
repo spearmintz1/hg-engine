@@ -111,6 +111,16 @@ LDFLAGS = rom.ld -T $(C_SUBDIR)/linker.ld
 ASFLAGS = -mthumb
 CFLAGS = -mthumb -mno-thumb-interwork -mcpu=arm7tdmi -mtune=arm7tdmi -mno-long-calls -march=armv4t -Wall -Wextra -Wno-builtin-declaration-mismatch -Wno-sequence-point -Wno-address-of-packed-member -Os -fira-loop-pressure -fipa-pta
 
+# `make AUTO_TEST=Y` builds the headless battle-test ROM (see data/battle_tests/README.md).  Objects are not rebuilt when
+# this flag changes, so run `make clean_code` when switching between a normal and an AUTO_TEST build.
+AUTO_TEST_FLAGS =
+ARMIPS_FLAGS = -equ DEBUG_BATTLE_SCENARIOS 0
+ifeq ($(AUTO_TEST),Y)
+    AUTO_TEST_FLAGS = -DDEBUG_BATTLE_SCENARIOS -DDEBUG_AUTO_CONTINUE_GAME
+    ARMIPS_FLAGS = -equ DEBUG_BATTLE_SCENARIOS 1
+    CFLAGS += $(AUTO_TEST_FLAGS)
+endif
+
 ####################### Output #######################
 C_SUBDIR = src
 ASM_SUBDIR = asm
@@ -262,7 +272,7 @@ all: $(TOOLS) $(OUTPUT) $(OVERLAY_OUTPUTS)
 	$(NDSTOOL) -x $(ROMNAME) -9 $(BASE)/arm9.bin -7 $(BASE)/arm7.bin -y9 $(BASE)/overarm9.bin -y7 $(BASE)/overarm7.bin -d $(FILESYS) -y $(BASE)/overlay -t $(BASE)/banner.bin -h $(BASE)/header.bin
 	@echo "$(ROMNAME) Decompression successful!!"
 	$(NARCHIVE) extract $(FILESYS)/a/0/2/8 -o $(BUILD)/a028/ -nf
-	$(PYTHON) scripts/make.py
+	$(PYTHON) scripts/make.py $(AUTO_TEST_FLAGS)
 	$(MAKE) move_narc
 	$(ARMIPS) armips/global.s
 	$(NARCHIVE) create $(FILESYS)/a/0/2/8 $(BUILD)/a028/ -nf
@@ -451,6 +461,11 @@ move_narc: $(NARC_FILES)
 
 	@echo "base experience table:"
 	cp $(BASE_EXPERIENCE_TABLE_BIN) $(BASE_EXPERIENCE_TABLE_TARGET)
+ifeq ($(AUTO_TEST),Y)
+
+	@echo "battle tests:"
+	cp $(BATTLETESTS_BIN) $(BATTLETESTS_TARGET)
+endif
 
 	@echo "mon overworld data:"
 	$(ARMIPS) $(OVERWORLD_DATA_DEPENDENCIES)

@@ -523,3 +523,12 @@ arm9 PartyMenu_ItemUseFunc_ReuseItem_hook 0208138C 3
 0001 SetOverworldRequestFlags_hook 021E6982 0
 # hook from near beginning of function
 0001 CheckOverworldRequestFlags_hook 021E6AF6 3
+#ifdef DEBUG_BATTLE_SCENARIOS
+0010 TestBattle_AISelectMove 0221BEF4 2
+0010 TestBattle_AIPickCommand 022205BC 2
+0012 TestBattle_PostKOSwitchIn 02258800 2
+0012 TestBattle_ShowParty 0223E8A0 2
+0012 TestBattle_WaitMonSelection 0223E978 2
+0012 CheckTrainerMessage 02250D4C 2
+0012 BattleMessage_ExpandPlaceholders 0223CEF4
+#endif

@@ -68,3 +68,29 @@ $(FORMREVERSION_BIN): $(FORMREVERSION_DEPENDENCIES)
 	$(OBJCOPY) -O binary $(FORMREVERSION_OBJS) $@
 
 NARC_FILES += $(FORMREVERSION_BIN)
+
+# headless battle test scenarios, only built into the ROM for `make AUTO_TEST=Y`
+BATTLETESTS_OUTPUT_DIR := build/battle_tests
+BATTLETESTS_TARGET := $(BUILD)/a028/9_14
+
+ifeq ($(AUTO_TEST),Y)
+BATTLETESTS_HEADER := include/constants/generated/test_battle.h
+BATTLETESTS_DEPENDENCIES := $(BATTLETESTS_OUTPUT_DIR)/BattleTests.c
+BATTLETESTS_OBJS := $(patsubst %.c,%.o,$(BATTLETESTS_DEPENDENCIES))
+BATTLETESTS_BIN := $(patsubst %.c,%.bin,$(BATTLETESTS_DEPENDENCIES))
+
+# the generator is re-run whenever any scenario changes, including in nested directories
+BATTLETESTS_SOURCES := $(shell find data/battle_tests -name '*.c')
+
+$(BATTLETESTS_HEADER) $(BATTLETESTS_DEPENDENCIES) &: $(BATTLETESTS_SOURCES) scripts/build_tests.py
+	$(PYTHON) scripts/build_tests.py
+
+$(BATTLETESTS_BIN): $(BATTLETESTS_DEPENDENCIES)
+	$(CC) $(CFLAGS) -c $< -o $(BATTLETESTS_OBJS)
+	$(OBJCOPY) -O binary $(BATTLETESTS_OBJS) $@
+
+# test_battle.c reads the generated test count
+$(BUILD)/test_battle.o: $(BATTLETESTS_HEADER)
+
+NARC_FILES += $(BATTLETESTS_BIN)
+endif

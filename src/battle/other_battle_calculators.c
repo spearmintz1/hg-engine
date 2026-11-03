@@ -478,6 +478,10 @@ BOOL CalcAccuracy(void *bw, struct BattleStruct *sp, int attacker, int defender,
         return FALSE;
     }
 
+#ifdef DEBUG_BATTLE_SCENARIOS
+    accuracy = 100;
+#endif // DEBUG_BATTLE_SCENARIOS
+
     // 5. If the move is a status move, has greater than 50% accuracy, and the target has Wonder Skin, or the move is Thunder / Hurricane and the weather is sun, set the move's accuracy to 50.
 
     // handle wonder skin
@@ -680,7 +684,7 @@ BOOL CalcAccuracy(void *bw, struct BattleStruct *sp, int attacker, int defender,
     // 13. If the affection of the target is 4 hearts or more, subtract 10. You can't go below 0.
     // https://bulbapedia.bulbagarden.net/wiki/Friendship
 
-#ifdef FRIENDSHIP_EFFECTS
+#if defined(FRIENDSHIP_EFFECTS) && !defined(DEBUG_BATTLE_SCENARIOS)
     if ((sp->battlemon[defender].friendship == 255)
     && !(BattleTypeGet(bw) & BATTLE_TYPE_NO_EXPERIENCE)
     && ClientBelongsToPlayer(bw, defender)) {
@@ -1397,7 +1401,11 @@ int CalcCritical(void *bw, struct BattleStruct *sp, int attacker, int defender, 
 
     if
     (
+#ifdef DEBUG_BATTLE_SCENARIOS
+        FALSE // test scenarios are deterministic: no random critical hits
+#else
         BattleRand(bw) % CriticalRateTable[temp] == 0
+#endif
         || (ability == ABILITY_MERCILESS && (defender_condition & STATUS_POISON_ALL))
         || (sp->moveTbl[sp->current_move_index].effect == MOVE_EFFECT_ALWAYS_CRITICAL)
         || (sp->moveTbl[sp->current_move_index].effect == MOVE_EFFECT_HIT_THREE_TIMES_ALWAYS_CRITICAL)

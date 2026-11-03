@@ -1,0 +1,225 @@
+#include "../../include/types.h"
+
+#include "../../include/test_battle.h"
+
+#include "../../include/battle.h"
+#include "../../include/msgdata.h"
+
+#ifdef DEBUG_BATTLE_SCENARIOS
+
+static void NormalizeMessage(char *s)
+{
+    int read = 0;
+    int write = 0;
+
+    while (s[read] == ' ' || s[read] == '\t' || s[read] == '\r' || s[read] == '\n') {
+        read++;
+    }
+
+    while (s[read] != '\0') {
+        s[write++] = s[read++];
+    }
+
+    while (write > 0 && (s[write - 1] == ' ' || s[write - 1] == '\t' || s[write - 1] == '\r' || s[write - 1] == '\n')) {
+        write--;
+    }
+
+    s[write] = '\0';
+}
+
+static BOOL MessageContains(const char *message, const char *substring)
+{
+    int i = 0;
+
+    if (substring[0] == '\0') {
+        return TRUE;
+    }
+
+    for (i = 0; message[i] != '\0'; i++) {
+        int j = 0;
+        while (substring[j] != '\0' && message[i + j] == substring[j]) {
+            j++;
+        }
+        if (substring[j] == '\0') {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+void LONG_CALL BattleMessage_ExpandPlaceholders(struct BattleSystem *battleSystem, MsgData *data, MESSAGE_PARAM *msg)
+{
+    String *str = NewString_ReadMsgData(data, msg->msg_id);
+    String *msgBuffer = battleSystem->msgBuffer;
+    StringExpandPlaceholders(battleSystem->msgFormat, msgBuffer, str);
+    String_Delete(str);
+
+    struct TestBattleScenario *scenario = TestBattle_GetCurrentScenario();
+
+    while (scenario != NULL && TestBattle_HasMoreExpectations()) {
+        struct Expectations *expectation = &scenario->expectations[scenario->expectationPassCount];
+        if (expectation->expectationType == EXPECTATION_TYPE_PARTY_FORM) {
+            struct PartyPokemon *mon = BattleWorkPokemonParamGet(battleSystem, BATTLER_PLAYER_FIRST, expectation->battlerIDOrPartySlot);
+            if (GetMonData(mon, MON_DATA_FORM, NULL) != expectation->expectationValue.formID) {
+                break;
+            }
+        } else if (expectation->expectationType == EXPECTATION_TYPE_BATTLER_TYPES) {
+            struct BattlePokemon *mon = &battleSystem->sp->battlemon[expectation->battlerIDOrPartySlot];
+            if (mon->type1 != expectation->expectationValue.types[0]
+                || mon->type2 != expectation->expectationValue.types[1]) {
+                break;
+            }
+        } else if (expectation->expectationType == EXPECTATION_TYPE_SIDE_CONDITION_ABSENT) {
+            if (battleSystem->sp->side_condition[expectation->battlerIDOrPartySlot]
+                & expectation->expectationValue.sideConditionMask) {
+                break;
+            }
+        } else {
+            break;
+        }
+        scenario->expectationPassCount++;
+    }
+
+    char actualMessage[TEST_BATTLE_MESSAGE_LEN] = { 0 };
+    int out = 0;
+
+    for (int i = 0; i < msgBuffer->size && out < TEST_BATTLE_MESSAGE_LEN - 1; i++) {
+        u32 code = msgBuffer->data[i];
+        char character = '\0';
+
+        switch (code) {
+        case 0xFFFF:
+            actualMessage[out] = '\0';
+            i = msgBuffer->size;
+            continue;
+        case 0x01AC:
+            character = '?';
+            break;
+        case 0x01A8:
+            character = '$';
+            break;
+        case 0x01BE:
+            character = '-';
+            break;
+        case 0x01DE:
+        case 0x0001:
+        case 0xE000:
+        case 0x25BC:
+        case 0x25BD:
+            character = ' ';
+            break;
+        case 0x01AB:
+            character = '!';
+            break;
+        case 0x01AD:
+            character = ',';
+            break;
+        case 0x01AE:
+            character = '.';
+            break;
+        case 0x01B3:
+            character = '\'';
+            break;
+        case 0x0188:
+            character = 'e';
+            break;
+        case 0x01B9:
+            character = '(';
+            break;
+        case 0x01BA:
+            character = ')';
+            break;
+        default:
+            if (code <= 0x012A) {
+                character = (char)(code - 0xF1);
+            } else if (code <= 0x0144) {
+                character = (char)(code - 234);
+            } else {
+                character = (char)(code - 228);
+            }
+            break;
+        }
+        if (character == '\0') {
+            character = ' ';
+        }
+        actualMessage[out++] = character;
+
+        switch (code) {
+        case 0x01B3:
+            debug_printf("’");
+            break;
+        case 0x0188:
+            debug_printf("é");
+            break;
+        default:
+            debug_printf("%c", character);
+            break;
+        }
+    }
+    actualMessage[out] = '\0';
+
+    if (scenario == NULL || !TestBattle_HasMoreExpectations()) {
+        debug_printf("\n");
+        return;
+    }
+
+    enum ExpectationType expectationType = scenario->expectations[scenario->expectationPassCount].expectationType;
+    if (expectationType != EXPECTATION_TYPE_MESSAGE
+        && expectationType != EXPECTATION_TYPE_MESSAGE_CONTAINS
+        && expectationType != EXPECTATION_TYPE_ATTACK_MESSAGE
+        && expectationType != EXPECTATION_TYPE_MESSAGE_DOES_NOT_CONTAIN
+        && expectationType != EXPECTATION_TYPE_NOT_MESSAGE) {
+        debug_printf("\n");
+        return;
+    }
+
+    char expectedMessage[TEST_BATTLE_MESSAGE_LEN] = { 0 };
+    for (int i = 0; i < TEST_BATTLE_MESSAGE_LEN - 1; i++) {
+        expectedMessage[i] = scenario->expectations[scenario->expectationPassCount].expectationValue.message[i];
+        if (expectedMessage[i] == '\0') {
+            break;
+        }
+    }
+
+    NormalizeMessage(actualMessage);
+    NormalizeMessage(expectedMessage);
+
+    BOOL messageMatch = FALSE;
+    if (expectationType == EXPECTATION_TYPE_MESSAGE_CONTAINS) {
+        messageMatch = MessageContains(actualMessage, expectedMessage);
+    } else if (expectationType == EXPECTATION_TYPE_MESSAGE_DOES_NOT_CONTAIN) {
+        messageMatch = !MessageContains(actualMessage, expectedMessage);
+    } else {
+        messageMatch = TRUE;
+        for (int i = 0; i < TEST_BATTLE_MESSAGE_LEN; i++) {
+            if (actualMessage[i] != expectedMessage[i]) {
+                messageMatch = FALSE;
+                break;
+            }
+            if (actualMessage[i] == '\0') {
+                break;
+            }
+        }
+        if (expectationType == EXPECTATION_TYPE_NOT_MESSAGE) {
+            messageMatch = !messageMatch;
+        }
+    }
+
+    if (messageMatch && !scenario->markAsFail) {
+        if (expectationType == EXPECTATION_TYPE_MESSAGE || EXPECTATION_TYPE_MESSAGE_CONTAINS) {
+            debug_printf(" ✅");
+        } else {
+            debug_printf(" ✔️");
+        }
+        scenario->expectationPassCount++;
+    } else {
+        if ((expectationType == EXPECTATION_TYPE_NOT_MESSAGE || expectationType == EXPECTATION_TYPE_MESSAGE_DOES_NOT_CONTAIN) && !scenario->markAsFail) {
+            debug_printf(" ❌");
+            scenario->markAsFail = TRUE;
+        }
+    }
+    debug_printf("\n");
+}
+
+#endif // DEBUG_BATTLE_SCENARIOS

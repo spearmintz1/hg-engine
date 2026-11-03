@@ -660,7 +660,7 @@ SCR_SEQ_DEPENDENCIES := $(SCR_SEQ_DEPENDENCIES_DIR)/*
 
 $(SCR_SEQ_NARC): $(SCR_SEQ_DEPENDENCIES)
 	$(NARCHIVE) extract $(SCR_SEQ_TARGET) -o $(SCR_SEQ_DIR) -nf
-	for file in $^; do $(ARMIPS) $$file; done
+	for file in $^; do $(ARMIPS) $$file $(ARMIPS_FLAGS); done
 	$(NARCHIVE) create $@ $(SCR_SEQ_DIR) -nf
 
 # for convenience, rebuild SCR_SEQ_NARC every build so that DSPRE changes are not overwritten

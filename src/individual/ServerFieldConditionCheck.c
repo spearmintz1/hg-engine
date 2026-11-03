@@ -15,6 +15,10 @@
 #include "../../include/constants/species.h"
 #include "../../include/constants/weather_numbers.h"
 
+#ifdef DEBUG_BATTLE_SCENARIOS
+#include "../../include/test_battle.h"
+#endif
+
 enum EndTurnResolutionOrder {
     ENDTURN_WEATHER_SUBSIDING,
     ENDTURN_WEATHER_ANIMATION_AND_DAMAGE_AND_HEAL,
@@ -1886,6 +1890,23 @@ void ServerFieldConditionCheck(void *bw, struct BattleStruct *sp) {
 #ifdef DEBUG_ENDTURN_LOGIC
                 sprintf(buf, "In ENDTURN_END\n");
                 debugsyscall(buf);
+#endif
+
+#ifdef DEBUG_BATTLE_SCENARIOS
+                struct TestBattleScenario *scenario = TestBattle_GetCurrentScenario();
+                if (scenario != NULL && TestBattle_HasMoreExpectations()) {
+                    for (battlerId = 0; battlerId < client_set_max; ++battlerId) {
+                        if (scenario->expectations[scenario->expectationPassCount].expectationType == EXPECTATION_CURRENT_HP
+                            && battlerId == scenario->expectations[scenario->expectationPassCount].battlerIDOrPartySlot) {
+                            debug_printf("[ServerFieldConditionCheck: current HP %d:%d]", battlerId, sp->battlemon[battlerId].hp);
+                            if (sp->battlemon[battlerId].hp == scenario->expectations[scenario->expectationPassCount].expectationValue.currentHP) {
+                                debug_printf(" ✅");
+                                scenario->expectationPassCount++;
+                            }
+                            debug_printf("\n");
+                        }
+                    }
+                }
 #endif
 
                 for (int i = 0; i < client_set_max; i++) {
