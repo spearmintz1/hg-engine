@@ -1884,8 +1884,8 @@ evodata SPECIES_CYNDAQUIL
     terminateevodata
 
 evodata SPECIES_QUILAVA
-    evolution EVO_LEVEL, 36, SPECIES_TYPHLOSION
-    evolutionwithform EVO_HAS_MOVE, MOVE_INFERNAL_PARADE, SPECIES_TYPHLOSION, 1
+    evolution EVO_LEVEL_DAY, 36, SPECIES_TYPHLOSION
+    evolutionwithform EVO_LEVEL_NIGHT, 36, SPECIES_TYPHLOSION, 1
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
@@ -6640,8 +6640,8 @@ evodata SPECIES_OSHAWOTT
     terminateevodata
 
 evodata SPECIES_DEWOTT
-    evolution EVO_LEVEL, 36, SPECIES_SAMUROTT
-    evolutionwithform EVO_HAS_MOVE, MOVE_CEASELESS_EDGE, SPECIES_SAMUROTT, 1
+    evolution EVO_LEVEL_DAY, 36, SPECIES_SAMUROTT
+    evolutionwithform EVO_LEVEL_NIGHT, 36, SPECIES_SAMUROTT, 1
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
@@ -9292,8 +9292,8 @@ evodata SPECIES_ROWLET
 terminateevodata
 
 evodata SPECIES_DARTRIX
-    evolution EVO_LEVEL, 34, SPECIES_DECIDUEYE
-    evolutionwithform EVO_HAS_MOVE, MOVE_TRIPLE_ARROWS, SPECIES_DECIDUEYE, 1
+    evolution EVO_LEVEL_DAY, 35, SPECIES_DECIDUEYE
+    evolutionwithform EVO_LEVEL_NIGHT, 35, SPECIES_DECIDUEYE, 1
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
