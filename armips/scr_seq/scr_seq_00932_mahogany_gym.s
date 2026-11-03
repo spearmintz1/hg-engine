@@ -65,6 +65,7 @@ scr_seq_0932_001:
     end
 
 scr_seq_0932_00DB:
+    goto_if_unset FLAG_GOT_TM07_FROM_PRYCE, scr_seq_0932_give_tm07
     goto_if_set FLAG_GAME_CLEAR, scr_seq_0932_0190
     npc_msg 5
     wait_button_or_walk_away
@@ -83,6 +84,7 @@ scr_seq_0932_00F7:
     play_fanfare SEQ_ME_BADGE
     wait_fanfare
     npc_msg 3
+scr_seq_0932_give_tm07:
     goto_if_no_item_space ITEM_TM07, 1, scr_seq_0932_013A
     callstd std_give_item_verbose
     setflag FLAG_GOT_TM07_FROM_PRYCE
