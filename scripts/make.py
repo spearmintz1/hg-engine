@@ -354,8 +354,7 @@ def hook():
                 try:
                     code = table[symbol]
                 except KeyError:
-                    print('Symbol missing:', symbol)
-                    continue
+                    sys.exit('Symbol missing: ' + symbol)
                 if files == "arm9":
                     rom2 = open("base/arm9.bin", 'rb+')
                     offset = int(address, 16) - 0x02000000 if int(address, 16) & 0x02000000 else int(address, 16) - 0x08000000
@@ -386,8 +385,7 @@ def hook():
                 try:
                     code = table[symbol]
                 except KeyError:
-                    print('Symbol missing:', symbol)
-                    continue
+                    sys.exit('Symbol missing: ' + symbol)
                 if files == "arm9":
                     rom2 = open("base/arm9.bin", 'rb+')
                     offset = int(address, 16) - 0x02000000 if int(address, 16) & 0x02000000 else int(address, 16) - 0x08000000

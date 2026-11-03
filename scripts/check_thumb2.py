@@ -2,7 +2,8 @@
 
 The DS ARM9 (ARMv5TE) has no Thumb-2.  Without an -march on the assembler, binutils happily assembles things like
 `ldr r1, =0x2D68` into a Thumb-2 `movw`, which the CPU cannot execute.  BL and BLX are the only 32-bit Thumb
-encodings ARMv5TE has (a pair of 16-bit halves), so any other 32-bit instruction is a bug.
+encodings ARMv5TE has (a pair of 16-bit halves, 11110 then 11111 for BL or 11101 for BLX in their top five bits), so any
+other 32-bit instruction, including a Thumb-2 BL whose J1/J2 bits differ, is a bug.
 
 usage: check_thumb2.py [--objdump PATH] LINKED_OBJECT...
 """
@@ -22,9 +23,10 @@ def wide_thumb_instructions(objdump: str, path: str):
         if not m:
             continue
         address, encoding, mnemonic = m.groups()
-        if len(encoding.split()) != 2:
+        halves = [int(half, 16) for half in encoding.split()]
+        if len(halves) != 2:
             continue  # a 16-bit instruction, or ARM-state/data words (their 8-digit hex is one token)
-        if mnemonic.split(".")[0] in ("bl", "blx"):
+        if mnemonic.split(".")[0] in ("bl", "blx") and halves[0] >> 11 == 0b11110 and halves[1] >> 11 in (0b11111, 0b11101):
             continue
         yield address, encoding.strip(), line.strip()
 
