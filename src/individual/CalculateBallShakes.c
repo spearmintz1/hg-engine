@@ -297,7 +297,11 @@ u32 __attribute__((section (".init"))) CalculateBallShakesInternal(void *bw, str
     debug_printf("Step 5: Calculate the badge penalty\n");
 #endif
     struct PlayerProfile *profile = Sav2_PlayerData_GetProfileAddr(SaveBlock2_get());
-    badges = profile->johtoBadges + profile->kantoBadges;
+    // johtoBadges and kantoBadges are bitmasks, one bit per badge
+    badges = 0;
+    for (u32 mask = profile->johtoBadges | (profile->kantoBadges << 8); mask != 0; mask >>= 1) {
+        badges += mask & 1;
+    }
     missingBadges = 8 - badges;
     if (missingBadges < 0) {
         missingBadges = 0;
