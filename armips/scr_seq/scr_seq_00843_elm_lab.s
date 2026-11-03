@@ -410,8 +410,7 @@ scr_seq_0843_0584:
 scr_seq_0843_0606:
     buffer_players_name 0
     gender_msgbox 71, 72
-    setvar VAR_SPECIAL_x8004, 456
-    setvar VAR_SPECIAL_x8005, 1
+    goto_if_no_item_space ITEM_SS_TICKET, 1, scr_seq_0843_1198
     setflag FLAG_UNK_0F2
     callstd std_give_item_verbose
     buffer_players_name 0
@@ -1073,8 +1072,6 @@ scr_seq_0843_0F88:
     buffer_players_name 0
     gender_msgbox 19, 20
     goto_if_no_item_space ITEM_POTION, 5, scr_seq_0843_114E
-    setvar VAR_SPECIAL_x8004, 17
-    setvar VAR_SPECIAL_x8005, 5
     callstd std_obtain_item_verbose
     closemsg
     setvar VAR_SCENE_ELMS_LAB, 2
