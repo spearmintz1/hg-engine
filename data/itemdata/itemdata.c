@@ -39143,7 +39143,7 @@ const ITEMDATA __data[] =
 
 [ITEM_ABILITY_PATCH - NUM_UNKNOWN_SLOTS_EXPLORER_KIT] =
 {
-    .price = 250000,
+    .price = 65535, // price is a u16; 250000 would truncate to 53392
     .holdEffect = 0,
     .holdEffectParam = 0,
     .pluckEffect = 0,

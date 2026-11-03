@@ -459,3 +459,6 @@ arm9 020821B0 DB
 
 # nop out selection of cancel when the item won't have an effect
 arm9 0207C3AC 00 00 00 00
+
+# show 5 digits for mart prices (Cracked Pot and other items at 10000+ printed a garbage first digit)
+0031 0225DE46 05 23
