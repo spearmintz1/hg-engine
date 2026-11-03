@@ -30,6 +30,10 @@
 .org 0x02000000 + 0x497A4 + 5
 .byte 0xD0  // beq
 
+// single and no-partner trainers share a message branch; give its "only one Pokemon" message the double one-Pokemon text type (6)
+.org 0x02000000 + 0x497AE
+.hword 0x2206  // movs r2, #6
+
 .else
 
 
@@ -52,6 +56,9 @@
 .hword 0x0C00
 .org 0x02000000 + 0x497A4 + 5
 .byte 0xD1
+
+.org 0x02000000 + 0x497AE
+.hword 0x1C02
 
 
 .endif
