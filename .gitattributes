@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# sprite scramble keys are raw 4-byte binary; some contain 0d 0a, which text=auto would rewrite to 0a
+*.key binary
