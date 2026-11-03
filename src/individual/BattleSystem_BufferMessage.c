@@ -23,7 +23,9 @@ static int GetKeyStoneVariantFromTrainerClass(int trainerClass) {
     }
 }
 
-void BattleSystem_BufferMessage(struct BattleSystem *bsys, MESSAGE_PARAM *msg) {
+static void BufferNumberTag(struct BattleSystem *bsys, int bufferIndex, int param);
+
+void __attribute__((section (".init"))) BattleSystem_BufferMessage(struct BattleSystem *bsys, MESSAGE_PARAM *msg) {
     // debug_printf("In BattleSystem_BufferMessage (overlay)\n");
 
     // https://github.com/pret/pokeplatinum/blob/main/include/constants/battle/message_tags.h#L7
@@ -45,7 +47,7 @@ void BattleSystem_BufferMessage(struct BattleSystem *bsys, MESSAGE_PARAM *msg) {
         BattleMessage_BufferItem(bsys, 0, msg->msg_para[0]);
         break;
     case TAG_NUMBER:
-        BattleMessage_BufferNumber(bsys, 0, msg->msg_para[0]);
+        BufferNumberTag(bsys, 0, msg->msg_para[0]);
         break;
     case TAG_NUMBERS:
         BattleMessage_BufferNumbers(bsys, 0, msg->msg_para[0], msg->msg_keta);
@@ -96,7 +98,7 @@ void BattleSystem_BufferMessage(struct BattleSystem *bsys, MESSAGE_PARAM *msg) {
         break;
     case TAG_NICKNAME_NUM:
         BattleMessage_BufferNickname(bsys, 0, msg->msg_para[0]);
-        BattleMessage_BufferNumber(bsys, 1, msg->msg_para[1]);
+        BufferNumberTag(bsys, 1, msg->msg_para[1]);
         break;
     case TAG_NICKNAME_TRNAME:
         BattleMessage_BufferNickname(bsys, 0, msg->msg_para[0]);
@@ -123,8 +125,8 @@ void BattleSystem_BufferMessage(struct BattleSystem *bsys, MESSAGE_PARAM *msg) {
         BattleMessage_BufferMove(bsys, 1, msg->msg_para[1]);
         break;
     case TAG_NUMBER_NUMBER:
-        BattleMessage_BufferNumber(bsys, 0, msg->msg_para[0]);
-        BattleMessage_BufferNumber(bsys, 1, msg->msg_para[1]);
+        BufferNumberTag(bsys, 0, msg->msg_para[0]);
+        BufferNumberTag(bsys, 1, msg->msg_para[1]);
         break;
     case TAG_TRNAME_TRNAME:
         BattleMessage_BufferTrainerName(bsys, 0, msg->msg_para[0]);
@@ -140,7 +142,7 @@ void BattleSystem_BufferMessage(struct BattleSystem *bsys, MESSAGE_PARAM *msg) {
         break;
     case TAG_TRNAME_NUM:
         BattleMessage_BufferTrainerName(bsys, 0, msg->msg_para[0]);
-        BattleMessage_BufferNumber(bsys, 1, msg->msg_para[1]);
+        BufferNumberTag(bsys, 1, msg->msg_para[1]);
         break;
     case TAG_TRCLASS_TRNAME:
         BattleMessage_BufferTrainerClass(bsys, 0, msg->msg_para[0]);
@@ -169,7 +171,7 @@ void BattleSystem_BufferMessage(struct BattleSystem *bsys, MESSAGE_PARAM *msg) {
     case TAG_NICKNAME_MOVE_NUMBER:
         BattleMessage_BufferNickname(bsys, 0, msg->msg_para[0]);
         BattleMessage_BufferMove(bsys, 1, msg->msg_para[1]);
-        BattleMessage_BufferNumber(bsys, 2, msg->msg_para[2]);
+        BufferNumberTag(bsys, 2, msg->msg_para[2]);
         break;
     case TAG_NICKNAME_ABILITY_NICKNAME:
         BattleMessage_BufferNickname(bsys, 0, msg->msg_para[0]);
@@ -204,7 +206,7 @@ void BattleSystem_BufferMessage(struct BattleSystem *bsys, MESSAGE_PARAM *msg) {
     case TAG_NICKNAME_ABILITY_NUMBER:
         BattleMessage_BufferNickname(bsys, 0, msg->msg_para[0]);
         BattleMessage_BufferAbility(bsys, 1, msg->msg_para[1]);
-        BattleMessage_BufferNumber(bsys, 2, msg->msg_para[2]);
+        BufferNumberTag(bsys, 2, msg->msg_para[2]);
         break;
     case TAG_NICKNAME_ITEM_NICKNAME:
         BattleMessage_BufferNickname(bsys, 0, msg->msg_para[0]);
@@ -316,4 +318,15 @@ void BattleSystem_BufferMessage(struct BattleSystem *bsys, MESSAGE_PARAM *msg) {
     default:
         GF_ASSERT(FALSE);
     }
+}
+
+// BattleMessage_BufferNumber hardcodes five digits, so a top digit of 10 or more (an EXP gain of 100000+) prints as "?".
+static void BufferNumberTag(struct BattleSystem *bsys, int bufferIndex, int param) {
+    u32 magnitude = param < 0 ? -(u32)param : (u32)param;
+    u32 numDigits = 1;
+
+    for (u32 limit = 10; numDigits < 10 && magnitude >= limit; limit *= 10) {
+        numDigits++;
+    }
+    BufferIntegerAsString(bsys->msgFormat, bufferIndex, param, numDigits, 0, 1);
 }
