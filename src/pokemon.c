@@ -2049,24 +2049,43 @@ u32 SpeciesAndFormeToWazaOshieIndex(u32 species, u32 form)
     return ret;
 }
 
+#ifdef IMPLEMENT_LEVEL_CAP
+
+// level cap indexed by number of badges owned:  row 0 is before the game is cleared (johto badges), row 1 is after (kanto badges)
+static const u8 sLevelCaps[2][9] = {
+    { 13, 17, 21, 27, 35, 40, 40, 45, 55 },
+    { 65, 65, 65, 65, 65, 65, 80, 90, 100 },
+};
+
+static u32 CountBadges(u8 badgeMask)
+{
+    u32 count = 0;
+    for (; badgeMask != 0; badgeMask >>= 1)
+        count += badgeMask & 1;
+    return count;
+}
+
+#endif // IMPLEMENT_LEVEL_CAP
+
 /**
- *  @brief get level cap from the script variable defined by LEVEL_CAP_VARIABLE
+ *  @brief get level cap from the badges owned and whether the game has been cleared, so that script writes cannot desync it
  *
- *  @return level cap from LEVEL_CAP_VARIABLE script variable or 100 if it's not set at all
+ *  @return level cap from sLevelCaps or 100 if IMPLEMENT_LEVEL_CAP is not defined
  */
 u32 LONG_CALL GetLevelCap(void)
 {
 #ifdef IMPLEMENT_LEVEL_CAP
-    u32 levelCap = GetScriptVar(LEVEL_CAP_VARIABLE);
-    if (levelCap > 100 || levelCap == 0) levelCap = 100;
-    return levelCap;
+    struct PlayerProfile *profile = Sav2_PlayerData_GetProfileAddr(SaveBlock2_get());
+    if (CheckScriptFlag(FLAG_GAME_CLEAR))
+        return sLevelCaps[1][CountBadges(profile->kantoBadges)];
+    return sLevelCaps[0][CountBadges(profile->johtoBadges)];
 #else
     return 100;
 #endif // IMPLEMENT_LEVEL_CAP
 }
 
 /**
- *  @brief check if the level is at or above the level cap defined in LEVEL_CAP_VARIABLE
+ *  @brief check if the level is at or above the level cap returned by GetLevelCap
  *
  *  @param level level to check
  *  @return TRUE if level >= level cap; FALSE otherwise

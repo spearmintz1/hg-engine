@@ -885,7 +885,7 @@
 #define NUM_UNKNOWN_SLOTS 22 // used to adjust in data/itemdata.c
 #define NUM_UNKNOWN_SLOTS_EXPLORER_KIT (NUM_UNKNOWN_SLOTS+1) // used to adjust in data/itemdata.c
 
-#define NEW_ITEM_MAX ITEM_METAL_ALLOY
+#define NEW_ITEM_MAX ITEM_INFINITE_ASHES
 
 #define BAG_SLOT_QUANTITY_MAX                    999
 

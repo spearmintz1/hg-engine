@@ -69,17 +69,18 @@
 // commenting this line out disables the building of the new EV/IV viewing system
 #define IMPLEMENT_NEW_EV_IV_VIEWER
 
-// IMPLEMENT_LEVEL_CAP defines whether or not a configurable hard level cap system is built into the rom based on the value in LEVEL_CAP_VARIABLE
-// if the level is greater than or equal to LEVEL_CAP_VARIABLE, the pokémon will no longer gain experience
-// uncommenting IMPLEMENT_LEVEL_CAP enables the level cap system.  make sure to also uncomment LEVEL_CAP_VARIABLE in the process
+// IMPLEMENT_LEVEL_CAP defines whether or not a hard level cap system is built into the rom based on the badges owned and FLAG_GAME_CLEAR
+// the cap table is sLevelCaps in src/pokemon.c; if the level is greater than or equal to the cap, the pokémon will no longer gain experience
+// uncommenting IMPLEMENT_LEVEL_CAP enables the level cap system
 // uncommenting UNCAP_CANDIES_FROM_LEVEL_CAP will allow for rare candies to not be capped by the level cap even with the level cap in place, like run & bun
 // uncommenting ALLOW_LEVEL_CAP_EVOLVE will allow for rare candies to evolve pokemon already at the level cap that can evolve at that level already
 #define IMPLEMENT_LEVEL_CAP
-#define LEVEL_CAP_VARIABLE 0x416F
 //#define UNCAP_CANDIES_FROM_LEVEL_CAP
 //#define ALLOW_LEVEL_CAP_EVOLVE
 
 // System flags that need to be enabled for the player to use the gimmick. If you want to change them, remember to change them in flags.s as well for consistency
+#define FLAG_GAME_CLEAR 2404 // set by the game when the hall of fame is entered; selects the post-game level cap row
+#define FLAG_BUG_CONTEST_ACTIVE 2454 // set by the game for the duration of the bug-catching contest (Save_VarsFlags_CheckBugContestFlag)
 #define FLAG_MEGA_EVOLUTION_ENABLED 2518
 //#define FLAG_Z_MOVE_ENABLED 2519
 //#define FLAG_DYNAMAX_ENABLED 2520
