@@ -9544,7 +9544,7 @@ evodata SPECIES_RIBOMBEE
 terminateevodata
 
 evodata SPECIES_ROCKRUFF
-    evolutionwithform EVO_LEVEL_DAY, 25, SPECIES_LYCANROC, 3
+    evolution EVO_LEVEL_DAY, 25, SPECIES_LYCANROC
     evolutionwithform EVO_LEVEL_NIGHT, 25, SPECIES_LYCANROC, 1
     //evolutionwithform EVO_LEVEL_DUSK, 25, SPECIES_LYCANROC, 2 // only for own tempo rockruff
     evolution EVO_NONE, 0, SPECIES_NONE
@@ -10795,7 +10795,6 @@ terminateevodata
 evodata SPECIES_TOXEL
     evolution EVO_LEVEL_NATURE_AMPED, 30, SPECIES_TOXTRICITY
     evolutionwithform EVO_LEVEL_NATURE_LOW_KEY, 30, SPECIES_TOXTRICITY, 1
-    evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
     evolution EVO_NONE, 0, SPECIES_NONE
