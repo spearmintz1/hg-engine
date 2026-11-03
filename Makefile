@@ -223,7 +223,7 @@ $(O2NARC): $(wildcard tools/source/o2narc/*.cpp) $(wildcard tools/source/o2narc/
 
 TOOLS += $(O2NARC)
 
-$(ENCODEPWIMG):
+$(ENCODEPWIMG): tools/source/DECODEIMG/ENCODEIMG.c
 	cd tools/source/DECODEIMG ; $(MAKE)
 	mv tools/source/DECODEIMG/ENCODE_IMG $(ENCODEPWIMG)
 

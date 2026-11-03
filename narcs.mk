@@ -627,6 +627,11 @@ $(PW_POKEGRA_DIR)/%.lz: $(PW_POKEGRA_ART_DIR)/%.2bpp
 $(PW_POKEGRA_NARC): $(PW_POKEGRA_OBJS)
 	$(NARCHIVE) create $@ $(PW_POKEGRA_DIR) -nf
 
+# the number of members in the narc, so that GrabPokewalkerMonSpriteIndex never indexes past its end
+# (CFLAGS is expanded when the object rules are generated, so it cannot be a target-specific variable)
+CFLAGS += -DPOKEWALKER_SPRITE_COUNT=$(words $(PW_POKEGRA_OBJS))
+$(BUILD)/field/pokewalker.o: $(PW_POKEGRA_DEPENDENCIES)
+
 NARC_FILES += $(PW_POKEGRA_NARC)
 REQUIRED_DIRECTORIES += $(PW_POKEGRA_DIR) $(PW_POKEGRA_ART_DIR)
 
