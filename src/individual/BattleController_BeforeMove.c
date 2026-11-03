@@ -1338,6 +1338,16 @@ void BattleController_CheckHealBlock(struct BattleSystem *bsys, struct BattleStr
         CopyBattleMonToPartyMon(bsys, ctx, ctx->attack_client);
         ctx->server_status_flag |= BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE;
         ctx->waza_status_flag |= MOVE_STATUS_NO_MORE_WORK;
+    } else if (ctx->current_move_index == MOVE_HEAL_PULSE && ctx->battlemon[ctx->defence_client].moveeffect.healBlockTurns) {
+        // Heal Pulse fails on a Heal-Blocked target, not just a Heal-Blocked user
+        ctx->moveOutCheck[ctx->attack_client].stoppedFromHealBlock = TRUE;
+        LoadBattleSubSeqScript(ctx, ARC_BATTLE_SUB_SEQ, SUB_SEQ_MOVE_FAILED_HEAL_BLOCK);
+        ctx->server_seq_no = CONTROLLER_COMMAND_RUN_SCRIPT;
+        ctx->next_server_seq_no = CONTROLLER_COMMAND_39;
+        ctx->wb_seq_no = BEFORE_MOVE_START;
+        CopyBattleMonToPartyMon(bsys, ctx, ctx->attack_client);
+        ctx->server_status_flag |= BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE;
+        ctx->waza_status_flag |= MOVE_STATUS_NO_MORE_WORK;
     }
 }
 
@@ -2155,6 +2165,8 @@ BOOL BattleController_CheckPowerHerb(struct BattleSystem *bsys UNUSED, struct Ba
     case MOVE_EFFECT_CHARGE_TURN_HIGH_CRIT_FLINCH:
     case MOVE_EFFECT_CHARGE_TURN_DEF_UP:
     case MOVE_EFFECT_CHARGE_TURN_SP_ATK_UP:
+    case MOVE_EFFECT_CHARGE_TURN_PARALYZE_HIT:
+    case MOVE_EFFECT_CHARGE_TURN_BURN_HIT:
         if ((ctx->battlemon[ctx->attack_client].condition2 & STATUS2_LOCKED_INTO_MOVE) && HeldItemHoldEffectGet(ctx, ctx->attack_client) == HOLD_EFFECT_CHARGE_SKIP) {
             needToRunScript = TRUE;
         }
@@ -3798,17 +3810,6 @@ BOOL BattleController_CheckMoveFailures4_SingleTarget(struct BattleSystem *bsys 
 // Edit: should be done? Need to double check
 BOOL BattleController_CheckMoveFailures4_MultipleTargets(struct BattleSystem *bsys UNUSED, struct BattleStruct *ctx, int defender) {
     switch (ctx->current_move_index) {
-        case MOVE_LIFE_DEW: {
-            if (ctx->battlemon[defender].hp == (s32)ctx->battlemon[defender].maxhp) {
-                ctx->battlerIdTemp = defender;
-                LoadBattleSubSeqScript(ctx, ARC_BATTLE_SUB_SEQ, SUB_SEQ_HEAL_TARGET_HP_FULL_FAIL);
-                ctx->moveStatusFlagForSpreadMoves[defender] = MOVE_STATUS_FLAG_FAILED;
-                ctx->next_server_seq_no = ctx->server_seq_no;
-                ctx->server_seq_no = CONTROLLER_COMMAND_RUN_SCRIPT;
-                return TRUE;
-            }
-            break;
-        }
         case MOVE_CORROSIVE_GAS: {
             if (ctx->battlemon[defender].item == ITEM_NONE
 #if CORROSIVE_GAS_IMPLIED_BEHAVIOUR == TRUE

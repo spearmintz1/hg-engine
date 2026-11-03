@@ -1469,6 +1469,22 @@ u16 gf_p_rand(const u16 denominator)
     }
 }
 
+/**
+ *  @brief apply move-specific overrides to the type chart
+ *
+ *  @param move_no move index
+ *  @param defender_type defending type the chart entry applies to
+ *  @param defaultEffectiveness type chart effectiveness
+ *  @return effectiveness to use
+ */
+static u8 UpdateTypeEffectiveness(u32 move_no, u8 defender_type, u8 defaultEffectiveness)
+{
+    if (move_no == MOVE_FREEZE_DRY && defender_type == TYPE_WATER) {
+        return TYPE_MUL_SUPER_EFFECTIVE;
+    }
+    return defaultEffectiveness;
+}
+
 // TODO: Refactor this function
 int LONG_CALL GetTypeEffectiveness(struct BattleSystem *bw, struct BattleStruct *sp, int attack_client, int defence_client, int move_type, u32 *flag) {
     int i = 0;
@@ -1500,14 +1516,14 @@ int LONG_CALL GetTypeEffectiveness(struct BattleSystem *bw, struct BattleStruct 
         if (TypeEffectivenessTable[i][0] == move_type) {
             if (TypeEffectivenessTable[i][1] == defender_type_1) {
                 if (ShouldUseNormalTypeEffCalc(sp, attack_client, defence_client, i) == TRUE && !(!CheckSideAbility(bw, sp, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckSideAbility(bw, sp, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK) && sp->field_condition & WEATHER_STRONG_WINDS && (TypeEffectivenessTable[i][2] == 20) && defender_type_1 == TYPE_FLYING)) {
-                    type1Effectiveness = TypeEffectivenessTable[i][2];
+                    type1Effectiveness = UpdateTypeEffectiveness(sp->current_move_index, TypeEffectivenessTable[i][1], TypeEffectivenessTable[i][2]);
                     TypeCheckCalc(sp, attack_client, type1Effectiveness, 42, 42, flag);
                 }
             }
             if ((TypeEffectivenessTable[i][1] == defender_type_2) && (defender_type_1 != defender_type_2)) {
                 if (ShouldUseNormalTypeEffCalc(sp, attack_client, defence_client, i) == TRUE && !(!CheckSideAbility(bw, sp, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckSideAbility(bw, sp, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK) && sp->field_condition & WEATHER_STRONG_WINDS && (TypeEffectivenessTable[i][2] == 20) && defender_type_2 == TYPE_FLYING)) {
-                    type2Effectiveness = TypeEffectivenessTable[i][2];
-                    TypeCheckCalc(sp, attack_client, type1Effectiveness, 42, 42, flag);
+                    type2Effectiveness = UpdateTypeEffectiveness(sp->current_move_index, TypeEffectivenessTable[i][1], TypeEffectivenessTable[i][2]);
+                    TypeCheckCalc(sp, attack_client, type2Effectiveness, 42, 42, flag);
                 }
             }
             // TODO: Handle type3, Tera Type
@@ -1614,7 +1630,7 @@ int LONG_CALL ServerDoTypeCalcMod(void *bw UNUSED, struct BattleStruct *sp, int 
                     && (TypeEffectivenessTable[i][2] == 20)
                     && defender_type_1 == TYPE_FLYING))
                 {
-                    damage = TypeCheckCalc(sp, attack_client, TypeEffectivenessTable[i][2], damage, base_power, flag);
+                    damage = TypeCheckCalc(sp, attack_client, UpdateTypeEffectiveness(move_no, TypeEffectivenessTable[i][1], TypeEffectivenessTable[i][2]), damage, base_power, flag);
                     if (TypeEffectivenessTable[i][2] == 20) // seems to be useless, modifier isn't used elsewhere
                     {
                         modifier *= 2;
@@ -1630,7 +1646,7 @@ int LONG_CALL ServerDoTypeCalcMod(void *bw UNUSED, struct BattleStruct *sp, int 
                     && (TypeEffectivenessTable[i][2] == 20)
                     && defender_type_2 == TYPE_FLYING))
                 {
-                    damage = TypeCheckCalc(sp, attack_client, TypeEffectivenessTable[i][2], damage, base_power, flag);
+                    damage = TypeCheckCalc(sp, attack_client, UpdateTypeEffectiveness(move_no, TypeEffectivenessTable[i][1], TypeEffectivenessTable[i][2]), damage, base_power, flag);
                     if (TypeEffectivenessTable[i][2] == 20) // seems to be useless, modifier isn't used elsewhere
                     {
                         modifier *= 2;

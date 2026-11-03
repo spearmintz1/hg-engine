@@ -460,6 +460,7 @@
 #define SUB_SEQ_SPIKY_SHIELD                          (450)
 #define SUB_SEQ_HANDLE_ANGER_SHELL                    (451)
 #define SUB_SEQ_HANDLE_GEM_ACTIVATION_MESSAGE         (452)
+#define SUB_SEQ_LIFE_DEW_HEAL                         (453)
 
 #define MAX_BASE_SUBSCRIPT_NUM 452
 
