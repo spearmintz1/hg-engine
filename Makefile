@@ -305,6 +305,7 @@ ALL_CODE_OBJS := $(patsubst $(C_SUBDIR)/%.c,$(BUILD)/%.o,$(ALL_C_SRCS)) \
 
 clean_code:
 	rm -f $(ALL_CODE_OBJS) $(LINKED_OUTPUTS) $(OUTPUT) $(OVERLAY_OUTPUTS) rom_gen.ld rom_gen_battle.ld
+	rm -rf $(BATTLETESTS_OUTPUT_DIR) $(BATTLETESTS_HEADER)
 
 ####################### Final ROM Build #######################
 CODE_ADDON_ARTIFACTS := $(wildcard $(BUILD)/a028/9_*) $(wildcard $(BUILD)/a028/8_1*) $(wildcard build/$(BUILD)/8_2*) $(BUILD)/a028/8_07 $(BUILD)/a028/8_08 $(BUILD)/a028/8_09

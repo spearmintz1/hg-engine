@@ -207,7 +207,7 @@ void LONG_CALL BattleMessage_ExpandPlaceholders(struct BattleSystem *battleSyste
     }
 
     if (messageMatch && !scenario->markAsFail) {
-        if (expectationType == EXPECTATION_TYPE_MESSAGE || EXPECTATION_TYPE_MESSAGE_CONTAINS) {
+        if (expectationType == EXPECTATION_TYPE_MESSAGE || expectationType == EXPECTATION_TYPE_MESSAGE_CONTAINS) {
             debug_printf(" ✅");
         } else {
             debug_printf(" ✔️");
