@@ -1258,7 +1258,7 @@ u8 LONG_CALL LoadEggMoves(struct PartyPokemon *pokemon, u16 *dest)
     offset = 0;
 
     species = PokeOtherFormMonsNoGet(GetMonData(pokemon, MON_DATA_SPECIES, NULL), GetMonData(pokemon, MON_DATA_FORM, NULL));
-    for (i = 0; i < NUM_EGG_MOVES_TOTAL; i++) {
+    for (i = 0; i < NUM_EGG_MOVES_TOTAL && kowaza_list[i] != 0xFFFF; i++) {
         if (species + 20000 == kowaza_list[i]) {
             offset = i + 1;
             break;

@@ -1477,7 +1477,7 @@ struct OVERWORLD_TAG gOWTagToFileNum[] = // skip down a bit to see the parts tha
     { .tag = 1596, .gfx = 1239, .callback_params = OVERWORLD_SIZE_SMALL}, // antique
     { .tag = 1597, .gfx = 1240, .callback_params = OVERWORLD_SIZE_SMALL}, // SPECIES_HATENNA
     { .tag = 1598, .gfx = 1241, .callback_params = OVERWORLD_SIZE_SMALL}, // SPECIES_HATTREM
-    { .tag = 1599, .gfx = 1242, .callback_params = OVERWORLD_SIZE_LARGE}, // SPECIES_HATTERENE
+    { .tag = 1599, .gfx = 1242, .callback_params = OVERWORLD_SIZE_SMALL}, // SPECIES_HATTERENE
     { .tag = 1600, .gfx = 1243, .callback_params = OVERWORLD_SIZE_SMALL}, // SPECIES_IMPIDIMP
     { .tag = 1601, .gfx = 1244, .callback_params = OVERWORLD_SIZE_SMALL}, // SPECIES_MORGREM
     { .tag = 1602, .gfx = 1245, .callback_params = OVERWORLD_SIZE_SMALL}, // SPECIES_GRIMMSNARL
