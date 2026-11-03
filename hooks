@@ -532,3 +532,8 @@ arm9 PartyMenu_ItemUseFunc_ReuseItem_hook 0208138C 3
 0012 CheckTrainerMessage 02250D4C 2
 0012 BattleMessage_ExpandPlaceholders 0223CEF4
 #endif
+
+#ifdef MART_EXPANSION
+# the general mart (ScrCmd_MartBuy, 19 vanilla entries) is replaced wholesale by src/field/mart.c
+arm9 ScrCmd_MartBuy 02048060 1
+#endif
