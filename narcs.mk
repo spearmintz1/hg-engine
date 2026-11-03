@@ -701,6 +701,10 @@ $(TRAINER_GFX_DIR)/8_%-00.NCGR:$(TRAINER_GFX_DEPENDENCIES_DIR)/%.png
 $(TRAINER_GFX_DIR)/8_%-01.NCLR:$(TRAINER_GFX_DEPENDENCIES_DIR)/%.png
 	$(GFX) $< $@ -ir -bitdepth 4
 
+# class 102 (Battle Castle Owner) is the only trainer whose cells use OAM palette 1, so it ships 32 colours
+$(TRAINER_GFX_DIR)/8_102-01.NCLR:$(TRAINER_GFX_DEPENDENCIES_DIR)/102.pal
+	$(GFX) $< $@ -ir -bitdepth 4
+
 $(TRAINER_GFX_DIR)/8_%-02.NCER:$(TRAINER_GFX_DEPENDENCIES_DIR)/%_cell.json
 	$(GFX) $< $@
 
