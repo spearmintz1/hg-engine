@@ -227,6 +227,8 @@
 #define MOVE_EFFECT_FLAG_SHADOW_FORCE       (0x20000000)
 #define MOVE_EFFECT_FLAG_TRIED_IMPRISON     (0x40000000) // for trainer ai
 
+#define MOVE_EFFECT_FLAG_SEMI_INVULNERABLE (MOVE_EFFECT_FLAG_FLYING_IN_AIR | MOVE_EFFECT_FLAG_DIGGING | MOVE_EFFECT_FLAG_IS_DIVING | MOVE_EFFECT_FLAG_SHADOW_FORCE)
+
 /**
  *  @brief non-volatile status condition flags
  *  not just valid for battles, also valid outside of battles
@@ -1377,7 +1379,7 @@ struct PACKED BattleStruct {
     /*0x317E*/ struct BattleMove moveTbl[NUM_OF_MOVES + 1];
     /*0x    */ u32 gainedExperience[6]; // possible experience gained per party member in order to get level scaling done right
     /*0x    */ u32 gainedExperienceShare[6]; // possible experience gained per party member in order to get level scaling done right
-    /*0x    */ int SkillSeqWork[600];
+    /*0x    */ int SkillSeqWork[650];
     /*...*/
 
                FutureCondition futureConditionQueue[CLIENT_MAX * FUTURE_CONDITION_MAX];
