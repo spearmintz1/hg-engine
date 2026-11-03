@@ -7,6 +7,7 @@
 .include "asm/include/moves.inc"
 .include "asm/include/species.inc"
 
+.include "armips/asm/abilities.s" // ability expansion: personal narc, BoxPokemon, BattlePokemon, summary screen, GiveMon all hold a u16 ability
 .include "armips/asm/backgrounds.s" // fixes new move animations
 .include "armips/asm/moves.s" // repoints all the move table defines within the structure
 .include "armips/asm/trainer_ai.s" // repoints all the move table defines for trainer ai within the structure
