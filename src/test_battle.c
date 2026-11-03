@@ -254,6 +254,7 @@ void LONG_CALL TestBattle_OverrideParties(struct BATTLE_PARAM *bp)
     const struct TestBattleScenario *scenario = sCurrentScenario;
 
     ResetScriptIndices();
+    Sav2_PlayerData_GetProfileAddr(SaveBlock2_get())->johtoBadges = scenario->johtoBadges;
 
     int enemyCount = 0;
     for (int i = 0; i < 6; i++) {

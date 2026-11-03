@@ -85,7 +85,8 @@ struct PACKED TestBattleScenario {
     u32 weather; // WEATHER_RAIN, WEATHER_SANDSTORM, etc.
     u32 fieldCondition; // FIELD_CONDITION_TRICK_ROOM_INIT, etc.
     u8 terrain; // GRASSY_TERRAIN, MISTY_TERRAIN, etc.
-    u8 _padding[3]; // Compiler adds 3 bytes padding to align struct to 4-byte boundary
+    u8 johtoBadges; // Johto badge bitmask given to the player for the scenario (it sets the level cap); 0, the default, leaves no badges
+    u8 _padding[2]; // Compiler adds 2 bytes padding to align struct to 4-byte boundary
     struct TestBattlePokemon playerParty[6]; // Player party
     struct TestBattlePokemon enemyParty[6]; // Enemy's party
 

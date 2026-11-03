@@ -3,6 +3,7 @@
 BEGIN_TEST
 {
     .battleType = BATTLE_TYPE_TRAINER,
+    .johtoBadges = 0xFF,
     .weather = FIELD_CONDITION_NONE,
     .fieldCondition = 0,
     .terrain = TERRAIN_NONE,
