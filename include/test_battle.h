@@ -137,6 +137,7 @@ void LONG_CALL SendValueThroughCommunicationSendHole(int value);
 BOOL LONG_CALL TestBattle_HasMoreExpectations();
 BOOL LONG_CALL TestBattle_HasMoreTests();
 BOOL LONG_CALL TestBattle_IsComplete();
+void LONG_CALL TestBattle_MarkComplete(void);
 void LONG_CALL TestBattle_QueueNextTest();
 void LONG_CALL TestBattle_OverrideParties(struct BATTLE_PARAM *bp);
 void LONG_CALL TestBattle_ApplyBattleState(struct BattleStruct *sp);

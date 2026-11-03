@@ -463,6 +463,19 @@ static void LONG_CALL TestBattle_CheckScriptCompletion()
 }
 
 /**
+ * @brief Mark the current test complete once its result has been sent
+ *
+ * CheckScriptCompletion only runs when a new turn starts, so a battle that ends on a KO
+ * would otherwise never be marked complete and the next test would never start.
+ */
+void LONG_CALL TestBattle_MarkComplete(void)
+{
+    if (sCurrentScenario != NULL) {
+        SetTestComplete(TRUE);
+    }
+}
+
+/**
  * @brief Check if test battle is marked as complete
  *
  * @return TRUE if test battle should end
