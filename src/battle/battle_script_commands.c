@@ -1385,7 +1385,7 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
     u32 totalexp = 0;
 
     // count how many pokémon are getting experience
-    if (!expcalc->work[6])
+    if (expcalc->seq_no == 0)
     {
         monCount = 0;
         monCountFromItem = 0;
@@ -1487,7 +1487,7 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
         struct Party *party = BattleWorkPokePartyGet(expcalc->bw, 0);
 
         // count how many pokémon are getting experience
-        if (!expcalc->work[6])
+        if (expcalc->seq_no == 0)
         {
             monCount = 0;
             monCountFromItem = 0;
