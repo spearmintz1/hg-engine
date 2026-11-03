@@ -1477,7 +1477,7 @@ u16 gf_p_rand(const u16 denominator)
  *  @param defaultEffectiveness type chart effectiveness
  *  @return effectiveness to use
  */
-static u8 UpdateTypeEffectiveness(u32 move_no, u8 defender_type, u8 defaultEffectiveness)
+u8 UpdateTypeEffectiveness(u32 move_no, u8 defender_type, u8 defaultEffectiveness)
 {
     if (move_no == MOVE_FREEZE_DRY && defender_type == TYPE_WATER) {
         return TYPE_MUL_SUPER_EFFECTIVE;
@@ -2950,6 +2950,39 @@ int LONG_CALL GetDynamicMoveType(struct BattleSystem *bsys, struct BattleStruct 
     }
 
     return GetAdjustedMoveTypeBasics(ctx, moveNo, GetBattlerAbility(ctx, battlerId), type);
+}
+
+// effects added by this fork; the base game's check only knows its own heal effects
+static const u16 HealBlockUnusableMoveEffects[] = {
+    MOVE_EFFECT_RECOVER_THREE_QUARTERS_DAMAGE_DEALT,
+    MOVE_EFFECT_RECOVER_FULL_DAMAGE_DEALT,
+    MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT,
+    MOVE_EFFECT_HEAL_TARGET,
+    MOVE_EFFECT_LIFE_DEW,
+};
+
+/**
+ *  @brief checks if the move is unusable because the battler is under Heal Block
+ *
+ *  @param bsys battle system
+ *  @param ctx global battle structure
+ *  @param battlerId battler to check
+ *  @param moveNo move index
+ *  @return TRUE if the battler cannot use the move
+ */
+BOOL LONG_CALL BattleContext_CheckMoveHealBlocked(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo)
+{
+    if (BattleContext_CheckMoveHealBlockedBase(bsys, ctx, battlerId, moveNo)) {
+        return TRUE;
+    }
+    if (ctx->battlemon[battlerId].moveeffect.healBlockTurns) {
+        for (u32 i = 0; i < NELEMS(HealBlockUnusableMoveEffects); i++) {
+            if (HealBlockUnusableMoveEffects[i] == ctx->moveTbl[moveNo].effect) {
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
 }
 
 u32 LONG_CALL StruggleCheck(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, u32 nonSelectableMoves, u32 struggleCheckFlags) {

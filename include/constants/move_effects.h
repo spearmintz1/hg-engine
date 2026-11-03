@@ -375,9 +375,9 @@
 #define MOVE_EFFECT_MORTAL_SPIN                             369
 #define MOVE_EFFECT_TIDY_UP                                 370
 #define MOVE_EFFECT_PROTECT_USER_SIDE                       371
-#define MOVE_EFFECT_HEAL_TARGET                                 372
-#define MOVE_EFFECT_LIFE_DEW                                    373
-#define MOVE_EFFECT_HOWL                                        374
+#define MOVE_EFFECT_HEAL_TARGET                             372
+#define MOVE_EFFECT_LIFE_DEW                                373
+#define MOVE_EFFECT_HOWL                                    374
 
 #define MAX_BASE_MOVE_EFFECT_NUM                            374
 

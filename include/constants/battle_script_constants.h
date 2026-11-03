@@ -462,7 +462,7 @@
 #define SUB_SEQ_HANDLE_GEM_ACTIVATION_MESSAGE         (452)
 #define SUB_SEQ_LIFE_DEW_HEAL                         (453)
 
-#define MAX_BASE_SUBSCRIPT_NUM 452
+#define MAX_BASE_SUBSCRIPT_NUM 453
 
 // define your custom subscripts below like this
 // #define MOVE_SUBSCRIPT_PTR_CUSTOM_1 (MAX_BASE_SUBSCRIPT_NUM + 1)

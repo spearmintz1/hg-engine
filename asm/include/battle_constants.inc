@@ -1421,7 +1421,7 @@
 .equ BATTLE_SUBSCRIPT_LIFE_DEW_HEAL, 453
 
 
-.equ MAX_BASE_SUBSCRIPT_NUM, 452
+.equ MAX_BASE_SUBSCRIPT_NUM, 453
 
 // define your custom subscripts below like this
 // .equ MOVE_SUBSCRIPT_PTR_CUSTOM_1, (MAX_BASE_SUBSCRIPT_NUM + 1)
