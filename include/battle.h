@@ -3752,6 +3752,10 @@ void LONG_CALL BattleMessage_BufferNickname(struct BattleSystem *bsys, int buffe
 void LONG_CALL BattleMessage_BufferMove(struct BattleSystem *bsys, int bufferIndex, int param);
 void LONG_CALL BattleMessage_BufferItem(struct BattleSystem *bsys, int bufferIndex, int param);
 void LONG_CALL BattleMessage_BufferNumber(struct BattleSystem *bsys, int bufferIndex, int param);
+/// @brief Format `num` into message buffer `idx` using at most `numDigits` digits.
+/// @param mode 0 left-aligns, 1 right-aligns, 2 pads with leading zeros
+/// @param charset 1 for the standard (non-Japanese) digit glyphs, as vanilla passes
+void LONG_CALL BufferIntegerAsString(u32 *msgFormat, u32 idx, int num, u32 numDigits, u32 mode, u32 charset);
 void LONG_CALL BattleMessage_BufferNumbers(struct BattleSystem *bsys, int bufferIndex, int param, int numDigits);
 void LONG_CALL BattleMessage_BufferType(struct BattleSystem *bsys, int bufferIndex, int param);
 void LONG_CALL BattleMessage_BufferAbility(struct BattleSystem *bsys, int bufferIndex, int param);

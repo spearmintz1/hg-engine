@@ -112,6 +112,7 @@ VarGet = 0x020403AC | 1;
 GF_CpuCopy8 = 0x0204D450;
 GetEvScriptWorkMemberAdrs = 0x020402F0 |1;
 WORDSET_RegisterAbilityName = 0x0200C060|1;
+BufferIntegerAsString = 0x0200BFCC | 1;
 EventSet_Script = 0x0203FE74 |1;
 
 sys_AllocMemory = 0x0201AA8C | 1;
