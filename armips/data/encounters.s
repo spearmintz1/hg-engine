@@ -634,7 +634,7 @@ pokemon SPECIES_WHISCASH
 
 encounterdata   6   // Sprout Tower 2F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -738,7 +738,7 @@ pokemon SPECIES_NONE
 
 encounterdata   7   // Sprout Tower 3F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -1050,7 +1050,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  10   // Ruins of Alph (Inside, Main Room)
 
-walkrate 15
+walkrate 8
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -1154,7 +1154,7 @@ pokemon SPECIES_NONE
 
 encounterdata  11   // Ruins of Alph (Inside, Main Room - Not sure when used?)
 
-walkrate 15
+walkrate 8
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -1258,7 +1258,7 @@ pokemon SPECIES_NONE
 
 encounterdata  12   // Ruins of Alph (Inside, Main Room - Not sure when used?)
 
-walkrate 15
+walkrate 8
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -1362,7 +1362,7 @@ pokemon SPECIES_NONE
 
 encounterdata  13   // Ruins of Alph (Inside, Ladder Room - This has no encounter tile permissions though)
 
-walkrate 15
+walkrate 8
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -1466,7 +1466,7 @@ pokemon SPECIES_NONE
 
 encounterdata  14   // Union Cave 1F
 
-walkrate 10
+walkrate 5
 surfrate 15
 rocksmashrate 0
 oldrodrate 25
@@ -1570,7 +1570,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  15   // Union Cave B1F
 
-walkrate 15
+walkrate 8
 surfrate 15
 rocksmashrate 0
 oldrodrate 25
@@ -1674,7 +1674,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  16   // Union Cave B2F
 
-walkrate 15
+walkrate 8
 surfrate 15
 rocksmashrate 0
 oldrodrate 25
@@ -1882,7 +1882,7 @@ pokemon SPECIES_NONE
 
 encounterdata  18   // Slowpoke Well 1F
 
-walkrate 5
+walkrate 3
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -1986,7 +1986,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  19   // Slowpoke Well B2F
 
-walkrate 15
+walkrate 8
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -2922,7 +2922,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  28   // Burned Tower 1F
 
-walkrate 10
+walkrate 5
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -3026,7 +3026,7 @@ pokemon SPECIES_NONE
 
 encounterdata  29   // Burned Tower B1F
 
-walkrate 10
+walkrate 5
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -3130,7 +3130,7 @@ pokemon SPECIES_NONE
 
 encounterdata  30   // Bell Tower 2F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -3234,7 +3234,7 @@ pokemon SPECIES_NONE
 
 encounterdata  31   // Bell Tower 3F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -3338,7 +3338,7 @@ pokemon SPECIES_NONE
 
 encounterdata  32   // Bell Tower 4F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -3442,7 +3442,7 @@ pokemon SPECIES_NONE
 
 encounterdata  33   // Bell Tower 5F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -3546,7 +3546,7 @@ pokemon SPECIES_NONE
 
 encounterdata  34   // Bell Tower 6F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -3650,7 +3650,7 @@ pokemon SPECIES_NONE
 
 encounterdata  35   // Bell Tower 7F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -3754,7 +3754,7 @@ pokemon SPECIES_NONE
 
 encounterdata  36   // Bell Tower 8F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -3858,7 +3858,7 @@ pokemon SPECIES_NONE
 
 encounterdata  37   // Bell Tower 9F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -4482,7 +4482,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  43   // Whirl Islands 1F
 
-walkrate 5
+walkrate 3
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -4586,7 +4586,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  44   // Whirl Islands B1F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -4794,7 +4794,7 @@ pokemon SPECIES_NONE
 
 encounterdata  46   // Whirl Islands B2F
 
-walkrate 5
+walkrate 3
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -5002,7 +5002,7 @@ pokemon SPECIES_NONE
 
 encounterdata  48   // Whirl Islands B3F (Ledge overlooking Lugia room)
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -5522,7 +5522,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  53   // Mt. Mortar (Waterfall room)
 
-walkrate 10
+walkrate 5
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -5626,7 +5626,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  54   // Mt. Mortar (Central room)
 
-walkrate 10
+walkrate 5
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -5730,7 +5730,7 @@ pokemon SPECIES_NONE
 
 encounterdata  55   // Mt. Mortar (Room above waterfall)
 
-walkrate 10
+walkrate 5
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -5834,7 +5834,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  56   // Mt. Mortar B1F
 
-walkrate 10
+walkrate 5
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -7186,7 +7186,7 @@ pokemon SPECIES_NONE
 
 encounterdata  69   // Dark Cave (Route 31 entrance)
 
-walkrate 10
+walkrate 5
 surfrate 10
 rocksmashrate 50
 oldrodrate 25
@@ -7290,7 +7290,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  70   // Dark Cave (Route 45 entrance)
 
-walkrate 10
+walkrate 5
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -7706,7 +7706,7 @@ pokemon SPECIES_POLIWAG
 
 encounterdata  74   // Seafoam Islands 1F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -7810,7 +7810,7 @@ pokemon SPECIES_NONE
 
 encounterdata  75   // Seafoam Islands B1F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -7914,7 +7914,7 @@ pokemon SPECIES_NONE
 
 encounterdata  76   // Seafoam Islands B2F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -8018,7 +8018,7 @@ pokemon SPECIES_NONE
 
 encounterdata  77   // Seafoam Islands B3F
 
-walkrate 10
+walkrate 5
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -8122,7 +8122,7 @@ pokemon SPECIES_NONE
 
 encounterdata  78   // Seafoam Islands B4F
 
-walkrate 10
+walkrate 5
 surfrate 5
 rocksmashrate 0
 oldrodrate 25
@@ -8226,7 +8226,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  79   // Mt. Silver (Moltres room)
 
-walkrate 5
+walkrate 3
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -8330,7 +8330,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  80   // Mt. Silver 3F
 
-walkrate 10
+walkrate 5
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -8434,7 +8434,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  81   // Mt. Silver 4F
 
-walkrate 10
+walkrate 5
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -8642,7 +8642,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  83   // Cliff Cave
 
-walkrate 10
+walkrate 5
 surfrate 0
 rocksmashrate 30
 oldrodrate 0
@@ -8746,7 +8746,7 @@ pokemon SPECIES_NONE
 
 encounterdata  84   // Bell Tower 10F
 
-walkrate 5
+walkrate 3
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -8954,7 +8954,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata  86   // Mt. Silver 1F
 
-walkrate 10
+walkrate 5
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -9162,7 +9162,7 @@ pokemon SPECIES_NONE
 
 encounterdata  88   // Mt. Silver (Expert Belt room)
 
-walkrate 10
+walkrate 5
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -11034,7 +11034,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata 106   // Mt. Moon 1F
 
-walkrate 15
+walkrate 8
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -11138,7 +11138,7 @@ pokemon SPECIES_NONE
 
 encounterdata 107   // Mt. Moon 2F
 
-walkrate 15
+walkrate 8
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -11242,7 +11242,7 @@ pokemon SPECIES_NONE
 
 encounterdata 108   // Rock Tunnel 1F
 
-walkrate 15
+walkrate 8
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -11346,7 +11346,7 @@ pokemon SPECIES_NONE
 
 encounterdata 109   // Rock Tunnel B1F
 
-walkrate 15
+walkrate 8
 surfrate 0
 rocksmashrate 20
 oldrodrate 0
@@ -11450,7 +11450,7 @@ pokemon SPECIES_NONE
 
 encounterdata 110   // Victory Road 1F
 
-walkrate 10
+walkrate 5
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -12087,8 +12087,8 @@ monwithform SPECIES_MOLTRES, 1
 pokemon SPECIES_MOLTRES
 monwithform SPECIES_MOLTRES, 1
 monwithform SPECIES_MOLTRES, 1
-monwithform SPECIES_VICTINI, 1
-monwithform SPECIES_VICTINI, 1
+pokemon SPECIES_VICTINI
+pokemon SPECIES_VICTINI
 pokemon SPECIES_VICTINI
 pokemon SPECIES_VICTINI
 pokemon SPECIES_MOLTRES
@@ -12101,8 +12101,8 @@ monwithform SPECIES_MOLTRES, 1
 pokemon SPECIES_MOLTRES
 monwithform SPECIES_MOLTRES, 1
 monwithform SPECIES_MOLTRES, 1
-monwithform SPECIES_VICTINI, 1
-monwithform SPECIES_VICTINI, 1
+pokemon SPECIES_VICTINI
+pokemon SPECIES_VICTINI
 pokemon SPECIES_VICTINI
 pokemon SPECIES_VICTINI
 pokemon SPECIES_MOLTRES
@@ -12115,8 +12115,8 @@ monwithform SPECIES_MOLTRES, 1
 pokemon SPECIES_MOLTRES
 monwithform SPECIES_MOLTRES, 1
 monwithform SPECIES_MOLTRES, 1
-monwithform SPECIES_VICTINI, 1
-monwithform SPECIES_VICTINI, 1
+pokemon SPECIES_VICTINI
+pokemon SPECIES_VICTINI
 pokemon SPECIES_VICTINI
 pokemon SPECIES_VICTINI
 pokemon SPECIES_MOLTRES
@@ -13738,7 +13738,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata 132   // Tohjo Falls
 
-walkrate 15
+walkrate 8
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -13842,7 +13842,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata 133   // Digletts Cave
 
-walkrate 10
+walkrate 5
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -13946,7 +13946,7 @@ pokemon SPECIES_NONE
 
 encounterdata 134   // Victory Road 2F
 
-walkrate 10
+walkrate 5
 surfrate 0
 rocksmashrate 0
 oldrodrate 0
@@ -14050,7 +14050,7 @@ pokemon SPECIES_NONE
 
 encounterdata 135   // Victory Road 3F
 
-walkrate 10
+walkrate 5
 surfrate 0
 rocksmashrate 40
 oldrodrate 0
@@ -14466,7 +14466,7 @@ pokemon SPECIES_NONE
 
 encounterdata 139   // Cerulean Cave 1F
 
-walkrate 10
+walkrate 5
 surfrate 10
 rocksmashrate 5
 oldrodrate 25
@@ -14570,7 +14570,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata 140   // Cerulean Cave B1F
 
-walkrate 10
+walkrate 5
 surfrate 10
 rocksmashrate 0
 oldrodrate 25
@@ -14674,7 +14674,7 @@ pokemon SPECIES_MAGIKARP
 
 encounterdata 141   // Cerulean Cave B2F
 
-walkrate 10
+walkrate 5
 surfrate 10
 rocksmashrate 5
 oldrodrate 25
