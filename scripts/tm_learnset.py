@@ -81,8 +81,7 @@ def tmdatabuilder(inputPath: str):
     for species in range(0, len(speciesDict)):
         data_to_write = [0, 0, 0, 0]
         mondata = open("build/a002/mondata_{:04d}".format(species), "rb+")
-        mondata.seek(0x1A)
-        mondata.write(bytes([0, 0]))
+        mondata.seek(0x1C)
         for i in range(0, 4):
             if species not in tm_data:
                 tm_data[species] = 0

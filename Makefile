@@ -62,6 +62,7 @@ CC = $(DEVKITARM)/$(PREFIX)gcc
 LD = $(DEVKITARM)/$(PREFIX)ld
 OBJCOPY = $(DEVKITARM)/$(PREFIX)objcopy
 endif
+OBJDUMP = $(patsubst %objcopy,%objdump,$(OBJCOPY))
 PYTHON_NO_VENV = python3
 VENV = .venv
 PYTHON_VENV_VERSION := $(shell $(PYTHON_NO_VENV) -m ensurepip 2>&1 | grep -i -q 'No module named'; echo $$?)
@@ -108,7 +109,8 @@ SDATTOOL := $(PYTHON) tools/SDATTool.py
 
 # Compiler/Assembler/Linker settings
 LDFLAGS = rom.ld -T $(C_SUBDIR)/linker.ld
-ASFLAGS = -mthumb
+# the ARM9 is an ARMv5TE: without an -march binutils assembles things like `ldr r1, =const` into Thumb-2 (movw), which it cannot run
+ASFLAGS = -mthumb -march=armv5te
 CFLAGS = -mthumb -mno-thumb-interwork -mcpu=arm7tdmi -mtune=arm7tdmi -mno-long-calls -march=armv4t -Wall -Wextra -Wno-builtin-declaration-mismatch -Wno-sequence-point -Wno-address-of-packed-member -Os -fira-loop-pressure -fipa-pta
 
 # `make AUTO_TEST=Y` builds the headless battle-test ROM (see data/battle_tests/README.md).  Objects are not rebuilt when
@@ -265,6 +267,7 @@ $(OUTPUT):$(LINK)
 	$(OBJCOPY) -O binary $< $@
 
 all: $(TOOLS) $(OUTPUT) $(OVERLAY_OUTPUTS)
+	$(PYTHON) scripts/check_thumb2.py --objdump $(OBJDUMP) $(LINKED_OUTPUTS)
 	rm -rf $(BASE)
 	@mkdir -p $(REQUIRED_DIRECTORIES)
 	@# find and delete macOS files that it creates for some reason
@@ -305,6 +308,7 @@ ALL_CODE_OBJS := $(patsubst $(C_SUBDIR)/%.c,$(BUILD)/%.o,$(ALL_C_SRCS)) \
 
 clean_code:
 	rm -f $(ALL_CODE_OBJS) $(LINKED_OUTPUTS) $(OUTPUT) $(OVERLAY_OUTPUTS) rom_gen.ld rom_gen_battle.ld
+	rm -rf $(BATTLETESTS_OUTPUT_DIR) $(BATTLETESTS_HEADER)
 
 ####################### Final ROM Build #######################
 CODE_ADDON_ARTIFACTS := $(wildcard $(BUILD)/a028/9_*) $(wildcard $(BUILD)/a028/8_1*) $(wildcard build/$(BUILD)/8_2*) $(BUILD)/a028/8_07 $(BUILD)/a028/8_08 $(BUILD)/a028/8_09

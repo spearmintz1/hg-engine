@@ -7,6 +7,7 @@
 .include "asm/include/moves.inc"
 .include "asm/include/species.inc"
 
+.include "armips/asm/abilities.s" // ability expansion: personal narc, BoxPokemon, BattlePokemon, summary screen, GiveMon all hold a u16 ability
 .include "armips/asm/backgrounds.s" // fixes new move animations
 .include "armips/asm/moves.s" // repoints all the move table defines within the structure
 .include "armips/asm/trainer_ai.s" // repoints all the move table defines for trainer ai within the structure
@@ -26,9 +27,6 @@
 .include "armips/asm/tm.s" // make tms infinite
 .include "armips/asm/forget_hm.s" // allows hm to be forgotten
 .include "armips/asm/no_partner_double_battles.s" // allows no partner double battles
-
-//custom asm scripts
-.include "armips/asm/custom/mart_items.s"
 
 .if FAIRY_TYPE_IMPLEMENTED == 1
 

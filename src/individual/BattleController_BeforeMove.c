@@ -1569,6 +1569,25 @@ BOOL BattlerController_RedirectTarget(struct BattleSystem *bsys, struct BattleSt
     return ret;
 }
 
+// Solar Beam in sun (or Electro Shot in rain) never enters the locked-in second turn that pays for a charge move
+static BOOL ChargeTurnSkippedByWeather(struct BattleSystem *bsys, struct BattleStruct *ctx) {
+    u32 skippingWeather;
+
+    switch (ctx->moveTbl[ctx->current_move_index].effect) {
+    case MOVE_EFFECT_CHARGE_TURN_SUN_SKIPS:
+        skippingWeather = WEATHER_SUNNY_ANY;
+        break;
+    case MOVE_EFFECT_CHARGE_TURN_SP_ATK_UP_RAIN_SKIPS:
+        skippingWeather = WEATHER_RAIN_ANY;
+        break;
+    default:
+        return FALSE;
+    }
+    return !CheckSideAbility(bsys, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE)
+        && !CheckSideAbility(bsys, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)
+        && (ctx->field_condition & skippingWeather);
+}
+
 BOOL BattlerController_DecrementPP(struct BattleSystem *bsys, struct BattleStruct *ctx) {
     int decreasePP = 1;
     int index;
@@ -1619,7 +1638,7 @@ BOOL BattlerController_DecrementPP(struct BattleSystem *bsys, struct BattleStruc
     }
 
     if (CheckMoveIsChargeMove(ctx, ctx->current_move_index)) {
-        if (((HeldItemHoldEffectGet(ctx, ctx->attack_client) == HOLD_EFFECT_CHARGE_SKIP) && ctx->current_move_index != MOVE_BIDE) || (ctx->battlemon[ctx->attack_client].condition2 & STATUS2_LOCKED_INTO_MOVE)) {
+        if (((HeldItemHoldEffectGet(ctx, ctx->attack_client) == HOLD_EFFECT_CHARGE_SKIP) && ctx->current_move_index != MOVE_BIDE) || (ctx->battlemon[ctx->attack_client].condition2 & STATUS2_LOCKED_INTO_MOVE) || ChargeTurnSkippedByWeather(bsys, ctx)) {
             ctx->oneTurnFlag[ctx->attack_client].pp_dec_flag = 0;
         } else {
             needToDecrementPP = FALSE;

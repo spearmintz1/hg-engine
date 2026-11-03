@@ -468,6 +468,13 @@ arm9 02000E54 24 00 00 00 04 5C 1E 02
 # show 5 digits for mart prices (Cracked Pot and other items at 10000+ printed a garbage first digit)
 0031 0225DE46 05 23
 
+# event-gated legendaries (Arceus, Celebi, spiky-eared Pichu) unlock without distribution events:
+# ScrCmd_FollowerPokeIsEventTrigger only checks the lead species, so wild-caught mons qualify
+# MonMetadataMatchesEvent: nop the "bhi" past the fateful-encounter return, so every non-Hall-of-Origin event matches
+arm9 0208EA0A C0 46
+# ScrCmd_FollowerPokeIsEventTrigger: nop the "beq" that rejects a non-shiny Pichu/Pikachu/Raichu
+arm9 02046AF6 C0 46
+
 # honestly will not have any way to revert this because this is so much less intrusive and Just Works
 #ifdef APPLY_ANTIPIRACY
 

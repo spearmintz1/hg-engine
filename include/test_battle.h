@@ -20,6 +20,10 @@
 
 #define NUM_FURTHER_TEST_PARAMS 4
 
+// .ability sentinels that generate the ability from the species data instead of forcing an id (an id above 0x1FF is never a real ability)
+#define TEST_ABILITY_PERSONAL_SLOT_2 0xFFFE // second ability slot in personal data
+#define TEST_ABILITY_HIDDEN          0xFFFF // hidden ability from the hidden ability table
+
 // Battle action for scripted tests
 struct PACKED BattleAction {
     u8 action; // 0-3 = move slot, 4-9 = switch to party slot (action - 4)
@@ -137,6 +141,7 @@ void LONG_CALL SendValueThroughCommunicationSendHole(int value);
 BOOL LONG_CALL TestBattle_HasMoreExpectations();
 BOOL LONG_CALL TestBattle_HasMoreTests();
 BOOL LONG_CALL TestBattle_IsComplete();
+void LONG_CALL TestBattle_MarkComplete(void);
 void LONG_CALL TestBattle_QueueNextTest();
 void LONG_CALL TestBattle_OverrideParties(struct BATTLE_PARAM *bp);
 void LONG_CALL TestBattle_ApplyBattleState(struct BattleStruct *sp);

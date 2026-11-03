@@ -594,10 +594,11 @@ int UNUSED SwitchInAbilityCheck(void *bw, struct BattleStruct *sp)
                             src = (u8 *)&sp->battlemon[sp->attack_client];
                             dest = (u8 *)&sp->battlemon[sp->defence_client];
 
-                            for (num = 0; num <= (int)offsetof(struct BattlePokemon, ability); num++) {
+                            for (num = 0; num <= 0x26; num++) {
                                 src[num] = dest[num];
                             }
 
+                            sp->battlemon[sp->attack_client].ability = sp->battlemon[sp->defence_client].ability; // lives outside the copied range
                             sp->battlemon[sp->attack_client].ability_activated_flag = 0;
                             sp->battlemon[sp->attack_client].ability_activated_flag = 0;
                             sp->battlemon[sp->attack_client].moveeffect.truantFlag = sp->total_turn & 1;
