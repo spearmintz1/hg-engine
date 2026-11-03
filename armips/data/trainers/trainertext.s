@@ -589,8 +589,9 @@ _049C: // Trainer 726
 
 _04A8: // Trainer 681
     trainertextentry 681, TEXT_NOTICE_IN_OVERWORLD, "Anyway, fight me and see!\r"
-    trainertextentry 681, TEXT_DEFEATED_IN_BATTLE, "I was deceived!\n"
+    trainertextentry 681, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "I was deceived!\n"
     trainertextentry 681, TEXT_DEFEATED_IN_OVERWORLD, "Me, I should be a pretty good practice\npartner...\fI shouldn’t say that about myself!\n"
+    trainertextentry 681, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _04B4: // Trainer 683
     trainertextentry 683, TEXT_NOTICE_IN_OVERWORLD, "What do you think? You’ve never seen\nsuch a wonderful Gym before, have you?\r"
@@ -639,8 +640,9 @@ _051C: // Trainer 297
 
 _0528: // Trainer 298
     trainertextentry 298, TEXT_NOTICE_IN_OVERWORLD, "Don’t get nervous watching my\nmagnificent swimming!\r"
-    trainertextentry 298, TEXT_DEFEATED_IN_BATTLE, "You’re not nervous at all.\nCool and confident...!\n"
+    trainertextentry 298, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "You’re not nervous at all.\nCool and confident...!\n"
     trainertextentry 298, TEXT_DEFEATED_IN_OVERWORLD, "Swimming is very good for both\nbeauty and health!\rJust look at Misty, you’ll see.\n"
+    trainertextentry 298, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _0534: // Trainer 678
     trainertextentry 678, TEXT_NOTICE_IN_OVERWORLD, "Swimming isn’t just about speed!\nIt’s also about the beauty of grace!\r"
@@ -701,8 +703,9 @@ _05B4: // Trainer 83
 
 _05B8: // Trainer 230
     trainertextentry 230, TEXT_NOTICE_IN_OVERWORLD, "Psychic power is the power of\nyour mind.\r"
-    trainertextentry 230, TEXT_DEFEATED_IN_BATTLE, "Your mind has more power than mine!\n"
+    trainertextentry 230, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "Your mind has more power than mine!\n"
     trainertextentry 230, TEXT_DEFEATED_IN_OVERWORLD, "You made your mind stronger, not just\nyour abilities.\n"
+    trainertextentry 230, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _05C4: // Trainer 415
     trainertextentry 415, TEXT_NOTICE_IN_OVERWORLD, "The Fighting Dojo next door was once\nthis city’s Gym.\r"
@@ -838,8 +841,9 @@ _06F8: // Trainer 357
 
 _0704: // Trainer 332
     trainertextentry 332, TEXT_NOTICE_IN_OVERWORLD, "Have you ever been to a picnic?\nThey’re so much fun!\r"
-    trainertextentry 332, TEXT_DEFEATED_IN_BATTLE, "Ohhhh!\n"
+    trainertextentry 332, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "Ohhhh!\n"
     trainertextentry 332, TEXT_DEFEATED_IN_OVERWORLD, "We bake lots of goodies and share them\naround. They’re delicious!\n"
+    trainertextentry 332, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _0710: // Trainer 333
     trainertextentry 333, TEXT_NOTICE_IN_OVERWORLD, "People shouldn’t leave any\nlitter behind.\r"
@@ -1214,8 +1218,9 @@ _0A8C: // Trainer 27
 
 _0A9C: // Trainer 49
     trainertextentry  49, TEXT_NOTICE_IN_OVERWORLD, "I haven’t seen you around before.\nSo you think you’re pretty tough?\r"
-    trainertextentry  49, TEXT_DEFEATED_IN_BATTLE, "You’re strong!\n"
+    trainertextentry  49, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "You’re strong!\n"
     trainertextentry  49, TEXT_DEFEATED_IN_OVERWORLD, "I’m going to try to be the best with my\nprized Pokémon. I’m not using the\fsame tough Pokémon as everyone else.\n"
+    trainertextentry  49, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _0AA8: // Trainer 56
     trainertextentry  56, TEXT_NOTICE_IN_OVERWORLD, "I found some good Pokémon in the grass!\nI think they’ll do it for me!\r"
@@ -1246,8 +1251,9 @@ _0AE0: // Trainer 118
 
 _0AEC: // Trainer 120
     trainertextentry 120, TEXT_NOTICE_IN_OVERWORLD, "Irene: Eeek! A Trainer!\r"
-    trainertextentry 120, TEXT_DEFEATED_IN_BATTLE, "Irene: Ohhh! Too strong!\n"
+    trainertextentry 120, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "Irene: Ohhh! Too strong!\n"
     trainertextentry 120, TEXT_DEFEATED_IN_OVERWORLD, "Irene: My sister Kate will get you\nfor this!\n"
+    trainertextentry 120, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _0AF8: // Trainer 417
     trainertextentry 417, TEXT_NOTICE_IN_OVERWORLD, "Jenn: You can’t beat Irene and go\nunpunished!\r"
@@ -1288,8 +1294,9 @@ _0B48: // Trainer 74
 
 _0B54: // Trainer 75
     trainertextentry  75, TEXT_NOTICE_IN_OVERWORLD, "I’m gonna show my girlfriend I’m\nhot stuff!\r"
-    trainertextentry  75, TEXT_DEFEATED_IN_BATTLE, "I wish you would have lost for me...\n"
+    trainertextentry  75, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "I wish you would have lost for me...\n"
     trainertextentry  75, TEXT_DEFEATED_IN_OVERWORLD, "I was humiliated in front of\nmy girlfriend...\n"
+    trainertextentry  75, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _0B60: // Trainer 388
     trainertextentry 388, TEXT_NOTICE_IN_OVERWORLD, "I’m practicing my fire breathing.\r"
@@ -1415,8 +1422,9 @@ _0C8C: // Trainer 9
 
 _0C98: // Trainer 85
     trainertextentry  85, TEXT_NOTICE_IN_OVERWORLD, "No inflatable tube for me.\nI’m hanging on to a sea Pokémon!\r"
-    trainertextentry  85, TEXT_DEFEATED_IN_BATTLE, "Ooh, I’m feeling dizzy!\n"
+    trainertextentry  85, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "Ooh, I’m feeling dizzy!\n"
     trainertextentry  85, TEXT_DEFEATED_IN_OVERWORLD, "While I float like this, the waves carry\nme along.\n"
+    trainertextentry  85, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _0CA4: // Trainer 95
     trainertextentry  95, TEXT_NOTICE_IN_OVERWORLD, "The water’s warm here. I’m loose and\nlimber. Sure, I’ll take you on!\r"
@@ -1560,8 +1568,9 @@ _0DF0: // Trainer 121
 
 _0DFC: // Trainer 108
     trainertextentry 108, TEXT_NOTICE_IN_OVERWORLD, "What are your thoughts on\nraising Pokémon?\r"
-    trainertextentry 108, TEXT_DEFEATED_IN_BATTLE, "You’ve won my respect.\n"
+    trainertextentry 108, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "You’ve won my respect.\n"
     trainertextentry 108, TEXT_DEFEATED_IN_OVERWORLD, "I see you’re raising your Pokémon\nwith care.\rThe bond you build will save you in\ntough situations.\n"
+    trainertextentry 108, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _0E08: // Trainer 17
     trainertextentry  17, TEXT_NOTICE_IN_OVERWORLD, "I was training here alone.\nBehold the result of my hard work!\r"
@@ -1676,8 +1685,9 @@ _0F00: // Trainer 242
 
 _0F0C: // Trainer 239
     trainertextentry 239, TEXT_NOTICE_IN_OVERWORLD, "Nothing beats a battle when I’m on\nmy break.\r"
-    trainertextentry 239, TEXT_DEFEATED_IN_BATTLE, "Win or lose, my break’s over!\n"
+    trainertextentry 239, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "Win or lose, my break’s over!\n"
     trainertextentry 239, TEXT_DEFEATED_IN_OVERWORLD, "I guess I can’t win if I don’t\nget serious.\n"
+    trainertextentry 239, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _0F18: // Trainer 139
     trainertextentry 139, TEXT_NOTICE_IN_OVERWORLD, "I’m so bored.\nWant to battle?\r"
@@ -2135,8 +2145,9 @@ _134C: // Trainer 392
 
 _1358: // Trainer 233
     trainertextentry 233, TEXT_NOTICE_IN_OVERWORLD, "I got booted out of the Game Corner.\nI kept winning at the new Coin game,\fand they thought I was cheating...\r"
-    trainertextentry 233, TEXT_DEFEATED_IN_BATTLE, "...Grumble...\n"
+    trainertextentry 233, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "...Grumble...\n"
     trainertextentry 233, TEXT_DEFEATED_IN_OVERWORLD, "I guess I have to do things fair\nand square...\n"
+    trainertextentry 233, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _1364: // Trainer 393
     trainertextentry 393, TEXT_NOTICE_IN_OVERWORLD, "Do you consider the Pokémon types\nin battle?\rIf you know about the different types\nof Pokémon, you’ll do better in battle.\r"
@@ -2242,8 +2253,9 @@ _1450: // Trainer 699
 
 _145C: // Trainer 686
     trainertextentry 686, TEXT_NOTICE_IN_OVERWORLD, "What did you come all the way out here\nfor, I wonder.\r"
-    trainertextentry 686, TEXT_DEFEATED_IN_BATTLE, "I lost all the way out here...\n"
+    trainertextentry 686, TEXT_DOUBLE_DEFEATED_IN_BATTLE_1, "I lost all the way out here...\n"
     trainertextentry 686, TEXT_DEFEATED_IN_OVERWORLD, "Trainers are everywhere.\n"
+    trainertextentry 686, TEXT_DOUBLE_ONLY_1_POKEMON_1, "You’ve only got one Pokémon?\nCome back when you have two!\n"
 
 _1468: // Trainer 687
     trainertextentry 687, TEXT_NOTICE_IN_OVERWORLD, "Hey, hey, you’re in my way!\nRight!\r"
