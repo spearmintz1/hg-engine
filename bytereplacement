@@ -467,3 +467,17 @@ arm9 02000E54 24 00 00 00 04 5C 1E 02
 
 # show 5 digits for mart prices (Cracked Pot and other items at 10000+ printed a garbage first digit)
 0031 0225DE46 05 23
+
+# honestly will not have any way to revert this because this is so much less intrusive and Just Works
+#ifdef APPLY_ANTIPIRACY
+
+# card checks return TRUE
+0001 021E662C 01 20 70 47
+# neuter dsprotect
+0123 0225F0CC E0 FC FF FF
+0123 0225F184 E0 FC FF FF
+
+#endif
+
+# make sure that the original antipiracy method is patched to vanilla
+arm9 02000A18 1E FF 2F E1
