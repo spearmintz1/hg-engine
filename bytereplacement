@@ -459,3 +459,8 @@ arm9 020821B0 DB
 
 # nop out selection of cancel when the item won't have an effect
 arm9 0207C3AC 00 00 00 00
+
+#ifdef DEBUG_AUTO_CONTINUE_GAME
+# automatically starts the game.  does not care if there is a save or not
+arm9 02000E54 24 00 00 00 04 5C 1E 02
+#endif

@@ -14,6 +14,10 @@
 #include "../../include/constants/system_control.h"
 #include "../../include/overlay.h"
 
+#ifdef DEBUG_BATTLE_SCENARIOS
+#include "../../include/test_battle.h"
+#endif
+
 /********************************************************************************************************************/
 /********************************************************************************************************************/
 //                                                战斗前准备
@@ -52,6 +56,11 @@ struct BattleStruct *ServerInit(struct BattleSystem *bw) {
     sp->original_bgId = bw->bgId;
 
     gBattleSystem = bw;
+
+#ifdef DEBUG_BATTLE_SCENARIOS
+    // Apply test battle state (recharge, charging, etc.)
+    TestBattle_ApplyBattleState(sp);
+#endif
 
     return sp;
 }

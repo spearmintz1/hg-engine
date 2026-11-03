@@ -15,6 +15,10 @@
 #include "../../include/constants/species.h"
 #include "../../include/constants/weather_numbers.h"
 
+#ifdef DEBUG_BATTLE_SCENARIOS
+#include "../../include/test_battle.h"
+#endif
+
 enum EndTurnResolutionOrder {
     ENDTURN_WEATHER_SUBSIDING,
     ENDTURN_WEATHER_ANIMATION_AND_DAMAGE_AND_HEAL,
@@ -328,6 +332,7 @@ void ServerFieldConditionCheck(void *bw, struct BattleStruct *sp) {
                                     sp->mp.msg_para[0] = CreateNicknameTag(sp, futureCondition.affectedClient);
                                     sp->mp.msg_para[1] = sp->fcc.future_prediction_wazano[futureCondition.affectedClient];
                                     sp->battlerIdTemp = futureCondition.affectedClient;
+                                    ov12_02252D14(bw, sp); // reset damage, status
                                     sp->attack_client_work = sp->fcc.future_prediction_client_no[futureCondition.affectedClient];
                                     sp->waza_work = sp->fcc.future_prediction_wazano[futureCondition.affectedClient];
                                     sp->hp_calc_work = sp->fcc.future_prediction_damage[futureCondition.affectedClient];
@@ -335,6 +340,10 @@ void ServerFieldConditionCheck(void *bw, struct BattleStruct *sp) {
                                     sp->next_server_seq_no = sp->server_seq_no;
                                     sp->server_seq_no = CONTROLLER_COMMAND_RUN_SCRIPT;
                                     ret = 1;
+                                    sp->futureConditionQueue[sp->scc_work].conditionType.futureConditionType = FUTURE_CONDITION_NONE;
+                                } else if (sp->fcc.future_prediction_count[futureCondition.affectedClient] == 0) {
+                                    // the target fainted or its slot is empty: drop the hit instead of resolving it
+                                    sp->side_condition[IsClientEnemy(bw, futureCondition.affectedClient)] &= ~SIDE_STATUS_FUTURE_SIGHT;
                                     sp->futureConditionQueue[sp->scc_work].conditionType.futureConditionType = FUTURE_CONDITION_NONE;
                                 }
                             }
@@ -1886,6 +1895,23 @@ void ServerFieldConditionCheck(void *bw, struct BattleStruct *sp) {
 #ifdef DEBUG_ENDTURN_LOGIC
                 sprintf(buf, "In ENDTURN_END\n");
                 debugsyscall(buf);
+#endif
+
+#ifdef DEBUG_BATTLE_SCENARIOS
+                struct TestBattleScenario *scenario = TestBattle_GetCurrentScenario();
+                if (scenario != NULL && TestBattle_HasMoreExpectations()) {
+                    for (battlerId = 0; battlerId < client_set_max; ++battlerId) {
+                        if (scenario->expectations[scenario->expectationPassCount].expectationType == EXPECTATION_CURRENT_HP
+                            && battlerId == scenario->expectations[scenario->expectationPassCount].battlerIDOrPartySlot) {
+                            debug_printf("[ServerFieldConditionCheck: current HP %d:%d]", battlerId, sp->battlemon[battlerId].hp);
+                            if (sp->battlemon[battlerId].hp == scenario->expectations[scenario->expectationPassCount].expectationValue.currentHP) {
+                                debug_printf(" ✅");
+                                scenario->expectationPassCount++;
+                            }
+                            debug_printf("\n");
+                        }
+                    }
+                }
 #endif
 
                 for (int i = 0; i < client_set_max; i++) {

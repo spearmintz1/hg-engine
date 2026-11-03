@@ -6,6 +6,10 @@
 #include "../include/save.h"
 #include "../include/script.h"
 
+#ifdef DEBUG_BATTLE_SCENARIOS
+#include "../include/test_battle.h"
+#endif
+
 
 // file is directly from pokeheartgold but without the bag_cursor stuff + sPocketCounts right here
 
@@ -436,11 +440,36 @@ u32 IsPlayerOnIce(u32 collision) // run to determine if the player is on ice
     return FALSE;
 }
 
+#ifdef DEBUG_BATTLE_SCENARIOS
+u32 queueUpAutoBattleScript = 0;
+u8 pendingNextTest = 0;
+#endif
+
 BOOL IsPlayerOnLadder(void)
 {
     if (gFieldSysPtr == NULL)
         return TRUE;
     u32 collision = GetMetatileBehaviorAt(gFieldSysPtr, gFieldSysPtr->location->x, gFieldSysPtr->location->z);
     u32 mapId = gFieldSysPtr->location->mapId;
-    return (collision == 0x3C || collision == 0x3D || collision == 0x3E || mapId == 114 || mapId == 180);
+#ifdef DEBUG_BATTLE_SCENARIOS
+    // this is run every frame in the overworld, so use it to start the next test battle
+    queueUpAutoBattleScript++;
+    if (queueUpAutoBattleScript == 30) {
+        EventSet_Script(gFieldSysPtr, 2073, NULL);
+        TestBattle_QueueNextTest();
+        queueUpAutoBattleScript = 31;
+    } else if (pendingNextTest >= 20) {
+        // delay some frames to give time for memory to clean up
+        EventSet_Script(gFieldSysPtr, 2073, NULL);
+        TestBattle_QueueNextTest();
+        pendingNextTest = 0;
+    } else if (TestBattle_HasMoreTests()) {
+        pendingNextTest++;
+    }
+#endif
+    // ladder collisions
+    // bugsy gym
+    // slowpoke well entry
+    // battle tower
+    return (collision == 0x3C || collision == 0x3D || collision == 0x3E || mapId == 114 || mapId == 180 || (mapId >= 265 && mapId <= 271));
 }

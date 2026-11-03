@@ -12,6 +12,11 @@
 #include "../../include/constants/moves.h"
 #include "../../include/constants/species.h"
 
+#ifdef DEBUG_BATTLE_SCENARIOS
+#include "../../include/save.h"
+#include "../../include/test_battle.h"
+#endif
+
 // function declarations
 //BOOL BattleFormChangeCheck(void *bw, struct BattleStruct *sp, int *seq_no);
 void ClientPokemonEncount(void *bw, struct CLIENT_PARAM *cp);
@@ -977,6 +982,42 @@ void BattleEndRevertFormChange(struct BattleSystem *bw)
         newBS.itemsToRestore[i] = 0;
     }
 #endif // RESTORE_ITEMS_AT_BATTLE_END
+
+#ifdef DEBUG_BATTLE_SCENARIOS
+
+    struct TestBattleScenario *currentScenario = TestBattle_GetCurrentScenario();
+
+    while (currentScenario != NULL && TestBattle_HasMoreExpectations()) {
+        // debug_printf("Has more expectations\n");
+        // debug_printf("expectation: %d\n", currentScenario->expectations[currentScenario->expectationPassCount].expectationType);
+        if (currentScenario->expectations[currentScenario->expectationPassCount].expectationType == EXPECTATION_OVERWORLD_FORM) {
+            // debug_printf("Checking form\n");
+            struct Party *party = SaveData_GetPlayerPartyPtr(SaveBlock2_get());
+            struct PartyPokemon partyPokemon = party->members[currentScenario->expectations[currentScenario->expectationPassCount].battlerIDOrPartySlot];
+            u32 expectedForm = currentScenario->expectations[currentScenario->expectationPassCount].expectationValue.formID;
+            // debug_printf("expected form %d\n", expectedForm);
+            if (GetMonData(&partyPokemon, MON_DATA_FORM, NULL) == expectedForm) {
+                // debug_printf("Form matches expectation\n");
+                currentScenario->expectationPassCount++;
+            }
+        } else {
+            // debug_printf("Break\n");
+            break;
+        }
+    }
+
+    if (TestBattle_HasMoreExpectations()) {
+        debug_printf("expectation[%d] ❌\n", currentScenario->expectationPassCount);
+        if (currentScenario->knownFailing) {
+            SendValueThroughCommunicationSendHole(TEST_CASE_KNOWN_FAILING);
+        } else {
+            SendValueThroughCommunicationSendHole(TEST_CASE_FAIL);
+        }
+    } else {
+        SendValueThroughCommunicationSendHole(TEST_CASE_PASS);
+    }
+
+#endif // DEBUG_BATTLE_SCENARIOS
 }
 
 /**
@@ -989,16 +1030,6 @@ void BattleEndRevertFormChange(struct BattleSystem *bw)
 void LONG_CALL ClearBattleMonFlags(struct BattleStruct *sp, int client)
 {
     int i;
-    // Double-KO: the faint path (ClearBattleMonFlags_hook2) can hand us BATTLER_NONE (0xFF)
-    // as the fainting battler when both opponents faint and the single-scalar replacement
-    // state (reshuffle_client) is re-entered with no third battler left. Indexing battlemon[]
-    // (and oneTurnFlag[]/protectSuccessTurns[]/binding_turns[]) with it writes far out of
-    // bounds and crashes. A valid battler is always 0..CLIENT_MAX-1, so short-circuit the
-    // sentinel and any other out-of-range index here; single-faint callers pass a real slot
-    // and are unaffected.
-    if (client < 0 || client >= CLIENT_MAX)
-        return;
-
     // code from aero's pr
     sp->battlemon[client].slow_start_flag = 0;
     sp->battlemon[client].slow_start_end_flag = 0;

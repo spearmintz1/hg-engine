@@ -825,6 +825,8 @@ enum
 
 
 #define MAX_EVOS_PER_POKE (9)
+// every evodata file is MAX_EVOS_PER_POKE rows followed by a 2-byte terminator; the load buffer must hold all of it
+#define EVOLUTION_TABLE_FILE_SIZE (MAX_EVOS_PER_POKE * sizeof(struct Evolution) + sizeof(u16))
 
 
 #define gDimorphismTable ((u8 *)(0x020FECAE))

@@ -753,3 +753,13 @@ particleEmitCallback = 0x021E5C28 | 1;
 
 BattleSystem_GetTrainer = 0x0223A9F4 | 1;
 PartyMenu_PrintMessageOnWindow32 = 0x0207DAC4 | 1;
+
+GetMoveMaxPP = 0x0207332C | 1;
+MaskOfFlagNo = 0x020726C0 | 1;
+BattleBuffer_GetNext = 0x0225682C | 1;
+BattleController_EmitShowMonList = 0x022632DC | 1;
+BattleController_EmitShowWaitMessage = 0x02263F30 | 1;
+ov12_0223BDDC = 0x0223BDDC | 1;
+NewString_ReadMsgData = 0x0200BBA0 | 1;
+StringExpandPlaceholders = 0x0200CBBC | 1;
+BattleSystem_SetBattleOutcomeFlags = 0x0223BD20 | 1;

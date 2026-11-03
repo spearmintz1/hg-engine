@@ -908,12 +908,13 @@ int UNUSED CalcBaseDamage(void *bw, struct BattleStruct *sp, int moveno, u32 sid
 
             // handle Analytic
             if (AttackingMon.ability == ABILITY_ANALYTIC) {
-                for (i = 0; i < 4; i++) {
-                    if (attacker != i && sp->battlemon[i].hp != 0 && CalcSpeed(bw, sp, attacker, i, 0) == 0) {
+                int k;
+                for (k = 0; k < 4; k++) {
+                    if (attacker != k && sp->battlemon[k].hp != 0 && CalcSpeed(bw, sp, attacker, k, 0) == 0) {
                         break;
                     }
                 }
-                if (i == 4) {
+                if (k == 4) {
                     basePowerModifier = QMul_RoundUp(basePowerModifier, UQ412__1_3);
                     continue;
                 }
@@ -1646,7 +1647,7 @@ int UNUSED CalcBaseDamage(void *bw, struct BattleStruct *sp, int moveno, u32 sid
                 speciesWithForm = PokeOtherFormMonsNoGet(sp->battlemon[defender].species, sp->battlemon[defender].form_no);
 
                 struct Evolution *evoTable;
-                evoTable = sys_AllocMemory(0, MAX_EVOS_PER_POKE * sizeof(struct Evolution));
+                evoTable = sys_AllocMemory(0, EVOLUTION_TABLE_FILE_SIZE);
                 ArchiveDataLoad(evoTable, ARC_EVOLUTIONS, speciesWithForm);
 
                 // If a Pokémon has any evolutions, there should be an entry at the top that isn't EVO_NONE.

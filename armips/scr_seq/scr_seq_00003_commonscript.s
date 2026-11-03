@@ -87,6 +87,9 @@ scrdef scr_seq_0003_069
 scrdef scr_seq_0003_070
 scrdef scr_seq_0003_071
 scrdef scr_seq_0003_072_repels
+.if DEBUG_BATTLE_SCENARIOS
+scrdef scr_seq_0003_073_autobattle_testing
+.endif
 scrdef_end
 
 scr_seq_0003_002:
@@ -1738,8 +1741,13 @@ scr_seq_0003_064:
     releaseall
     end
 
-
-
-
+.if DEBUG_BATTLE_SCENARIOS
+// started by the AUTO_TEST battle-test hook (src/bag.c) as script 2073; the party is replaced by the test scenario
+scr_seq_0003_073_autobattle_testing:
+    lockall
+    trainer_battle 5, 0, 0, 0
+    releaseall
+    end
+.endif
 
 .close

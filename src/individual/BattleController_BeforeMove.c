@@ -266,7 +266,11 @@ void __attribute__((section (".init"))) BattleController_BeforeMove(struct Battl
             int seq_no;
 
             if ((ctx->waza_out_check_on_off & SYSCTL_SKIP_OBEDIENCE_CHECK) == 0) {
+#ifdef DEBUG_BATTLE_SCENARIOS
+                ret = 0;
+#else
                 ret = ServerBadgeCheck(bsys, ctx, &seq_no);  // 8013610h
+#endif
                 if (ret) {
                     switch (ret) {
                         case OBEY_CHECK_DO_NOTHING:
@@ -1845,8 +1849,9 @@ BOOL BattleController_CheckMoveFailures1(struct BattleSystem *bsys, struct Battl
             }
             break;
         case MOVE_METAL_BURST:
-            sideB = IsClientEnemy(bsys, ctx->oneTurnFlag[ctx->attack_client].last_damage);
-            if (!(ctx->oneTurnFlag[ctx->attack_client].last_damage && sideA != sideB && ctx->battlemon[ctx->oneTurnFlag[ctx->attack_client].last_damager].hp)) {
+            battlerId = ctx->oneTurnFlag[ctx->attack_client].last_damager;
+            sideB = IsClientEnemy(bsys, battlerId);
+            if (!(ctx->oneTurnFlag[ctx->attack_client].last_damage && sideA != sideB && ctx->battlemon[battlerId].hp)) {
                 flag = TRUE;
             }
             break;
@@ -1950,6 +1955,9 @@ void BattleController_CheckBide(struct BattleSystem *bsys, struct BattleStruct *
 }
 
 BOOL BattleController_CheckAbilityFailures1(struct BattleSystem *bsys, struct BattleStruct *ctx) {
+    if (ctx->defence_client == BATTLER_NONE) {
+        return FALSE;
+    }
     int attacker = ctx->attack_client;
     int defender = ctx->defence_client;
 
@@ -1996,7 +2004,7 @@ BOOL BattleController_CheckAbilityFailures1(struct BattleSystem *bsys, struct Ba
 BOOL BattleController_CheckInterruptibleMoves(struct BattleSystem *bsys UNUSED, struct BattleStruct *ctx) {
     int effect = ctx->moveTbl[ctx->current_move_index].effect;
     if (effect == MOVE_EFFECT_HIT_IN_3_TURNS) {
-        ctx->server_seq_no = CONTROLLER_COMMAND_25;
+        ctx->wb_seq_no = BEFORE_MOVE_END;
         return TRUE;
     }
     return FALSE;
@@ -2201,7 +2209,8 @@ BOOL BattleController_CheckStolenBySnatch(struct BattleSystem *bw UNUSED, struct
 
 BOOL BattleController_CheckSemiInvulnerability(struct BattleSystem *bsys UNUSED, struct BattleStruct *ctx, int defender) {
     if (!(ctx->waza_status_flag & MOVE_STATUS_FLAG_LOCK_ON)
-    && !(GetBattlerAbility(ctx, ctx->attack_client) != ABILITY_NO_GUARD)
+    && GetBattlerAbility(ctx, ctx->attack_client) != ABILITY_NO_GUARD
+    && GetBattlerAbility(ctx, defender) != ABILITY_NO_GUARD
     && ctx->moveTbl[ctx->current_move_index].target != RANGE_ADJACENT_OPPONENTS
     && (
         (!(ctx->server_status_flag & BATTLE_STATUS_HIT_FLY) && ctx->battlemon[defender].effect_of_moves & MOVE_EFFECT_FLAG_FLYING_IN_AIR)
@@ -2210,6 +2219,8 @@ BOOL BattleController_CheckSemiInvulnerability(struct BattleSystem *bsys UNUSED,
         || (!(ctx->server_status_flag & BATTLE_STATUS_HIT_DIVE) && ctx->battlemon[defender].effect_of_moves & MOVE_EFFECT_FLAG_IS_DIVING)
         )) {
         ctx->moveStatusFlagForSpreadMoves[defender] = WAZA_STATUS_FLAG_KIE_NOHIT;
+        ctx->battlemon[ctx->attack_client].condition2 &= ~STATUS2_LOCKED_INTO_MOVE;
+        ctx->battlemon[ctx->attack_client].effect_of_moves &= ~(MOVE_EFFECT_FLAG_SEMI_INVULNERABLE);
         LoadBattleSubSeqScript(ctx, ARC_BATTLE_SUB_SEQ, SUB_SEQ_ATTACK_MISSED);
         ctx->next_server_seq_no = ctx->server_seq_no;
         ctx->server_seq_no = CONTROLLER_COMMAND_RUN_SCRIPT;
@@ -2311,6 +2322,7 @@ BOOL BattleController_CheckProtect(struct BattleSystem *bsys, struct BattleStruc
         if (runProtectedSubseq) {
             ctx->battlerIdTemp = defender;
             UnlockBattlerOutOfCurrentMove(bsys, ctx, ctx->attack_client);
+            ctx->battlemon[ctx->attack_client].effect_of_moves &= ~(MOVE_EFFECT_FLAG_SEMI_INVULNERABLE);
             ctx->moveStatusFlagForSpreadMoves[defender] = MOVE_STATUS_FLAG_PROTECTED;
             LoadBattleSubSeqScript(ctx, ARC_BATTLE_SUB_SEQ, SUB_SEQ_PROTECTED);
             
@@ -2379,6 +2391,8 @@ BOOL BattleController_CheckAbilityFailures2(struct BattleSystem *bsys UNUSED, st
         if (scriptNum) {
             ctx->oneTurnFlag[ctx->attack_client].parental_bond_flag = 0;
             ctx->oneTurnFlag[ctx->attack_client].parental_bond_is_active = FALSE;
+            ctx->battlemon[ctx->attack_client].condition2 &= ~STATUS2_LOCKED_INTO_MOVE;
+            ctx->battlemon[ctx->attack_client].effect_of_moves &= ~(MOVE_EFFECT_FLAG_SEMI_INVULNERABLE);
             ctx->moveStatusFlagForSpreadMoves[defender] = MOVE_STATUS_FLAG_FAILED;
             ctx->battlerIdTemp = defender;
             LoadBattleSubSeqScript(ctx, ARC_BATTLE_SUB_SEQ, scriptNum);
@@ -2429,6 +2443,8 @@ BOOL BattleController_CheckLevitate(struct BattleSystem *bsys UNUSED, struct Bat
         ctx->moveStatusFlagForSpreadMoves[defender] = MOVE_STATUS_FLAG_LEVITATE_MISS;
         ctx->oneTurnFlag[ctx->attack_client].parental_bond_flag = 0;
         ctx->oneTurnFlag[ctx->attack_client].parental_bond_is_active = FALSE;
+        ctx->battlemon[ctx->attack_client].condition2 &= ~STATUS2_LOCKED_INTO_MOVE;
+        ctx->battlemon[ctx->attack_client].effect_of_moves &= ~(MOVE_EFFECT_FLAG_SEMI_INVULNERABLE);
         ctx->battlerIdTemp = defender;
         LoadBattleSubSeqScript(ctx, ARC_BATTLE_SUB_SEQ, SUB_SEQ_LEVITATE_FAIL);
         ctx->next_server_seq_no = ctx->server_seq_no;
@@ -2460,6 +2476,8 @@ BOOL BattleController_CheckAirBalloonTelekinesisMagnetRise(struct BattleSystem *
         ctx->moveStatusFlagForSpreadMoves[defender] = MOVE_STATUS_FLAG_MAGNET_RISE_MISS;
         ctx->oneTurnFlag[ctx->attack_client].parental_bond_flag = 0;
         ctx->oneTurnFlag[ctx->attack_client].parental_bond_is_active = FALSE;
+        ctx->battlemon[ctx->attack_client].condition2 &= ~STATUS2_LOCKED_INTO_MOVE;
+        ctx->battlemon[ctx->attack_client].effect_of_moves &= ~(MOVE_EFFECT_FLAG_SEMI_INVULNERABLE);
         ctx->battlerIdTemp = defender;
         LoadBattleSubSeqScript(ctx, ARC_BATTLE_SUB_SEQ, SUB_SEQ_DOESNT_AFFECT_ABILITY);
         ctx->next_server_seq_no = ctx->server_seq_no;
@@ -3083,6 +3101,7 @@ BOOL BattleController_CheckMoveAccuracy(struct BattleSystem *bsys, struct Battle
         ctx->waza_status_flag = 0;
         ctx->moveStatusFlagForSpreadMoves[defender] = MOVE_STATUS_FLAG_MISS;
         ctx->battlemon[ctx->attack_client].condition2 &= ~STATUS2_LOCKED_INTO_MOVE;
+        ctx->battlemon[ctx->attack_client].effect_of_moves &= ~(MOVE_EFFECT_FLAG_SEMI_INVULNERABLE);
         ctx->battlerIdTemp = defender;
         LoadBattleSubSeqScript(ctx, ARC_BATTLE_SUB_SEQ, SUB_SEQ_ATTACK_MISSED);
         ctx->next_server_seq_no = ctx->server_seq_no;
