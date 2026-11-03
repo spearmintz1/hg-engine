@@ -460,8 +460,15 @@
 #define SUB_SEQ_SPIKY_SHIELD                          (450)
 #define SUB_SEQ_HANDLE_ANGER_SHELL                    (451)
 #define SUB_SEQ_HANDLE_GEM_ACTIVATION_MESSAGE         (452)
+#define SUB_SEQ_BOOSTER_ENERGY                        (453)
+#define SUB_SEQ_FIELD_CONDITION_PARADOX_ABILITY       (454)
+#define SUB_SEQ_PARADOX_ABILITY_END                   (455)
+#define SUB_SEQ_ORICHALCUM_PULSE                      (456)
+#define SUB_SEQ_HADRON_ENGINE_NO_TERRAIN_SETUP        (457)
+#define SUB_SEQ_SOUL_HEART                            (458)
+#define SUB_SEQ_HANDLE_HOSPITALITY                    (459)
 
-#define MAX_BASE_SUBSCRIPT_NUM 452
+#define MAX_BASE_SUBSCRIPT_NUM 459
 
 // define your custom subscripts below like this
 // #define MOVE_SUBSCRIPT_PTR_CUSTOM_1 (MAX_BASE_SUBSCRIPT_NUM + 1)

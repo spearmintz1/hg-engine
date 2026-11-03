@@ -591,6 +591,19 @@ BOOL MoveHitDefenderAbilityCheckInternal(void *bw, struct BattleStruct *sp, int 
                 ret = TRUE;
             }
             break;
+        case ABILITY_SEED_SOWER:
+            if ((sp->terrainOverlay.type != GRASSY_TERRAIN)
+                && ((sp->oneSelfFlag[sp->defence_client].physical_damage) || (sp->oneSelfFlag[sp->defence_client].special_damage)))
+            {
+                sp->calc_work = sp->current_move_index;
+                sp->current_move_index = MOVE_GRASSY_TERRAIN;  // need this for UpdateTerrainOverlay
+                sp->addeffect_type = ADD_EFFECT_ABILITY;  // restores the current move index after the terrain script
+                sp->state_client = sp->defence_client;
+                sp->battlerIdTemp = sp->defence_client;
+                seq_no[0] = SUB_SEQ_CREATE_TERRAIN_OVERLAY;
+                ret = TRUE;
+            }
+            break;
         default:
             break;
     }

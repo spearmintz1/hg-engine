@@ -1407,6 +1407,8 @@ struct PACKED BattleStruct {
                OnceOnlyAbilityFlags onceOnlyAbilityFlags[4][6];
 
                BOOL gemBoostingMove;
+               u8 paradoxBoostedStat[CLIENT_MAX];
+               BOOL boosterEnergyActivated[CLIENT_MAX];
 };
 
 enum {
@@ -3059,6 +3061,28 @@ u32 TurnEndAbilityCheck(void *bw, struct BattleStruct *sp, int client_no);
  *  @return the highest raw stat the the client has (excluding HP)
  */
 u8 LONG_CALL BeastBoostGreatestStatHelper(struct BattleStruct *sp, u32 client);
+
+/**
+ *  @brief grab which of the client's stats after stat stages (excluding HP) is the highest for the paradox abilities
+ *
+ *  @param ctx global battle structure
+ *  @param client battler whose stats to compare among themselves
+ *  @return the highest stat (STAT_ATTACK to STAT_SPECIAL_DEFENSE)
+ */
+u8 LONG_CALL ParadoxGreatestStatHelper(struct BattleStruct *ctx, u32 client);
+
+/**
+ *  @brief activate Protosynthesis or Quark Drive for a client, through the weather/terrain or Booster Energy
+ *
+ *  @return subscript to run, or 0 if the ability does not activate
+ */
+u16 LONG_CALL ActivateParadoxAbility(void *bsys, struct BattleStruct *ctx, u8 client);
+u16 LONG_CALL ActivateHospitality(void *bsys, struct BattleStruct *ctx, u8 client);
+
+/**
+ *  @brief get a client's stat (STAT_ATTACK to STAT_SPDEF) with its stat stage applied
+ */
+u16 LONG_CALL GetStatValueWithStages(struct BattleStruct *ctx, u32 client, u8 stat);
 
 
 // defined in other_battle_calculators.c

@@ -27,9 +27,24 @@ _024:
 _029:
     PlayBattleAnimation BATTLER_CATEGORY_ATTACKER, BATTLE_ANIMATION_ELECTRIC_TERRAIN
     Wait
+    CompareVarToValue OPCODE_NEQ, BSCRIPT_VAR_SIDE_EFFECT_TYPE, SIDE_EFFECT_TYPE_ABILITY, _electricTerrainMessage
+    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_HADRON_ENGINE, _hadronEngineMessage
+
+_electricTerrainMessage:
     // An electric current ran across the battlefield!
     PrintMessage 1392, TAG_NONE
-    GoTo _037
+    GoTo _activateParadoxAbility
+
+_hadronEngineMessage:
+    // {0} turned the ground into Electric Terrain, energizing its futuristic engine!
+    PrintMessage 1622, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+
+_activateParadoxAbility:
+    Wait
+    WaitButtonABTime 30
+    // Booster Energy or Electric Terrain
+    ActivateParadoxAbility ABILITY_QUARK_DRIVE
+    GoTo _afterParadoxAbility
 
 _034:
     PlayBattleAnimation BATTLER_CATEGORY_ATTACKER, BATTLE_ANIMATION_PSYCHIC_TERRAIN
@@ -40,6 +55,11 @@ _034:
 _037:
     Wait
     WaitButtonABTime 30
+    ResetParadoxAbility ABILITY_QUARK_DRIVE
+    // Booster Energy
+    ActivateParadoxAbility ABILITY_QUARK_DRIVE
+
+_afterParadoxAbility:
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_MOVE_ANIMATIONS_OFF
     // restore the mon's current move to the original one
     CompareVarToValue OPCODE_NEQ, BSCRIPT_VAR_SIDE_EFFECT_TYPE, SIDE_EFFECT_TYPE_ABILITY, _049

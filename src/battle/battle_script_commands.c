@@ -92,6 +92,8 @@ BOOL btl_scr_cmd_101_addentryhazardtoqueue(void *bsys UNUSED, struct BattleStruc
 void BattleContext_RemoveEntryHazardFromQueue(struct BattleStruct *ctx, u32 side, u32 hazard);
 BOOL btl_scr_cmd_102_removeentryhazardfromqueue(void *bsys UNUSED, struct BattleStruct *ctx);
 BOOL btl_scr_cmd_103_checkprotectcontactmoves(void *bsys, struct BattleStruct *ctx);
+BOOL btl_scr_cmd_104_activateparadoxability(void *bsys, struct BattleStruct *ctx);
+BOOL btl_scr_cmd_105_resetparadoxability(void *bsys, struct BattleStruct *ctx);
 BOOL BtlCmd_GoToMoveScript(struct BattleSystem *bsys, struct BattleStruct *ctx);
 BOOL BtlCmd_WeatherHPRecovery(void *bw, struct BattleStruct *sp);
 BOOL BtlCmd_CalcWeatherBallParams(void *bw, struct BattleStruct *sp);
@@ -375,6 +377,8 @@ const u8 *BattleScrCmdNames[] =
     "AddEntryHazardToQueue",
     "RemoveEntryHazardFromQueue",
     "CheckProtectContactMoves",
+    "ActivateParadoxAbility",
+    "ResetParadoxAbility",
     // "YourCustomCommand",
 };
 
@@ -421,6 +425,8 @@ const btl_scr_cmd_func NewBattleScriptCmdTable[] =
     [0x101 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_101_addentryhazardtoqueue,
     [0x102 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_102_removeentryhazardfromqueue,
     [0x103 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_103_checkprotectcontactmoves,
+    [0x104 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_104_activateparadoxability,
+    [0x105 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_105_resetparadoxability,
     // [BASE_ENGINE_BTL_SCR_CMDS_MAX - START_OF_NEW_BTL_SCR_CMDS + 1] = btl_scr_cmd_custom_01_your_custom_command,
 };
 
@@ -3981,6 +3987,88 @@ BOOL BtlCmd_TrySwapItems(void* bw, struct BattleStruct *sp)
         IncrementBattleScriptPtr(sp, attack);
     else if (MoldBreakerAbilityCheck(sp, sp->attack_client, sp->defence_client, ABILITY_STICKY_HOLD) == TRUE)
         IncrementBattleScriptPtr(sp, defence);
+
+    return FALSE;
+}
+
+/**
+ * @brief Activate all clients' Paradox Abilities depending on input.
+ *        ActivateParadoxAbility will do the other checks
+ *
+ * Inputs:
+ * 1. ABILITY_PROTOSYNTHESIS or ABILITY_QUARK_DRIVE
+ *
+ * @param bsys BattleSystem
+ * @param ctx BattleContext
+ * @return FALSE
+ */
+BOOL btl_scr_cmd_104_activateparadoxability(void *bsys, struct BattleStruct *ctx)
+{
+    IncrementBattleScriptPtr(ctx, 1);
+
+    // ABILITY_PROTOSYNTHESIS or ABILITY_QUARK_DRIVE
+    u32 abilityToCheck = read_battle_script_param(ctx);
+
+    u8 i;
+    u8 maxBattlers = BattleWorkClientSetMaxGet(bsys);
+    u16 seq_no;
+    u8 client;
+
+    SortRawSpeedNonRNGArray(bsys, ctx);
+    for (i = 0; i < maxBattlers; i++) {
+        seq_no = 0;
+        client = ctx->rawSpeedNonRNGClientOrder[i];
+        if (GetBattlerAbility(ctx, client) == abilityToCheck) {
+            // this function will do the other checks (Sunny/Elec Terrain or Booster Energy)
+            seq_no = ActivateParadoxAbility(bsys, ctx, client);
+        }
+        if (seq_no == SUB_SEQ_FIELD_CONDITION_PARADOX_ABILITY
+            || seq_no == SUB_SEQ_BOOSTER_ENERGY) {
+            // Jump back to instruction to rerun this command on the next client
+            IncrementBattleScriptPtr(ctx, -2);
+            SkillSequenceGosub(ctx, ARC_BATTLE_SUB_SEQ, seq_no);
+            break;
+        }
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief Reset all clients' Paradox Abilities depending on input.
+ *
+ * Inputs:
+ * 1. ABILITY_PROTOSYNTHESIS or ABILITY_QUARK_DRIVE
+ *
+ * @param bsys BattleSystem
+ * @param ctx BattleContext
+ * @return FALSE
+ */
+BOOL btl_scr_cmd_105_resetparadoxability(void *bsys, struct BattleStruct *ctx)
+{
+    IncrementBattleScriptPtr(ctx, 1);
+
+    // ABILITY_PROTOSYNTHESIS or ABILITY_QUARK_DRIVE
+    u32 abilityToCheck = read_battle_script_param(ctx);
+
+    u8 i;
+    u8 maxBattlers = BattleWorkClientSetMaxGet(bsys);
+    u8 client;
+
+    SortRawSpeedNonRNGArray(bsys, ctx);
+    for (i = 0; i < maxBattlers; i++) {
+        client = ctx->rawSpeedNonRNGClientOrder[i];
+        if (GetBattlerAbility(ctx, client) == abilityToCheck
+            && !ctx->boosterEnergyActivated[client]
+            && (ctx->paradoxBoostedStat[client] > 0)) {
+            // jump back to instruction to rerun this command on the next client
+            IncrementBattleScriptPtr(ctx, -2);
+            ctx->paradoxBoostedStat[client] = 0;
+            ctx->battlerIdTemp = client;
+            SkillSequenceGosub(ctx, ARC_BATTLE_SUB_SEQ, SUB_SEQ_PARADOX_ABILITY_END);
+            return FALSE;
+        }
+    }
 
     return FALSE;
 }
