@@ -95,7 +95,7 @@ const u16 *_0210FA3C[] = {
     _020FBA98, 16
     _020FBA5A, 17
     _020FBC02, 18
-    _020FBC4E, 19
+    _020FBC50, 19
     _020FBC68, 20
     _020FBA68, 21
     _020FBBC6, 22 
@@ -155,13 +155,14 @@ const u16 *_0210FA3C[] = {
 
 .org 0x020FBB08
 /* Celadon Dept Store 5F -> Goldenrod/Celadon Dept Store 2F (reduced inventory) */
-.halfword ITEM_POTION
+/* The 7 halfword slot is full to the next list at 0x020FBB16, so 6 items + terminator is the most that fits */
 .halfword ITEM_SUPER_POTION
 .halfword ITEM_HYPER_POTION
 .halfword ITEM_MAX_POTION
 .halfword ITEM_REVIVE
 .halfword ITEM_FULL_HEAL
 .halfword ITEM_EXP_SHARE
+.halfword 0xFFFF
 
 /* const u16 _020FBB16[] = {ITEM_POKE_DOLL, ITEM_FRESH_WATER, ITEM_SODA_POP, ITEM_LEMONADE, ITEM_REPEL, ITEM_HEART_MAIL, 0xFFFF}; */
 /* const u16 _020FBB84[] = {ITEM_ULTRA_BALL, ITEM_MAX_REPEL, ITEM_HYPER_POTION, ITEM_MAX_POTION, ITEM_FULL_RESTORE, ITEM_REVIVE, ITEM_FULL_HEAL, 0xFFFF}; */
@@ -257,10 +258,15 @@ const u16 *_0210FA3C[] = {
 .halfword ITEM_LINKING_CORD
 .halfword ITEM_METAL_ALLOY
 .halfword ITEM_PEAT_BLOCK
+.halfword 0xFFFF
 
 /* const u16 _020FBC4E[] = {ITEM_POKE_BALL, ITEM_GREAT_BALL, ITEM_ULTRA_BALL, ITEM_ESCAPE_ROPE, ITEM_POKE_DOLL, ITEM_REPEL, ITEM_SUPER_REPEL, ITEM_MAX_REPEL, ITEM_GRASS_MAIL, ITEM_FLAME_MAIL, ITEM_BUBBLE_MAIL, ITEM_SPACE_MAIL, 0xFFFF}; */
 
-.org 0x020FBC4E
+/* _020FBC34 takes the halfword the vanilla _020FBC4E list started at, so this list moves up to 0x020FBC50 and index 19 of the special mart table at 0x0210FA3C is repointed to it */
+.org 0x0210FA88
+.word 0x020FBC50
+
+.org 0x020FBC50
 /* Celadon Dept Store 2F -> Safari Zone Gate */
 .halfword ITEM_GALARICA_CUFF
 .halfword ITEM_GALARICA_WREATH
@@ -271,7 +277,6 @@ const u16 *_0210FA3C[] = {
 .halfword ITEM_TART_APPLE
 .halfword ITEM_MALICIOUS_ARMOR
 .halfword ITEM_AUSPICIOUS_ARMOR
-.halfword 0xFFFF
 .halfword 0xFFFF
 .halfword 0xFFFF
 .halfword 0xFFFF

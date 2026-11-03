@@ -464,3 +464,6 @@ arm9 0207C3AC 00 00 00 00
 # automatically starts the game.  does not care if there is a save or not
 arm9 02000E54 24 00 00 00 04 5C 1E 02
 #endif
+
+# show 5 digits for mart prices (Cracked Pot and other items at 10000+ printed a garbage first digit)
+0031 0225DE46 05 23
