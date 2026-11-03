@@ -183,7 +183,6 @@ void ServerHPCalc(struct BattleSystem *bw, struct BattleStruct *sp)
             sp->oneTurnFlag[sp->defence_client].last_damager = sp->attack_client;
 
             sp->battlerIdTemp = sp->defence_client;
-            sp->hit_damage = sp->damage;
             sp->hp_calc_work = sp->damage;
 
             LoadBattleSubSeqScript(sp, ARC_BATTLE_SUB_SEQ, SUB_SEQ_HP_CHANGE);
