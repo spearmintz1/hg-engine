@@ -36,6 +36,7 @@ ALIGN4 struct ILLUSION_STRUCT gIllusionStruct =
 {
     .illusionClient = {CLIENT_MAX, CLIENT_MAX, CLIENT_MAX, CLIENT_MAX},
     .illusionPos = {6, 6, 6, 6},
+    .illusionCopiedPos = {6, 6, 6, 6},
 };
 
 /**
@@ -294,6 +295,7 @@ void ClientPokemonEncount(void *bw, struct CLIENT_PARAM *cp)
             pep->rare = newshiny;
 
             gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, side)] = side;
+            gIllusionStruct.illusionCopiedPos[SanitizeClientForTeamAccess(bw, side)] = illusionIndex;
             if (!(gIllusionStruct.isSideInIllusion & No2Bit(SanitizeClientForTeamAccess(bw, side))))
             {
                 gIllusionStruct.isSideInIllusion |= No2Bit(SanitizeClientForTeamAccess(bw, side));
@@ -350,6 +352,7 @@ void ClientPokemonEncountAppear(void *bw, struct CLIENT_PARAM *cp)
             pap->rare = newshiny;
 
             gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, side)] = side;
+            gIllusionStruct.illusionCopiedPos[SanitizeClientForTeamAccess(bw, side)] = illusionIndex;
             if (!(gIllusionStruct.isSideInIllusion & No2Bit(SanitizeClientForTeamAccess(bw, side))))
             {
                 gIllusionStruct.isSideInIllusion |= No2Bit(SanitizeClientForTeamAccess(bw, side));
@@ -406,6 +409,7 @@ void ClientPokemonAppear(void *bw, struct CLIENT_PARAM *cp)
             pap->rare = newshiny;
 
             gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, side)] = side;
+            gIllusionStruct.illusionCopiedPos[SanitizeClientForTeamAccess(bw, side)] = illusionIndex;
             if (!(gIllusionStruct.isSideInIllusion & No2Bit(SanitizeClientForTeamAccess(bw, side))))
             {
                 gIllusionStruct.isSideInIllusion |= No2Bit(SanitizeClientForTeamAccess(bw, side));
@@ -444,13 +448,7 @@ int MessageParam_GetNickname(void *bw, struct BattleStruct *sp, int para)
      && gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, client)] == client
      && gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client)] == sp->sel_mons_no[client])
     {
-        struct Party *party;
-        u32 count;
-
-        party = BattleWorkPokePartyGet(bw, client);
-        count = Party_GetIllusionImitatedIndex(party, sp->sel_mons_no[client]);
-
-        ret |= count << 8;
+        ret |= gIllusionStruct.illusionCopiedPos[SanitizeClientForTeamAccess(bw, client)] << 8;
     }
     else if (para == 0x16) // switch after the attack?
     {
@@ -618,9 +616,9 @@ void CT_EncountSendOutMessageParamMake(void *bw, struct CLIENT_PARAM *cp, struct
              && ((DoesSideHave2Battlers(bw, cp->client_no))
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && party->count > 2)
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE)) == 0)
-             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == esomp->sel_mons_no[client2]))
+             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] == esomp->sel_mons_no[client2]))
             {
-                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] = esomp->sel_mons_no[client2];
+                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] = esomp->sel_mons_no[client2];
                 esomp->sel_mons_no[client2] = Party_GetIllusionImitatedIndex(party, esomp->sel_mons_no[client2]);
             }
         }
@@ -776,9 +774,9 @@ void CT_EncountSendOutMessageParamMake(void *bw, struct CLIENT_PARAM *cp, struct
              && ((DoesSideHave2Battlers(bw, cp->client_no))
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && party->count > 2)
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE)) == 0)
-             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == esomp->sel_mons_no[client2]))
+             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] == esomp->sel_mons_no[client2]))
             {
-                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] = esomp->sel_mons_no[client2];
+                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] = esomp->sel_mons_no[client2];
                 esomp->sel_mons_no[client2] = Party_GetIllusionImitatedIndex(party, esomp->sel_mons_no[client2]);
             }
         }
@@ -929,6 +927,7 @@ void BattleEndRevertFormChange(struct BattleSystem *bw)
         gIllusionStruct.isSideInIllusion &= ~No2Bit(SanitizeClientForTeamAccess(bw, i));
         gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, i)] = CLIENT_MAX;
         gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, i)] = 6;
+        gIllusionStruct.illusionCopiedPos[SanitizeClientForTeamAccess(bw, i)] = 6;
         for (j = 0; j < 11; j++)
             gIllusionStruct.illusionNameBuf[SanitizeClientForTeamAccess(bw, i)][j] = 0;
     }
@@ -1225,7 +1224,7 @@ struct PartyPokemon *TargetSelectGrabIllusionPartyPokemon(void *bw, u32 client, 
 
     if (gIllusionStruct.isSideInIllusion & No2Bit(SanitizeClientForTeamAccess(bw, client))
      && gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, client)] == client) {
-        pp = BattleWorkPokemonParamGet(bw, client, Party_GetIllusionImitatedIndex(BattleWorkPokePartyGet(bw, client), gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client)]));
+        pp = BattleWorkPokemonParamGet(bw, client, gIllusionStruct.illusionCopiedPos[SanitizeClientForTeamAccess(bw, client)]);
     } else {
         pp = BattleWorkPokemonParamGet(bw, client, pos);
     }

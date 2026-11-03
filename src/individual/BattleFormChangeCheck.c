@@ -273,6 +273,7 @@ BOOL BattleFormChangeCheck(void *bw, struct BattleStruct *sp, int *seq_no)
             gIllusionStruct.isSideInIllusion &= ~No2Bit(SanitizeClientForTeamAccess(bw, sp->battlerIdTemp));
             gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, sp->battlerIdTemp)] = CLIENT_MAX;
             gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, sp->battlerIdTemp)] = 6;
+            gIllusionStruct.illusionCopiedPos[SanitizeClientForTeamAccess(bw, sp->battlerIdTemp)] = 6;
             for (int k = 0; k < 11; k++)
             {
                 sp->battlemon[sp->battlerIdTemp].nickname[k] = gIllusionStruct.illusionNameBuf[SanitizeClientForTeamAccess(bw, sp->battlerIdTemp)][k];

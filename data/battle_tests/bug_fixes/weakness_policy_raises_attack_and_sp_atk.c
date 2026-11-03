@@ -1,4 +1,4 @@
-// Test: Weakness Policy must activate when its holder is hit super effectively and announce the sharp Attack and Sp. Atk boosts
+// Test: Weakness Policy must activate when its holder is hit super effectively and report each sharp boost with the normal stat message
 #include "../battle_tests.h"
 BEGIN_TEST
 {
@@ -53,8 +53,8 @@ BEGIN_TEST
     },
     },
     .expectations = {
-        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The Weakness Policy sharply boosted Snorlax's Attack!" },
-        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The Weakness Policy sharply boosted Snorlax's Sp. Atk!" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "Snorlax's Attack rose sharply!" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "Snorlax's Sp. Atk rose sharply!" },
     },
 }
 END_TEST
