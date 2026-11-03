@@ -98,6 +98,24 @@ void LONG_CALL BattleController_MoveEndInternal(struct BattleSystem *bsys, struc
                 ctx->oneTurnFlag[ctx->attack_client].chargeProcessedFlag = 1;
         }
 
+        // Fell Stinger: +3 Attack when the target is knocked out by the move
+        if (ctx->current_move_index == MOVE_FELL_STINGER
+            && ctx->oneTurnFlag[ctx->attack_client].fellStingerProcessedFlag == FALSE
+            && ctx->defence_client != BATTLER_NONE
+            && ctx->battlemon[ctx->defence_client].hp == 0
+            && ctx->oneSelfFlag[ctx->defence_client].physical_damager == ctx->attack_client
+            && ctx->battlemon[ctx->attack_client].hp != 0
+            && ctx->battlemon[ctx->attack_client].states[STAT_ATTACK] < 12) {
+            ctx->oneTurnFlag[ctx->attack_client].fellStingerProcessedFlag = TRUE;
+            ctx->addeffect_param = ADD_STATUS_EFF_BOOST_STATS_ATTACK_UP_3;
+            ctx->addeffect_type = ADD_EFFECT_INDIRECT;
+            ctx->state_client = ctx->attack_client;
+            LoadBattleSubSeqScript(ctx, 1, SUB_SEQ_BOOST_STATS);
+            ctx->next_server_seq_no = ctx->server_seq_no;
+            ctx->server_seq_no = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
+        }
+
         switch (GetBattlerAbility(ctx, ctx->attack_client)) {
             case ABILITY_BEAST_BOOST:
                 if (ctx->oneTurnFlag[ctx->attack_client].numberOfKOs) {
