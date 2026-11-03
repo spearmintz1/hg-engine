@@ -163,6 +163,9 @@
 // REUSABLE_TMS will make TMs infinite and hide the quantity number.
 #define REUSABLE_TMS
 
+// MART_EXPANSION replaces the arm9 mart tables with the C-side marts in src/field/mart.c: badge and game clear gated general mart, one list per special mart
+#define MART_EXPANSION
+
 // STATIC_HP_BAR updates the HP bar to increase/decrease at a fixed rate like later generations
 #define STATIC_HP_BAR
 
