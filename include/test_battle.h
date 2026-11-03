@@ -81,7 +81,8 @@ struct PACKED TestBattleScenario {
     u32 weather; // WEATHER_RAIN, WEATHER_SANDSTORM, etc.
     u32 fieldCondition; // FIELD_CONDITION_TRICK_ROOM_INIT, etc.
     u8 terrain; // GRASSY_TERRAIN, MISTY_TERRAIN, etc.
-    u8 _padding[3]; // Compiler adds 3 bytes padding to align struct to 4-byte boundary
+    u8 expShareOff; // TRUE switches the Exp. Share key item off for the scenario, FALSE (the default) leaves it on
+    u8 _padding[2]; // together with expShareOff, the 3 bytes of padding that align the struct to 4 bytes
     struct TestBattlePokemon playerParty[6]; // Player party
     struct TestBattlePokemon enemyParty[6]; // Enemy's party
 

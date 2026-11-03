@@ -155,13 +155,12 @@ const u16 *_0210FA3C[] = {
 
 .org 0x020FBB08
 /* Celadon Dept Store 5F -> Goldenrod/Celadon Dept Store 2F (reduced inventory) */
-/* The 7 halfword slot is full to the next list at 0x020FBB16, so 6 items + terminator is the most that fits */
+/* The 7 halfword slot runs to the next list at 0x020FBB16, so 6 items + terminator is the most that fits; 5 are used */
 .halfword ITEM_SUPER_POTION
 .halfword ITEM_HYPER_POTION
 .halfword ITEM_MAX_POTION
 .halfword ITEM_REVIVE
 .halfword ITEM_FULL_HEAL
-.halfword ITEM_EXP_SHARE
 .halfword 0xFFFF
 
 /* const u16 _020FBB16[] = {ITEM_POKE_DOLL, ITEM_FRESH_WATER, ITEM_SODA_POP, ITEM_LEMONADE, ITEM_REPEL, ITEM_HEART_MAIL, 0xFFFF}; */

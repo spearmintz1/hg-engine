@@ -282,11 +282,13 @@ BOOL LONG_CALL THUMB_FUNC ItemFieldUseFunc_UnownReport(struct ItemFieldUseData *
 void LONG_CALL THUMB_FUNC ItemMenuUseFunc_DowsingMchn(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2);
 BOOL LONG_CALL THUMB_FUNC ItemFieldUseFunc_DowsingMchn(struct ItemFieldUseData *data);
 BOOL LONG_CALL THUMB_FUNC ItemFieldUseFunc_GbSounds(struct ItemFieldUseData *data);
+BOOL LONG_CALL THUMB_FUNC Task_ItemUsePrintMessage(TaskManager *taskManager); // prints the string in the work (see struct ItemUseMessageWork in item.c), waits for a button, frees both
 void LONG_CALL THUMB_FUNC ItemMenuUseFunc_Gracidea(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2);
 BOOL LONG_CALL THUMB_FUNC ItemFieldUseFunc_Gracidea(struct ItemFieldUseData *data);
 void LONG_CALL THUMB_FUNC ItemMenuUseFunc_VSRecorder(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2);
 BOOL LONG_CALL THUMB_FUNC ItemFieldUseFunc_VSRecorder(struct ItemFieldUseData *data);
 void *LONG_CALL sub_0203FAE8(FieldSystem *fsys, u32 heapId, u32 itemId);
+void LONG_CALL sub_020505C0(FieldSystem *fieldSystem); // prepares the field for the bag to close into an exit task (Bicycle, Dowsing Machine)
 void LONG_CALL sub_0203C8F0(struct BagViewAppWork *env, u32 task); // task is a func ptr
 void LONG_CALL RegisteredItem_CreateGoToAppTask(struct ItemFieldUseData *data, FieldApplicationWorkCtor ctorTask, BOOL something);
 

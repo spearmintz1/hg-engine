@@ -162,6 +162,7 @@ scr_seq_0843_002:
     wait_movement
     gender_msgbox 36, 37
     closemsg
+    call scr_seq_0843_give_exp_share
     apply_movement 0, scr_seq_0843_12B2
     wait_movement
     gender_msgbox 38, 39
@@ -594,6 +595,7 @@ scr_seq_0843_0804:
     wait_movement
     gender_msgbox 36, 37
     closemsg
+    call scr_seq_0843_give_exp_share
     apply_movement 0, scr_seq_0843_12B2
     wait_movement
     gender_msgbox 38, 39
@@ -612,6 +614,17 @@ scr_seq_0843_0804:
     setvar VAR_SCENE_ROUTE_30_PHONE_CALL, 1
     releaseall
     end
+
+scr_seq_0843_give_exp_share:
+    npc_msg 107
+    closemsg
+    goto_if_no_item_space ITEM_EXP_SHARE, 1, scr_seq_0843_exp_share_bag_full
+    callstd std_give_item_verbose
+    return
+
+scr_seq_0843_exp_share_bag_full:
+    callstd std_bag_is_full
+    return
 
 scr_seq_0843_0959:
     npc_msg 29

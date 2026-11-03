@@ -11,6 +11,7 @@
 #include "../include/constants/moves.h"
 #include "../include/constants/species.h"
 #include "../include/pokemon.h"
+#include "../include/save.h"
 #include "../include/test_battle.h"
 
 #define TEST_START_INDEX 0
@@ -244,6 +245,12 @@ void LONG_CALL TestBattle_OverrideParties(struct BATTLE_PARAM *bp)
     const struct TestBattleScenario *scenario = sCurrentScenario;
 
     ResetScriptIndices();
+
+    if (scenario->expShareOff) {
+        SetScriptFlag(FLAG_EXP_SHARE_OFF);
+    } else {
+        ClearScriptFlag(FLAG_EXP_SHARE_OFF);
+    }
 
     int enemyCount = 0;
     for (int i = 0; i < 6; i++) {

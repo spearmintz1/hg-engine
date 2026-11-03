@@ -81,6 +81,7 @@
 // System flags that need to be enabled for the player to use the gimmick. If you want to change them, remember to change them in flags.s as well for consistency
 #define FLAG_GAME_CLEAR 2404 // set by the game when the hall of fame is entered; selects the post-game level cap row
 #define FLAG_BUG_CONTEST_ACTIVE 2454 // set by the game for the duration of the bug-catching contest (Save_VarsFlags_CheckBugContestFlag)
+#define FLAG_EXP_SHARE_OFF 2522 // set while the Exp. Share key item is switched off; clear (the default) means on, so new and existing saves start with it on
 #define FLAG_MEGA_EVOLUTION_ENABLED 2518
 //#define FLAG_Z_MOVE_ENABLED 2519
 //#define FLAG_DYNAMAX_ENABLED 2520
