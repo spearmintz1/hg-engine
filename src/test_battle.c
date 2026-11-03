@@ -153,11 +153,12 @@ static void LONG_CALL TestBattle_OverridePokemon(struct PartyPokemon *mon, u16 s
 
     PokeParaSet(mon, species, level, 31, FALSE, 0, 0, 0);
     SetMonData(mon, MON_DATA_FORM, &form);
-    if (ability == TEST_ABILITY_HIDDEN || ability == TEST_ABILITY_PERSONAL_SLOT_2) {
+    if (ability == TEST_ABILITY_HIDDEN || ability == TEST_ABILITY_PERSONAL_SLOT_1 || ability == TEST_ABILITY_PERSONAL_SLOT_2) {
         if (ability == TEST_ABILITY_HIDDEN) {
             SET_MON_HIDDEN_ABILITY_BIT(mon);
         } else {
-            u32 pid = GetMonData(mon, MON_DATA_PERSONALITY, NULL) | 1; // an odd personality picks the second slot
+            u32 pid = GetMonData(mon, MON_DATA_PERSONALITY, NULL);
+            pid = (ability == TEST_ABILITY_PERSONAL_SLOT_2) ? (pid | 1) : (pid & ~1u); // an odd personality picks the second slot, an even one the first
             SetMonData(mon, MON_DATA_PERSONALITY, &pid);
         }
         ResetPartyPokemonAbility(mon);
@@ -254,6 +255,7 @@ void LONG_CALL TestBattle_OverrideParties(struct BATTLE_PARAM *bp)
     const struct TestBattleScenario *scenario = sCurrentScenario;
 
     ResetScriptIndices();
+    Sav2_PlayerData_GetProfileAddr(SaveBlock2_get())->johtoBadges = scenario->johtoBadges;
 
     int enemyCount = 0;
     for (int i = 0; i < 6; i++) {

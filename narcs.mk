@@ -3,6 +3,13 @@
 # NARC_FILES handles prereqs for move_narc
 # MSGDATA_COMPILETIME_DEPENDENCIES handles prereqs for msgdata
 
+# narcpy packs every file in a directory, so a stale build output (left by a renamed or deleted source) would shift
+# every later NARC index. pack_built_narc(dir,objs) removes anything in dir that is not one of objs, then packs dir into $@.
+define pack_built_narc
+	rm -f $(filter-out $(2),$(wildcard $(1)/*))
+	$(NARCHIVE) create $@ $(1) -nf
+endef
+
 MSGDATA_DIR := $(BUILD)/text
 MSGDATA_NARC := $(BUILD_NARC)/msg_data.narc
 MSGDATA_TARGET := $(FILESYS)/a/0/2/7
@@ -287,7 +294,7 @@ $(MOVEANIM_DIR)/0_%:$(MOVEANIM_DEPENDENCIES_DIR)/%.s
 	$(ARMIPS) $<
 
 $(MOVEANIM_NARC): $(MOVEANIM_OBJS)
-	$(NARCHIVE) create $@ $(MOVEANIM_DIR) -nf
+	$(call pack_built_narc,$(MOVEANIM_DIR),$(MOVEANIM_OBJS))
 
 NARC_FILES += $(MOVEANIM_NARC)
 REQUIRED_DIRECTORIES += $(MOVEANIM_DIR)
@@ -305,7 +312,7 @@ $(MOVESUBANIM_DIR)/1_%:$(MOVESUBANIM_DEPENDENCIES_DIR)/%.s
 	$(ARMIPS) $<
 
 $(MOVESUBANIM_NARC): $(MOVESUBANIM_OBJS)
-	$(NARCHIVE) create $@ $(MOVESUBANIM_DIR) -nf
+	$(call pack_built_narc,$(MOVESUBANIM_DIR),$(MOVESUBANIM_OBJS))
 
 NARC_FILES += $(MOVESUBANIM_NARC)
 REQUIRED_DIRECTORIES += $(MOVESUBANIM_DIR)
@@ -336,7 +343,7 @@ $(MOVE_SEQ_DIR)/1_%:$(MOVE_SEQ_CUSTOM_DIR)/%.s
 	$(OBJCOPY) -O binary $(patsubst $(MOVE_SEQ_CUSTOM_DIR)/%.s,$(MOVE_SEQ_OBJ_DIR)/1_%_linked.o,$<) $@
 
 $(MOVE_SEQ_NARC): $(MOVE_SEQ_OBJS)
-	$(NARCHIVE) create $@ $(MOVE_SEQ_DIR) -nf
+	$(call pack_built_narc,$(MOVE_SEQ_DIR),$(MOVE_SEQ_OBJS))
 
 $(OUTPUT):$(LINK)
 
@@ -367,7 +374,7 @@ $(BATTLE_EFF_DIR)/1_%:$(BATTLE_EFF_CUSTOM_DIR)/%.s
 	$(OBJCOPY) -O binary $(patsubst $(BATTLE_EFF_CUSTOM_DIR)/%.s,$(BATTLE_EFF_OBJ_DIR)/1_%_linked.o,$<) $@
 
 $(BATTLE_EFF_NARC): $(BATTLE_EFF_OBJS)
-	$(NARCHIVE) create $@ $(BATTLE_EFF_DIR) -nf
+	$(call pack_built_narc,$(BATTLE_EFF_DIR),$(BATTLE_EFF_OBJS))
 
 NARC_FILES += $(BATTLE_EFF_NARC)
 REQUIRED_DIRECTORIES += $(BATTLE_EFF_DIR) $(BATTLE_EFF_OBJ_DIR)
@@ -396,7 +403,7 @@ $(BATTLE_SUB_DIR)/2_%:$(BATTLE_SUB_CUSTOM_DIR)/%.s
 	$(OBJCOPY) -O binary $(patsubst $(BATTLE_SUB_CUSTOM_DIR)/%.s,$(BATTLE_SUB_OBJ_DIR)/2_%_linked.o,$<) $@
 
 $(BATTLE_SUB_NARC): $(BATTLE_SUB_OBJS)
-	$(NARCHIVE) create $@ $(BATTLE_SUB_DIR) -nf
+	$(call pack_built_narc,$(BATTLE_SUB_DIR),$(BATTLE_SUB_OBJS))
 
 NARC_FILES += $(BATTLE_SUB_NARC)
 REQUIRED_DIRECTORIES += $(BATTLE_SUB_DIR) $(BATTLE_SUB_OBJ_DIR)
