@@ -2356,6 +2356,47 @@ u32 LONG_CALL GenerateShinyPIDKeepSubstructuresIntact(u32 otId, u32 pid)
     return pid;
 }
 
+#define SHINY_CHARM_EXTRA_ROLLS 2
+#define SHINY_CHARM_MAX_TRIES 4096 // per extra roll; a roll that finds no matching pid within this many tries is skipped
+#define PID_SUBSTRUCT_ORDER_MASK 0x0003E000 // the bits GetSubstruct reads to order a mon's data blocks
+
+/**
+ *  @brief give a freshly generated pid the Shiny Charm's extra shiny rolls
+ *
+ *  an extra roll draws a random pid with the same nature, gender, ability slot and substructure order as the pid it may replace,
+ *  so nature forcing, Synchronize, Cute Charm and the day care's inherited nature stay intact and the mon's data stays readable.
+ *  the first extra pid that is shiny wins; if none is, the pid passed in is kept.
+ *  the shininess threshold is untouched, so mons that already exist keep their shininess.
+ *
+ *  @param pid personality id the mon was generated with
+ *  @param otid original trainer id the mon will have
+ *  @param species species index, for the gender check
+ *  @returns the pid to use
+ */
+u32 LONG_CALL ApplyShinyCharmRolls(u32 pid, u32 otid, u32 species)
+{
+    u32 roll, tries, candidate;
+    u32 nature = pid % 25;
+    u32 gender = PokeSexGetMonsNo(species, pid);
+
+    if (SHINY_CHECK(otid, pid) || !Bag_HasItem(Sav2_Bag_get(SaveBlock2_get()), ITEM_SHINY_CHARM, 1, HEAPID_DEFAULT))
+        return pid;
+
+    for (roll = 0; roll < SHINY_CHARM_EXTRA_ROLLS; roll++)
+    {
+        for (tries = 0; tries < SHINY_CHARM_MAX_TRIES; tries++)
+        {
+            candidate = (gf_rand() | (gf_rand() << 16));
+            candidate = (candidate & ~PID_SUBSTRUCT_ORDER_MASK) | (pid & PID_SUBSTRUCT_ORDER_MASK);
+            if (candidate % 25 == nature && (candidate & 1) == (pid & 1) && PokeSexGetMonsNo(species, candidate) == gender)
+                break;
+        }
+        if (tries < SHINY_CHARM_MAX_TRIES && SHINY_CHECK(otid, candidate))
+            return candidate;
+    }
+    return pid;
+}
+
 /**
  *  @brief try learning a move upon level up
 *          edited to allow for moves to be learned on evolution at level 0

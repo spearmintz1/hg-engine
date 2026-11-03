@@ -181,6 +181,8 @@ arm9 GiveMon 020541DC 5
 #need to use this to UpdatePassiveForms, reinitialize the moveset, set the hidden ability, recalc stats
 0002 AddWildPartyPokemon 0224855C
 
+# shiny charm: extra pid rolls for day care eggs
+arm9 egg_shiny_charm_hook 0206CA02 5
 arm9 ScrCmd_GiveEgg 0204D248 1
 0001 ScrCmd_GiveTogepiEgg 022020CC 1
 arm9 sub_0206D328 0206D328 2

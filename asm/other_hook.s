@@ -262,6 +262,25 @@ mov r1, r7
 ldr r5, =0x02247B4C | 1
 bx r5
 
+// 0206CA02 - the day care egg's pid is final here, right before it is handed to PokeParaSet
+// r4 is the pid, r6 the OT id, [sp, #0x10] the species
+// the Shiny Charm gets its extra shiny rolls; then redo the five instructions the hook overwrote
+.global egg_shiny_charm_hook
+egg_shiny_charm_hook:
+mov r0, r4
+mov r1, r6
+ldr r2, [sp, #0x10]
+bl ApplyShinyCharmRolls
+mov r4, r0
+mov r2, #1
+str r2, [sp, #0x0]
+str r4, [sp, #0x4]
+mov r0, #0
+str r0, [sp, #0x8]
+ldr r5, =0x0206CA0C | 1
+bx r5
+.pool
+
 call_setmondata:
 ldr r3, =0x0206EC40 | 1
 call_via_r3:

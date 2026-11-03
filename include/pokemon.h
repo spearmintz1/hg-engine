@@ -1885,6 +1885,16 @@ BOOL LONG_CALL CalcShininessByOtIdAndPersonality(u32 otid, u32 pid);
  */
 u32 LONG_CALL GenerateShinyPIDKeepSubstructuresIntact(u32 otId, u32 pid);
 
+/**
+ *  @brief give a freshly generated pid the Shiny Charm's extra shiny rolls, keeping nature, gender and ability slot
+ *
+ *  @param pid personality id the mon was generated with
+ *  @param otid original trainer id the mon will have
+ *  @param species species index
+ *  @returns the pid to use; the shiny one found by the extra rolls, else pid
+ */
+u32 LONG_CALL ApplyShinyCharmRolls(u32 pid, u32 otid, u32 species);
+
 // defined in src/moves.c--can't just define in battles, sadly.  does need BattleMove structure from battle.h, though
 /**
  *  @brief get move data field requested from ARC_MOVE_DATA
