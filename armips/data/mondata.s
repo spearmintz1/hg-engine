@@ -17309,7 +17309,7 @@ mondata SPECIES_SILVALLY, "Silvally"
     basefriendship 0
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_BATTLE_ARMOR, ABILITY_NONE
+    abilities ABILITY_RKS_SYSTEM, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_GRAY, 0
     mondexentry SPECIES_SILVALLY, "It destroyed its own control mask. It\nhas become capable of changing type by\nequipping special memories."
@@ -17897,7 +17897,7 @@ mondata SPECIES_MAGEARNA, "Magearna"
     basefriendship 0
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_NONE, ABILITY_NONE
+    abilities ABILITY_SOUL_HEART, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_GRAY, 0
     mondexentry SPECIES_MAGEARNA, "Its mechanized body is merely a vessel.\nIts true self is its Soul-Heart, an\nartificial soul."
@@ -19724,7 +19724,7 @@ mondata SPECIES_ZACIAN, "Zacian"
     basefriendship 0
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_PRESSURE, ABILITY_NONE
+    abilities ABILITY_INTREPID_SWORD, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_BLUE, 0
     mondexentry SPECIES_ZACIAN, "It  has slumbered for many years. Some\nsay it is Zamazenta’s elder sister,\nothers say the two are rivals."
@@ -19745,7 +19745,7 @@ mondata SPECIES_ZAMAZENTA, "Zamazenta"
     basefriendship 0
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_PRESSURE, ABILITY_NONE
+    abilities ABILITY_DAUNTLESS_SHIELD, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_RED, 0
     mondexentry SPECIES_ZAMAZENTA, "It slept for aeons while in the form\nof a statue. It was asleep for so long,\npeople forgot that it ever existed."
@@ -19808,7 +19808,7 @@ mondata SPECIES_URSHIFU, "Urshifu"
     basefriendship 50
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_INFILTRATOR, ABILITY_NONE //ABILITY_UNSEEN_FIST, ABILITY_NONE
+    abilities ABILITY_UNSEEN_FIST, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_GRAY, 0
     mondexentry SPECIES_URSHIFU, "Inhabiting the mountains of a distant\nregion, it races across sheer cliffs, training\nits legs and refining its moves."
@@ -22097,7 +22097,7 @@ mondata SPECIES_WO_CHIEN, "Wo-Chien"
     basefriendship 0
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_INTIMIDATE, ABILITY_NONE //ABILITY_TABLETS_OF_RUIN, ABILITY_NONE
+    abilities ABILITY_TABLETS_OF_RUIN, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_BROWN, 0
     mondexentry SPECIES_WO_CHIEN, "It drains the life-force from vegetation,\ncausing nearby forests to instantly wither\nand fields to turn barren."
@@ -22118,7 +22118,7 @@ mondata SPECIES_CHIEN_PAO, "Chien-Pao"
     basefriendship 0
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_INTIMIDATE, ABILITY_NONE //ABILITY_SWORD_OF_RUIN, ABILITY_NONE
+    abilities ABILITY_SWORD_OF_RUIN, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_WHITE, 0
     mondexentry SPECIES_CHIEN_PAO, "This Pokémon can control 100 tons of fallen\nsnow. It plays around innocently by leaping\nin and out of avalanches it has caused."
@@ -22139,7 +22139,7 @@ mondata SPECIES_TING_LU, "Ting-Lu"
     basefriendship 0
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_INTIMIDATE, ABILITY_NONE //ABILITY_VESSEL_OF_RUIN, ABILITY_NONE
+    abilities ABILITY_VESSEL_OF_RUIN, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_BROWN, 0
     mondexentry SPECIES_TING_LU, "The fear poured into an ancient ritual\nvessel has clad itself in rocks and\ndirt to become a Pokémon."
@@ -22160,7 +22160,7 @@ mondata SPECIES_CHI_YU, "Chi-Yu"
     basefriendship 0
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_INTIMIDATE, ABILITY_NONE //ABILITY_BEADS_OF_RUIN, ABILITY_NONE
+    abilities ABILITY_BEADS_OF_RUIN, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_RED, 0
     mondexentry SPECIES_CHI_YU, "The envy accumulated within curved beads\nthat sparked multiple conflicts has clad\nitself in fire and become a Pokémon."
@@ -22496,7 +22496,7 @@ mondata SPECIES_GOUGING_FIRE, "GouginFire"
     basefriendship 0
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_NONE, ABILITY_SOLAR_POWER //ABILITY_PROTOSYNTHESIS, ABILITY_NONE
+    abilities ABILITY_PROTOSYNTHESIS, ABILITY_SOLAR_POWER //ABILITY_PROTOSYNTHESIS, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_BROWN, 0
     mondexentry SPECIES_GOUGING_FIRE, "It resembles a Pokémon once shown in a\nparanormal magazine. That Pokémon was said\nto be an Entei regenerated from a fossil."
@@ -26494,7 +26494,7 @@ mondata SPECIES_ZACIAN_CROWNED, "-----"
     basefriendship 0
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_PRESSURE, ABILITY_NONE
+    abilities ABILITY_INTREPID_SWORD, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_BLUE, 0
 
@@ -26510,7 +26510,7 @@ mondata SPECIES_ZAMAZENTA_CROWNED, "-----"
     basefriendship 0
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_PRESSURE, ABILITY_NONE
+    abilities ABILITY_DAUNTLESS_SHIELD, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_RED, 0
 
@@ -26542,7 +26542,7 @@ mondata SPECIES_URSHIFU_RAPID_STRIKE, "-----"
     basefriendship 70
     growthrate GROWTH_SLOW
     egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
-    abilities ABILITY_INFILTRATOR, ABILITY_NONE //ABILITY_UNSEEN_FIST, ABILITY_NONE
+    abilities ABILITY_UNSEEN_FIST, ABILITY_NONE
     runchance 0
     colorflip BODY_COLOR_GRAY, 0
 
