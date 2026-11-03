@@ -55,6 +55,7 @@ scr_seq_0869_001:
     play_fanfare SEQ_ME_BADGE
     wait_fanfare
     give_badge 1
+    setvar VAR_UNK_416F, 21
     settrainerflag 68
     settrainerflag 67
     settrainerflag 69
@@ -67,7 +68,6 @@ scr_seq_0869_001:
     npc_msg 5
     wait_button_or_walk_away
     closemsg
-    setvar VAR_UNK_416F, 21
     releaseall
     end
 
