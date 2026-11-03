@@ -21,6 +21,7 @@
 #define NUM_FURTHER_TEST_PARAMS 4
 
 // .ability sentinels that generate the ability from the species data instead of forcing an id (an id above 0x1FF is never a real ability)
+#define TEST_ABILITY_PERSONAL_SLOT_1 0xFFFD // first ability slot in personal data
 #define TEST_ABILITY_PERSONAL_SLOT_2 0xFFFE // second ability slot in personal data
 #define TEST_ABILITY_HIDDEN          0xFFFF // hidden ability from the hidden ability table
 
