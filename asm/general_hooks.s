@@ -55,6 +55,25 @@ ldr r3, =0x0208FEFA | 1
 bx r3
 
 
+// replaces "exp = ExpToNextLevel(mon)" in the vanilla item effect (r5 is the mon, [sp, #4] the item) so EXP Candies can add more
+.global LevelUpItemExp_hook
+LevelUpItemExp_hook:
+mov r0, r5
+ldr r3, =0x0206FCA8 | 1 // experience missing for the next level
+bl bx_r3
+mov r2, r0
+mov r0, r5
+ldr r1, [sp, #4]
+bl GetLevelUpItemExp
+mov r2, r0
+mov r0, r5
+mov r1, #8 // MON_DATA_EXPERIENCE
+ldr r3, =0x02090448 | 1 // the add-to-mon-data call
+bx r3
+
+.pool
+
+
 // still needed because function itself is not 0x1C bytes long
 .global Bag_HasSpaceForItem_hook
 Bag_HasSpaceForItem_hook:

@@ -1663,6 +1663,14 @@ BOOL LONG_CALL HandleBoxPokemonFormeChanges(struct BoxPokemon* bp);
 BOOL LONG_CALL CanUseRevealGlass(struct PartyPokemon *pp);
 
 /**
+ *  @brief check if the prison bottle can be used on a PartyPokemon
+ *
+ *  @param pp PartyPokemon to check the prison bottle against
+ *  @return TRUE if the prison bottle can be used; FALSE otherwise
+ */
+BOOL LONG_CALL CanUsePrisonBottle(struct PartyPokemon *pp);
+
+/**
  *  @brief check if DNA splicers can be used, return position in party if so
  *
  *  @param pp PartyPokemon to check for
@@ -1858,6 +1866,17 @@ u32 LONG_CALL GetLevelCap(void);
  *  @return TRUE if level >= level cap; FALSE otherwise
  */
 u32 LONG_CALL IsLevelAtLevelCap(u32 level);
+
+/**
+ *  @brief experience a level-up item grants; the vanilla Rare Candy amount is exactly one level, EXP Candies give a fixed amount
+ *         that stops at the level cap
+ *
+ *  @param mon PartyPokemon the item is used on
+ *  @param item item being used
+ *  @param nextLevelExp experience vanilla would grant: what is missing to reach the next level
+ *  @return experience to add to mon
+ */
+u32 LONG_CALL GetLevelUpItemExp(struct PartyPokemon *mon, u32 item, u32 nextLevelExp);
 
 /**
  *  @brief grab the nature of a BoxPokemon factoring in the nature mint override field

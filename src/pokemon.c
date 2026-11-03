@@ -794,6 +794,17 @@ BOOL LONG_CALL CanUseRevealGlass(struct PartyPokemon *pp)
 }
 
 /**
+ *  @brief check if the prison bottle can be used on a PartyPokemon
+ *
+ *  @param pp PartyPokemon to check the prison bottle against
+ *  @return TRUE if the prison bottle can be used; FALSE otherwise
+ */
+BOOL LONG_CALL CanUsePrisonBottle(struct PartyPokemon *pp)
+{
+    return GetMonData(pp, MON_DATA_SPECIES, NULL) == SPECIES_HOOPA;
+}
+
+/**
  *  @brief check if a certain type of nectar can be used on a PartyPokemon
  *
  *  @param pp PartyPokemon to check the nectar against
@@ -952,6 +963,20 @@ u32 LONG_CALL UseItemMonAttrChangeCheck(struct PLIST_WORK *wk, void *dat)
         sys_FreeMemoryEz(dat);
         PokeList_FormDemoOverlayLoad(wk);
         ChangePartyPokemonToForm(pp, wk->dat->after_mons); // this works alright
+        return TRUE;
+    }
+
+    // handle hoopa: the bottle toggles between confined and unbound, and unbound-only Hyperspace Fury goes back to Hole
+
+    if (wk->dat->item == ITEM_PRISON_BOTTLE
+     && CanUsePrisonBottle(pp) == TRUE)
+    {
+        wk->dat->after_mons = GetMonData(pp, MON_DATA_FORM, NULL) ^ 1;
+        sys_FreeMemoryEz(dat);
+        PokeList_FormDemoOverlayLoad(wk);
+        ChangePartyPokemonToForm(pp, wk->dat->after_mons);
+        if (wk->dat->after_mons == 0)
+            SwapPartyPokemonMove(pp, MOVE_HYPERSPACE_FURY, MOVE_HYPERSPACE_HOLE);
         return TRUE;
     }
 
@@ -2224,6 +2249,37 @@ u32 LONG_CALL IsLevelAtLevelCap(u32 level)
     return (level >= GetLevelCap());
 }
 
+
+/**
+ *  @brief experience a level-up item grants; the vanilla Rare Candy amount is exactly one level, EXP Candies give a fixed amount
+ *         that stops at the level cap
+ *
+ *  @param mon PartyPokemon the item is used on
+ *  @param item item being used
+ *  @param nextLevelExp experience vanilla would grant: what is missing to reach the next level
+ *  @return experience to add to mon
+ */
+u32 LONG_CALL GetLevelUpItemExp(struct PartyPokemon *mon, u32 item, u32 nextLevelExp)
+{
+    u32 amount;
+
+    switch ((u16)item) {
+    case ITEM_EXP_CANDY_XS: amount = 100; break;
+    case ITEM_EXP_CANDY_S:  amount = 800; break;
+    case ITEM_EXP_CANDY_M:  amount = 3000; break;
+    case ITEM_EXP_CANDY_L:  amount = 10000; break;
+    case ITEM_EXP_CANDY_XL: amount = 30000; break;
+    default: return nextLevelExp;
+    }
+
+    u32 species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    u32 exp = GetMonData(mon, MON_DATA_EXPERIENCE, NULL);
+    u32 maxExp = GetExpByGrowthRateAndLevel(PokePersonalParaGet(species, PERSONAL_EXP_GROUP), GetLevelCap());
+
+    if (exp >= maxExp)
+        return 0;
+    return amount < maxExp - exp ? amount : maxExp - exp;
+}
 
 #ifdef IMPLEMENT_LEVEL_CAP
 
