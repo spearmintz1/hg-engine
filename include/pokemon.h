@@ -1830,14 +1830,14 @@ bool8 LONG_CALL RevertFormChange(struct PartyPokemon *pp, u16 species, u8 form_n
 void LONG_CALL ClearMonMoves(struct PartyPokemon *pokemon);
 
 /**
- *  @brief get level cap from the script variable defined by LEVEL_CAP_VARIABLE
+ *  @brief get level cap from the badges owned and whether the game has been cleared
  *
- *  @return level cap from LEVEL_CAP_VARIABLE script variable
+ *  @return level cap from the table in pokemon.c or 100 if IMPLEMENT_LEVEL_CAP is not defined
  */
 u32 LONG_CALL GetLevelCap(void);
 
 /**
- *  @brief check if the level is at or above the level cap defined in LEVEL_CAP_VARIABLE
+ *  @brief check if the level is at or above the level cap returned by GetLevelCap
  *
  *  @param level level to check
  *  @return TRUE if level >= level cap; FALSE otherwise
