@@ -467,5 +467,9 @@ BOOL IsPlayerOnLadder(void)
         pendingNextTest++;
     }
 #endif
-    return (collision == 0x3C || collision == 0x3D || collision == 0x3E || mapId == 114 || mapId == 180);
+    // ladder collisions
+    // bugsy gym
+    // slowpoke well entry
+    // battle tower
+    return (collision == 0x3C || collision == 0x3D || collision == 0x3E || mapId == 114 || mapId == 180 || (mapId >= 265 && mapId <= 271));
 }
