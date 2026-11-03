@@ -459,3 +459,18 @@ arm9 020821B0 DB
 
 # nop out selection of cancel when the item won't have an effect
 arm9 0207C3AC 00 00 00 00
+
+
+# honestly will not have any way to revert this because this is so much less intrusive and Just Works
+#ifdef APPLY_ANTIPIRACY
+
+# card checks return TRUE
+0001 021E662C 01 20 70 47
+# neuter dsprotect
+0123 0225F0CC E0 FC FF FF
+0123 0225F184 E0 FC FF FF
+
+#endif
+
+# make sure that the original antipiracy method is patched to vanilla
+arm9 02000A18 1E FF 2F E1
