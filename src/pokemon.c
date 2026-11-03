@@ -536,6 +536,136 @@ void LONG_CALL SetBoxMonAbility(struct BoxPokemon *boxmon) // actually takes box
 }
 
 /**
+ *  @brief recover a full ability id from the low byte a u8 ability field kept
+ *
+ *  @param species pokémon species
+ *  @param form form number
+ *  @param lowByte stored low byte of the ability
+ *  @return the first of the species' ability 1, ability 2 and hidden ability whose low byte matches, otherwise lowByte
+ */
+u16 ResolveAbilityFromLowByte(u16 species, u32 form, u8 lowByte)
+{
+    u16 candidates[3];
+    u32 i;
+
+    candidates[0] = PokeFormNoPersonalParaGet(species, form, PERSONAL_ABILITY_1);
+    candidates[1] = PokeFormNoPersonalParaGet(species, form, PERSONAL_ABILITY_2);
+    candidates[2] = GetMonHiddenAbility(species, form);
+    for (i = 0; i < NELEMS(candidates); i++) {
+        if ((candidates[i] & 0xFF) == lowByte) {
+            return candidates[i];
+        }
+    }
+    return lowByte;
+}
+
+/**
+ *  @brief Battle Frontier ability restore.  the Frontier structs keep the ability as one byte, so the full id is recovered from the mon's species and form
+ *
+ *  @param mon mon with species and form already set
+ *  @param storedAbility pointer to the byte stored in the Frontier struct
+ */
+void Frontier_SetMonAbility(struct PartyPokemon *mon, u8 *storedAbility)
+{
+    u16 species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    u32 form = GetMonData(mon, MON_DATA_FORM, NULL);
+    u16 ability = ResolveAbilityFromLowByte(species, form, *storedAbility);
+
+    SetMonData(mon, MON_DATA_ABILITY, &ability);
+}
+
+struct BoxMonSubstructs {
+    PokemonDataBlockA *blockA;
+    PokemonDataBlockB *blockB;
+    PokemonDataBlockC *blockC;
+    PokemonDataBlockD *blockD;
+};
+
+/**
+ *  @brief edited fields in SetBoxMonData.  experience is edited because it shares its word with the top bit of the ability index
+ *
+ *  @param blocks unencrypted data blocks from BoxPokemon structure
+ *  @param field MON_DATA_* constant to set
+ *  @param data pointer to set data from
+ *  @return signal to the hook that it shouldn't return to vanilla handling
+ */
+BOOL SetBoxMonData_EditedCases(struct BoxMonSubstructs *blocks, u32 field, void *data)
+{
+    PokemonDataBlockA *blockA = blocks->blockA;
+
+    switch (field) {
+    case MON_DATA_ABILITY: {
+        u16 ability = *((u16 *)data);
+        blockA->ability = ability & 0xFF;
+        blockA->abilityMSB = (ability >> 8) & 0x01;
+        return TRUE;
+    }
+    case MON_DATA_EXPERIENCE:
+        blockA->exp = *((u32 *)data);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/**
+ *  @brief edited fields in GetBoxMonData.  experience and level are edited because vanilla would read the ability's top bit as part of the experience
+ *
+ *  @param blocks unencrypted data blocks from BoxPokemon structure
+ *  @param field MON_DATA_* constant to retrieve
+ *  @param data pointer to return data in (if necessary as a structure)
+ *  @param retBool pointer to signal to the hook that it shouldn't return to vanilla handling
+ *  @return result of GetBoxMonData if one of these fields applies and return data is containable in variable
+ */
+u32 GetBoxMonData_EditedCases(struct BoxMonSubstructs *blocks, u32 field, void *data UNUSED, BOOL *retBool)
+{
+    PokemonDataBlockA *blockA = blocks->blockA;
+
+    *retBool = TRUE;
+    switch (field) {
+    case MON_DATA_ABILITY:
+        return (blockA->abilityMSB << 8) | blockA->ability;
+    case MON_DATA_EXPERIENCE:
+        return blockA->exp;
+    case MON_DATA_LEVEL:
+        return CalcLevelBySpeciesAndExp(blockA->species, blockA->exp);
+    }
+    *retBool = FALSE;
+    return 0;
+}
+
+/**
+ *  @brief edited fields in AddBoxMonData.  experience is edited because it shares its word with the top bit of the ability index
+ *
+ *  @param blocks unencrypted data blocks from BoxPokemon structure
+ *  @param field MON_DATA_* constant to modify
+ *  @param data value to add (or, for the ability, to set)
+ *  @return signal to the hook that it shouldn't return to vanilla handling
+ */
+BOOL AddBoxMonData_EditedCases(struct BoxMonSubstructs *blocks, u32 field, int data)
+{
+    PokemonDataBlockA *blockA = blocks->blockA;
+
+    switch (field) {
+    case MON_DATA_EXPERIENCE: {
+        u32 maxExp = PokeLevelExpGet(blockA->species, 100);
+        if (blockA->exp + (u32)data > maxExp) {
+            blockA->exp = maxExp;
+        } else {
+            blockA->exp += (u32)data;
+        }
+        return TRUE;
+    }
+    case MON_DATA_ABILITY: {
+        u16 ability = (u16)data;
+        blockA->ability = ability & 0xFF;
+        blockA->abilityMSB = (ability >> 8) & 0x01;
+        return TRUE;
+    }
+    }
+    return FALSE;
+}
+
+/**
  *  @brief get species base experience, modified for form.  base experience is no longer in personal
  *
  *  @param species species index
@@ -1481,7 +1611,7 @@ u16 LONG_CALL get_mon_ow_tag(u16 species, u32 form, u32 isFemale)
  *  @param encounterType encounter type
  *  @return TRUE if successful; FALSE otherwise
  */
-BOOL LONG_CALL GiveMon(int heapId, void *saveData, int species, int level, int forme, u8 ability, u16 heldItem, int ball, int encounterType) {
+BOOL LONG_CALL GiveMon(int heapId, void *saveData, int species, int level, int forme, u16 ability, u16 heldItem, int ball, int encounterType) {
     struct Party *party;
     struct PartyPokemon *pokemon;
     void *profile;

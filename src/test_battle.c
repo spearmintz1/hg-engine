@@ -153,7 +153,17 @@ static void LONG_CALL TestBattle_OverridePokemon(struct PartyPokemon *mon, u16 s
 
     PokeParaSet(mon, species, level, 31, FALSE, 0, 0, 0);
     SetMonData(mon, MON_DATA_FORM, &form);
-    SetMonData(mon, MON_DATA_ABILITY, &ability);
+    if (ability == TEST_ABILITY_HIDDEN || ability == TEST_ABILITY_PERSONAL_SLOT_2) {
+        if (ability == TEST_ABILITY_HIDDEN) {
+            SET_MON_HIDDEN_ABILITY_BIT(mon);
+        } else {
+            u32 pid = GetMonData(mon, MON_DATA_PERSONALITY, NULL) | 1; // an odd personality picks the second slot
+            SetMonData(mon, MON_DATA_PERSONALITY, &pid);
+        }
+        ResetPartyPokemonAbility(mon);
+    } else {
+        SetMonData(mon, MON_DATA_ABILITY, &ability);
+    }
     SetMonData(mon, MON_DATA_HELD_ITEM, &item);
     SET_MON_NATURE_OVERRIDE(mon, NATURE_HARDY);
 

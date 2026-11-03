@@ -91,28 +91,27 @@
 .endmacro
 
 .macro abilities,abi1,abi2
-.if abi1 > 255 && abi2 <= 255
-	.byte abi2
-.elseif abi1 > 255
-	.byte ABILITY_NONE
-.else
-	.byte abi1
-.endif
-
-.if abi2 > 255
-	.byte ABILITY_NONE
-.else
-	.byte abi2
-.endif
+.orga 0x16
+	.halfword abi1
+.orga 0x1A
+	.halfword abi2
 .endmacro
 
 .macro runchance,num
+.orga 0x18
 	.byte num
 .endmacro
 
 .macro colorflip,color,flip
+.orga 0x19
 	.byte (color | flip << 7)
-    .close
+	// 0x1A is ability 2: the tm learnset script writes only from 0x1C on
+.orga 0x1C
+	.word 0
+	.word 0
+	.word 0
+	.word 0
+	.close
 .endmacro
 
 .macro tmdata,num1,num2,num3,num4 // handled by a python script and armips/data/tmlearnset.txt

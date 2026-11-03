@@ -3850,7 +3850,8 @@ extern const u8 sHoneyGatherChanceTable[10];
 BOOL BtlCmd_GenerateEndOfBattleItem(struct BattleSystem *bw, struct BattleStruct *sp) {
     int rnd, i, j, k;
     u16 species, item;
-    u8 ability, lvl;
+    u16 ability;
+    u8 lvl;
     struct PartyPokemon *mon;
 
     IncrementBattleScriptPtr(sp, 1);
