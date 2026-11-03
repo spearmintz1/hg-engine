@@ -1480,7 +1480,7 @@ u16 LONG_CALL get_mon_ow_tag(u16 species, u32 form, u32 isFemale)
  *  @param encounterType encounter type
  *  @return TRUE if successful; FALSE otherwise
  */
-BOOL LONG_CALL GiveMon(int heapId, void *saveData, int species, int level, int forme, u8 ability, u16 heldItem, int ball, int encounterType) {
+BOOL LONG_CALL GiveMon(int heapId, void *saveData, int species, int level, int forme, u16 ability, u16 heldItem, int ball, int encounterType) {
     struct Party *party;
     struct PartyPokemon *pokemon;
     void *profile;

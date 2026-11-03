@@ -12524,7 +12524,7 @@ movedata MOVE_DRUM_BEATING, "Drum Beating"
     movedescription MOVE_DRUM_BEATING, "The user plays its drum,\ncontrolling the drum’s\nroots to attack the\ntarget. This also lowers\nthe target’s Speed stat."
 
 movedata MOVE_SNAP_TRAP, "Snap Trap"
-    battleeffect MOVE_EFFECT_HIT
+    battleeffect MOVE_EFFECT_BIND_HIT
     pss SPLIT_PHYSICAL
     basepower 35
     type TYPE_GRASS
@@ -13164,7 +13164,7 @@ movedata MOVE_SURGING_STRIKES, "Surging Strikes"
     movedescription MOVE_SURGING_STRIKES, "The user strikes the\ntarget with a flowing\nmotion three times in\na row. This move always\nlands a critical hit."
 
 movedata MOVE_THUNDER_CAGE, "Thunder Cage"
-    battleeffect MOVE_EFFECT_HIT
+    battleeffect MOVE_EFFECT_BIND_HIT
     pss SPLIT_SPECIAL
     basepower 80
     type TYPE_ELECTRIC

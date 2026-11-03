@@ -282,9 +282,6 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
             }
             break;
 
-
-#ifdef LATER_GEN_ITEM_EFFECTS
-
         case HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE:             // Weakness Policy
             // Defender is alive after the attack
             if ((sp->battlemon[sp->defence_client].hp)
@@ -310,8 +307,6 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
             // gen8 has no effects which belong in this particular
             // switch tree, since everything here cares about being
             // *dealt* damage, rather than *dealing* damage
-
-#endif
 
         default:
             break;
