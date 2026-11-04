@@ -17,10 +17,10 @@ There are two valuable Pokémon left!\n...But they belong to Professor Elm.
 There is one valuable Pokémon left!\nYou didn’t notice before, but it is\fbehind thick glass walls now so\fnothing bad can happen to it!
 There are no valuable Pokémon left...\rYou wonder who Professor Elm gave the\nlast Pokémon to?
 Huh? Me?\nI’m not the professor.\rHe’s at the back of the room.\n
-{STRVAR_1 3, 0, 0}, I want you to have these\nrepels and a prototypes to help\nyou with your task.\r
-{STRVAR_1 3, 0, 0}, I want you to have these\nrepels and a prototypes to help\nyou with your task.\r
-The repels will keep weaker Pokémon\naway while traveling\rThe Rejuvinator will restore HP and PP\nbetween battles.\rThe ashes will fully heal and restore\nall fainted Pokémon in your party,\r
-The repels will keep weaker Pokémon\naway while traveling\rThe Rejuvinator will restore HP and PP\nbetween battles.\rThe ashes will fully heal and restore\nall fainted Pokémon in your party,\r
+{STRVAR_1 3, 0, 0}, I want you to have these\nrepels and some prototypes to help\nyou with your task.\r
+{STRVAR_1 3, 0, 0}, I want you to have these\nrepels and some prototypes to help\nyou with your task.\r
+The repels will keep weaker Pokémon\naway while traveling.\rThe Rejuvenator will restore HP and PP\nbetween battles.\rThe ashes will fully heal and restore\nall fainted Pokémon in your party,\r
+The repels will keep weaker Pokémon\naway while traveling.\rThe Rejuvenator will restore HP and PP\nbetween battles.\rThe ashes will fully heal and restore\nall fainted Pokémon in your party,\r
 Who are you?\nWe are investigating the case of the\fmissing Pokémon here...\rRule number one!\n“Whoever did it will come\fback to the site.”\rOh my... So you must be...\nthe one who did it?\r
 Lyra: Hold on a second!\nHe has nothing to do with it!\rI saw it.\nThere was a red-haired boy\flooking into the building!\r
 Ethan: Hold on a second!\nShe has nothing to do with it!\rI saw it.\nThere was a red-haired boy\flooking into the building!\r
