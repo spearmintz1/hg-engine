@@ -519,7 +519,7 @@ BOOL LONG_CALL AddWildPartyPokemon(int inTarget, EncounterInfo *encounterInfo, s
     }
 
     pid = GetMonData(encounterPartyPokemon, MON_DATA_PERSONALITY, NULL);
-    shinyCharmPid = ApplyShinyCharmRolls(pid, GetMonData(encounterPartyPokemon, MON_DATA_OTID, NULL), GetMonData(encounterPartyPokemon, MON_DATA_SPECIES, NULL));
+    shinyCharmPid = ApplyShinyCharmRolls(pid, GetMonData(encounterPartyPokemon, MON_DATA_OTID, NULL), GetMonData(encounterPartyPokemon, MON_DATA_SPECIES, NULL), GetMonData(encounterPartyPokemon, MON_DATA_FORM, NULL));
     if (shinyCharmPid != pid)
     {
         SetMonData(encounterPartyPokemon, MON_DATA_PERSONALITY, &shinyCharmPid);

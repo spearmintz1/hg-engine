@@ -2330,32 +2330,6 @@ BOOL LONG_CALL CalcShininessByOtIdAndPersonality(u32 otid, u32 pid)
     return SHINY_CHECK(otid, pid);
 }
 
-/**
- *  @brief adjust the pid to be shiny such that it keeps substructures in the same order
- *
- *  @param otid original trainer id
- *  @param pid personality id
- *  @returns adjusted pid to be a shiny without corrupting the mon
- */
-u32 LONG_CALL GenerateShinyPIDKeepSubstructuresIntact(u32 otId, u32 pid)
-{
-    /*
-        see: https://github.com/pret/pokeheartgold/blob/4d4037e05713e267b337aeb81abcbdd395c1f3ac/src/pokemon.c#L3955
-        substructure order is determined in GetSubstruct at the above link.  it uses the 5 bits occupied by 0x0003E000 to select the order.
-        when generating this, i just add the random number at the end to prevent every shiny given out this way from being a square shiny
-    */
-    u32 shinyValue = SHINY_VALUE(otId, pid);
-    if (shinyValue >= SHINY_ODDS) // xoring pid with shinyValue will give shiny but may corrupt substruct order
-    {
-        if (shinyValue & 0xE000)
-            pid = pid ^ ((shinyValue << 16) & 0xE0000000);
-        pid = pid ^ (shinyValue & 0x1FFF);
-        // shinyValue is now 0.  any xor must keep the shinyValue below SHINY_ODDS--should be fine to just generate a random number 0-SHINY_ODDS and xor it
-        pid = pid ^ (gf_rand() % (SHINY_ODDS));
-    }
-    return pid;
-}
-
 #define SHINY_CHARM_EXTRA_ROLLS 2
 #define SHINY_CHARM_MAX_TRIES 4096 // per extra roll; a roll that finds no matching pid within this many tries is skipped
 #define PID_SUBSTRUCT_ORDER_MASK 0x0003E000 // the bits GetSubstruct reads to order a mon's data blocks
@@ -2371,16 +2345,18 @@ u32 LONG_CALL GenerateShinyPIDKeepSubstructuresIntact(u32 otId, u32 pid)
  *  @param pid personality id the mon was generated with
  *  @param otid original trainer id the mon will have
  *  @param species species index, for the gender check
+ *  @param form form number, for the gender check (forms can have their own gender ratio)
  *  @returns the pid to use
  */
-u32 LONG_CALL ApplyShinyCharmRolls(u32 pid, u32 otid, u32 species)
+u32 LONG_CALL ApplyShinyCharmRolls(u32 pid, u32 otid, u32 species, u32 form)
 {
-    u32 roll, tries, candidate;
+    u32 roll, tries, candidate, gender;
     u32 nature = pid % 25;
-    u32 gender = PokeSexGetMonsNo(species, pid);
 
     if (SHINY_CHECK(otid, pid) || !Bag_HasItem(Sav2_Bag_get(SaveBlock2_get()), ITEM_SHINY_CHARM, 1, HEAPID_DEFAULT))
         return pid;
+
+    gender = GrabSexFromSpeciesAndForm(species, pid, form);
 
     for (roll = 0; roll < SHINY_CHARM_EXTRA_ROLLS; roll++)
     {
@@ -2388,13 +2364,31 @@ u32 LONG_CALL ApplyShinyCharmRolls(u32 pid, u32 otid, u32 species)
         {
             candidate = (gf_rand() | (gf_rand() << 16));
             candidate = (candidate & ~PID_SUBSTRUCT_ORDER_MASK) | (pid & PID_SUBSTRUCT_ORDER_MASK);
-            if (candidate % 25 == nature && (candidate & 1) == (pid & 1) && PokeSexGetMonsNo(species, candidate) == gender)
+            if (candidate % 25 == nature && (candidate & 1) == (pid & 1) && GrabSexFromSpeciesAndForm(species, candidate, form) == gender)
                 break;
         }
         if (tries < SHINY_CHARM_MAX_TRIES && SHINY_CHECK(otid, candidate))
             return candidate;
     }
     return pid;
+}
+
+/**
+ *  @brief the pid a new roamer is saved with: the one its temporary PartyPokemon was generated with, plus the Shiny Charm's extra rolls
+ *
+ *  the roamer's save data keeps the pid; every battle builds the mon from it again, with the player's trainer id as OT,
+ *  so the extra rolls happen here, once, when the roamer starts roaming, not in the per-battle builder (which would reroll each encounter).
+ *  the temporary mon is made with the low half of the trainer id only, so the full id is read from the player profile.
+ *
+ *  @param roamerMon temporary PartyPokemon the roamer's save data is read from
+ *  @returns the pid to store in the roamer's save data
+ */
+u32 LONG_CALL GetNewRoamerPersonality(struct PartyPokemon *roamerMon)
+{
+    u32 pid = GetMonData(roamerMon, MON_DATA_PERSONALITY, NULL);
+    u32 otid = Sav2_PlayerData_GetProfileAddr(SaveBlock2_get())->id;
+
+    return ApplyShinyCharmRolls(pid, otid, GetMonData(roamerMon, MON_DATA_SPECIES, NULL), GetMonData(roamerMon, MON_DATA_FORM, NULL));
 }
 
 /**

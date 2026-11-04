@@ -263,13 +263,14 @@ ldr r5, =0x02247B4C | 1
 bx r5
 
 // 0206CA02 - the day care egg's pid is final here, right before it is handed to PokeParaSet
-// r4 is the pid, r6 the OT id, [sp, #0x10] the species
+// r4 is the pid, r6 the OT id, [sp, #0x10] the species, [sp, #0x30] the form
 // the Shiny Charm gets its extra shiny rolls; then redo the five instructions the hook overwrote
 .global egg_shiny_charm_hook
 egg_shiny_charm_hook:
 mov r0, r4
 mov r1, r6
 ldr r2, [sp, #0x10]
+ldr r3, [sp, #0x30]
 bl ApplyShinyCharmRolls
 mov r4, r0
 mov r2, #1
@@ -278,6 +279,20 @@ str r4, [sp, #0x4]
 mov r0, #0
 str r0, [sp, #0x8]
 ldr r5, =0x0206CA0C | 1
+bx r5
+.pool
+
+// 020677B2 - the roamer builder run by the create_roamer script command: r7 is the temporary mon whose pid the roamer is saved with
+// r4 is the roamer's save data; the hook overwrites GetMonData(r7, MON_DATA_PERSONALITY) and the setup of SetData(r4, 3, pid)
+// the pid gets the Shiny Charm's extra shiny rolls here, once; then redo that setup and go on to the SetData
+.global roamer_shiny_charm_hook
+roamer_shiny_charm_hook:
+mov r0, r7
+bl GetNewRoamerPersonality
+mov r2, r0
+mov r0, r4
+mov r1, #3
+ldr r5, =0x020677BC | 1
 bx r5
 .pool
 
