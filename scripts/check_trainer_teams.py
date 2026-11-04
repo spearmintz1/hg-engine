@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 TYPE_MOVES, TYPE_ITEMS, TYPE_ABILITY, TYPE_BALL = 0x01, 0x02, 0x04, 0x08
 TYPE_IV_EV, TYPE_NATURE, TYPE_SHINY, TYPE_EXTRA = 0x10, 0x20, 0x40, 0x80
 BOSS_FLAGS = TYPE_MOVES | TYPE_ITEMS | TYPE_NATURE
-SINGLE, DOUBLE = 0, 2
+SINGLE, DOUBLE, NO_PARTNER_DOUBLE = 0, 2, 3
 HEADER_SIZE = 20
 
 # first-run Elite Four: every mon is raised by this much
@@ -335,7 +335,7 @@ def main():
                 err(tid, "non-boss party changed")
             if nh["battle"] == oh["battle"]:
                 err(tid, "non-boss differs from base without a battle type change")
-            elif nh["battle"] == DOUBLE and oh["battle"] == SINGLE:
+            elif nh["battle"] in (DOUBLE, NO_PARTNER_DOUBLE) and oh["battle"] == SINGLE:
                 if nh["nummons"] < 2:
                     err(tid, "double battle with %d mon" % nh["nummons"])
                 doubles.append(tid)
