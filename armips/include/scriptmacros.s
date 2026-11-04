@@ -6755,6 +6755,13 @@ DummyTextTrap slot, unk
 RunNewCommand NEW_COMMAND_QUEUE_NEW_REPEL, 0x800C
 .endmacro
 
+.equ NEW_COMMAND_MIGRATE_EXP_SHARE, 1
+
+// brings a v2.0 save's Exp. Share into the Key Items pocket (Bag_MigrateExpShare); safe to repeat
+.macro migrate_exp_share
+RunNewCommand NEW_COMMAND_MIGRATE_EXP_SHARE, 0
+.endmacro
+
 // Dummy
 .macro DummyTextTreasure,slot,unk
 .halfword 209

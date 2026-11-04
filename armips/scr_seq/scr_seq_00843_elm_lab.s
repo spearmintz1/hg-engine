@@ -36,6 +36,8 @@ scr_seq_0843_000:
     play_se SEQ_SE_DP_SELECT
     lockall
     faceplayer
+    compare VAR_SCENE_ELMS_LAB, 4
+    call_if_ge scr_seq_0843_exp_share_catch_up
     goto_if_set FLAG_UNK_0F2, scr_seq_0843_0584
     goto_if_set FLAG_GAME_CLEAR, scr_seq_0843_0606
     get_party_count VAR_SPECIAL_RESULT
@@ -162,6 +164,7 @@ scr_seq_0843_002:
     wait_movement
     gender_msgbox 36, 37
     closemsg
+    call scr_seq_0843_give_exp_share
     apply_movement 0, scr_seq_0843_12B2
     wait_movement
     gender_msgbox 38, 39
@@ -594,6 +597,7 @@ scr_seq_0843_0804:
     wait_movement
     gender_msgbox 36, 37
     closemsg
+    call scr_seq_0843_give_exp_share
     apply_movement 0, scr_seq_0843_12B2
     wait_movement
     gender_msgbox 38, 39
@@ -612,6 +616,27 @@ scr_seq_0843_0804:
     setvar VAR_SCENE_ROUTE_30_PHONE_CALL, 1
     releaseall
     end
+
+// saves that got past the starter scene before the Exp. Share existed, or whose bag was full then, get it when they next talk to Elm
+scr_seq_0843_exp_share_catch_up:
+    migrate_exp_share
+    hasitem ITEM_EXP_SHARE, 1, VAR_SPECIAL_RESULT
+    compare VAR_SPECIAL_RESULT, 0
+    call_if_eq scr_seq_0843_give_exp_share
+    return
+
+scr_seq_0843_give_exp_share:
+    npc_msg 107
+    closemsg
+    goto_if_no_item_space ITEM_EXP_SHARE, 1, scr_seq_0843_exp_share_bag_full
+    callstd std_give_item_verbose
+    closemsg
+    return
+
+scr_seq_0843_exp_share_bag_full:
+    callstd std_bag_is_full
+    closemsg
+    return
 
 scr_seq_0843_0959:
     npc_msg 29

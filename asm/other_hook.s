@@ -404,6 +404,11 @@ str r1, [r0]
 ldr r0, [r4]
 mov r6, #0x7C
 
+// every field start (so after each save load): bring a v2.0 save's Exp. Share into the Key Items pocket
+bl Bag_MigrateExpShare
+mov r1, #0
+ldr r0, [r4]
+
 ldr r2, =0x0203E030 | 1
 bx r2
 

@@ -4,6 +4,7 @@
 
 #ifdef DEBUG_BATTLE_SCENARIOS
 
+#include "../include/bag.h"
 #include "../include/battle.h"
 #include "../include/constants/file.h"
 #include "../include/constants/generated/test_battle.h"
@@ -11,6 +12,7 @@
 #include "../include/constants/moves.h"
 #include "../include/constants/species.h"
 #include "../include/pokemon.h"
+#include "../include/save.h"
 #include "../include/test_battle.h"
 
 #define TEST_START_INDEX 0
@@ -256,6 +258,18 @@ void LONG_CALL TestBattle_OverrideParties(struct BATTLE_PARAM *bp)
 
     ResetScriptIndices();
     Sav2_PlayerData_GetProfileAddr(SaveBlock2_get())->johtoBadges = scenario->johtoBadges;
+
+    BAG_DATA *bag = Sav2_Bag_get(SaveBlock2_get());
+    if (scenario->expShareNotOwned) {
+        Bag_TakeItem(bag, ITEM_EXP_SHARE, 1, HEAPID_WORLD);
+    } else if (!Bag_HasItem(bag, ITEM_EXP_SHARE, 1, HEAPID_WORLD)) {
+        Bag_AddItem(bag, ITEM_EXP_SHARE, 1, HEAPID_WORLD);
+    }
+    if (scenario->expShareOff) {
+        SetScriptFlag(FLAG_EXP_SHARE_OFF);
+    } else {
+        ClearScriptFlag(FLAG_EXP_SHARE_OFF);
+    }
 
     int enemyCount = 0;
     for (int i = 0; i < 6; i++) {

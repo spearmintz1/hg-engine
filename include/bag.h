@@ -247,6 +247,14 @@ ITEM_SLOT *Bag_GetPocketSlotN(BAG_DATA *bag, u8 pocket, int n);
  */
 BAG_DATA *LONG_CALL Sav2_Bag_get(void *saveData);
 
+/*
+ * void Bag_MigrateExpShare(void)
+ *
+ * Moves the Exp. Share of a v2.0 save (a held item in the Items pocket and on party pokemon) into the Key Items pocket.
+ * Idempotent; see src/bag.c.
+ */
+void LONG_CALL Bag_MigrateExpShare(void);
+
 // fuck BAG_VIEW
 void *LONG_CALL BagView_New(u8 heap_id);
 void LONG_CALL BagView_SetItem(void *bagView, ITEM_SLOT *slots, u8 pocketId, u8 position);

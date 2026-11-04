@@ -89,7 +89,8 @@ struct PACKED TestBattleScenario {
     u32 fieldCondition; // FIELD_CONDITION_TRICK_ROOM_INIT, etc.
     u8 terrain; // GRASSY_TERRAIN, MISTY_TERRAIN, etc.
     u8 johtoBadges; // Johto badge bitmask given to the player for the scenario (it sets the level cap); 0, the default, leaves no badges
-    u8 _padding[2]; // Compiler adds 2 bytes padding to align struct to 4-byte boundary
+    u8 expShareOff; // TRUE switches the Exp. Share key item off for the scenario, FALSE (the default) leaves it on
+    u8 expShareNotOwned; // TRUE takes the Exp. Share key item out of the bag for the scenario, FALSE (the default) puts it in
     struct TestBattlePokemon playerParty[6]; // Player party
     struct TestBattlePokemon enemyParty[6]; // Enemy's party
 

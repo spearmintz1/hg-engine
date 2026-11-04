@@ -51,5 +51,6 @@ struct TaskManager { //declared in field_system.h
 SysTask *LONG_CALL CreateSysTask(SysTaskFunc func, void *data, int priority);
 void LONG_CALL DestroySysTask(SysTask *task);
 SysTask *LONG_CALL SysTask_CreateOnVBlankQueue(SysTaskFunc func, void *data, int priority);
+void LONG_CALL FieldSystem_CreateTask(FieldSystem *fieldSystem, TaskFunc func, void *env);
 
 #endif

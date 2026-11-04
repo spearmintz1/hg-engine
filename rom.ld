@@ -106,6 +106,7 @@ LoadHallOfFame = 0x02027104 | 1;
 AddHallOfFameEntry = 0x02052A50 | 1;
 
 GetVarAdrs = 0x020504A4 | 1;
+FieldSystem_CreateTask = 0x020504F0 | 1;
 EncDataSave_GetSaveDataPtr = 0x0202D9C4 | 1;
 GetVarPointer = 0x02040374 |1;
 VarSet = 0x020403C0 | 1;
@@ -507,12 +508,14 @@ ItemFieldUseFunc_UnownReport = 0x020654A4 | 1;
 ItemMenuUseFunc_DowsingMchn = 0x020654C0 | 1;
 ItemFieldUseFunc_DowsingMchn = 0x020654F4 | 1;
 ItemFieldUseFunc_GbSounds = 0x02065560 | 1;
+Task_ItemUsePrintMessage = 0x0206518C | 1;
 ItemMenuUseFunc_Gracidea = 0x020655B8 | 1;
 ItemFieldUseFunc_Gracidea = 0x020655F0 | 1;
 ItemMenuUseFunc_VSRecorder = 0x02065614 | 1;
 ItemFieldUseFunc_VSRecorder = 0x02065648 | 1;
 sub_0203FAE8 = 0x0203FAE8 | 1;
 sub_0203C8F0 = 0x0203C8F0 | 1;
+sub_020505C0 = 0x020505C0 | 1;
 RegisteredItem_CreateGoToAppTask = 0x020658B8 | 1;
 
 PaletteRAMArray = 0x05000000;

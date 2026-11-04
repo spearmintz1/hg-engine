@@ -1,4 +1,5 @@
 #include "../../include/types.h"
+#include "../../include/bag.h"
 #include "../../include/battle.h"
 #include "../../include/config.h"
 #include "../../include/debug.h"
@@ -1346,9 +1347,59 @@ BOOL btl_scr_cmd_27_shouldgetexp(void *bw, struct BattleStruct *sp)
 // global variables to track experience
 u8 ALIGN4 scratchpad[4] = {0, 0, 0, 0};
 
-#define monCount scratchpad[0]
-#define monCountFromItem scratchpad[1]
 #define trackPartyExperience scratchpad[2]
+
+/**
+ *  @brief whether the Exp. Share gives experience to the party: the player owns the key item and has not switched it off
+ *
+ *  @return TRUE if the pokémon that did not battle gain experience
+ */
+static BOOL IsExpShareActive(void)
+{
+    return !CheckScriptFlag(FLAG_EXP_SHARE_OFF) && Bag_HasItem(Sav2_Bag_get(SaveBlock2_get()), ITEM_EXP_SHARE, 1, HEAPID_BATTLE_HEAP);
+}
+
+/**
+ *  @brief party slots that gain experience from the Exp. Share key item: the healthy, non-egg pokémon that did not battle
+ *
+ *  @param expcalc exp calculator structure
+ *  @param firstSlot first party slot that has not been paid yet
+ *  @return bit mask of party slots, 0 if the Exp. Share is not active
+ */
+static u32 GetExpShareBenchMask(struct EXP_CALCULATOR *expcalc, int firstSlot)
+{
+    u32 participants = expcalc->sp->obtained_exp_right_flag[(expcalc->sp->fainting_client >> 1) & 1];
+    u32 mask = 0;
+
+    if (!IsExpShareActive())
+    {
+        return 0;
+    }
+    for (int i = firstSlot; i < BattleWorkPokeCountGet(expcalc->bw, 0); i++)
+    {
+        struct PartyPokemon *pp = BattleWorkPokemonParamGet(expcalc->bw, 0, i);
+        if (pp != NULL && !(participants & No2Bit(i)) && GetMonData(pp, MON_DATA_SPECIES, NULL) && GetMonData(pp, MON_DATA_HP, NULL) && !GetMonData(pp, MON_DATA_IS_EGG, NULL))
+        {
+            mask |= No2Bit(i);
+        }
+    }
+    return mask;
+}
+
+/**
+ *  @brief set the experience the pokémon being paid gains before the multipliers of Task_DistributeExp
+ *
+ *  @param sp global battle structure
+ *  @param totalexp experience of the fainted pokémon; every pokémon that battled gets all of it
+ *  @param isExpShareOnly whether the pokémon being paid did not battle, so it only gets half
+ */
+static void SetObtainedExp(struct BattleStruct *sp, u32 totalexp, BOOL isExpShareOnly)
+{
+    u32 share = isExpShareOnly ? totalexp / 2 : totalexp;
+
+    sp->obtained_exp = share ? share : 1;
+    sp->exp_share_obtained_exp = 0; // only read for pokémon holding the old Exp. Share, which no longer exists
+}
 
 /**
  *  @brief task to distribute experience
@@ -1360,14 +1411,15 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
 {
     int sel_mons_no = 0;
     int client_no;
-    int item;
-    int eqp;
     struct PartyPokemon *pp = NULL;
     struct EXP_CALCULATOR *expcalc = work;
     int exp_client_no = 0;
     struct BattleStruct *sp = expcalc->sp;
+    u32 benchMask;
 
     client_no = (sp->fainting_client >> 1) & 1;
+    // rebuilt on every call from the slots still unpaid, so the pokémon picked here and by Task_DistributeExp stay the same until the slot is paid
+    benchMask = GetExpShareBenchMask(expcalc, expcalc->work[6]);
 
     if (expcalc->seq_no < 37)
     {
@@ -1377,10 +1429,8 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
             pp = BattleWorkPokemonParamGet(expcalc->bw, exp_client_no, sel_mons_no);
             if (pp == NULL)
                 goto _skipAllThis;
-            item = GetMonData(pp, MON_DATA_HELD_ITEM, NULL);
-            eqp = GetItemData(item, ITEM_PARAM_HOLD_EFFECT, 5);
 
-            if ((eqp == HOLD_EFFECT_EXP_SHARE) || (sp->obtained_exp_right_flag[client_no] & No2Bit(sel_mons_no)))
+            if ((sp->obtained_exp_right_flag[client_no] | benchMask) & No2Bit(sel_mons_no))
             {
                 break;
             }
@@ -1388,36 +1438,7 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
     }
 
 #if EXPERIENCE_FORMULA_GEN == 5 || EXPERIENCE_FORMULA_GEN > 6 // scaled exp rate
-    struct Party *party = BattleWorkPokePartyGet(expcalc->bw, 0);
-    //u32 mons_getting_exp_from_item = 0;
-    //u32 mons_getting_exp = 0;
     u32 totalexp = 0;
-
-    // count how many pokémon are getting experience
-    if (expcalc->seq_no == 0)
-    {
-        monCount = 0;
-        monCountFromItem = 0;
-        for (int i = 0; i < party->count; i++)
-        {
-            struct PartyPokemon *pploop = BattleWorkPokemonParamGet(expcalc->bw, exp_client_no, i);
-            if ((GetMonData(pploop, MON_DATA_SPECIES, NULL)) && (GetMonData(pploop, MON_DATA_HP, NULL)))
-            {
-                if (sp->obtained_exp_right_flag[client_no /*(sp->fainting_client >> 1) & 1*/] & No2Bit(i))
-                {
-                    monCount++;
-                }
-
-                item = GetMonData(pploop, MON_DATA_HELD_ITEM, NULL);
-                eqp = BattleItemDataGet(sp, item, 1);
-
-                if (eqp == HOLD_EFFECT_EXP_SHARE)
-                {
-                    monCountFromItem++;
-                }
-            }
-        }
-    }
 
     if (expcalc->seq_no < 37) // either this or switch to below.  this prevents NULL access though (ideally)
     {
@@ -1454,28 +1475,7 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
 
             //debug_printf("[Task_DistributeExp_Extend] L = %d, Lp = %d, b = %d, top = %d, bottom = %d, exp = %d\n", level, Lp, base, top, bottom, totalexp);
 
-            if (monCountFromItem)
-            {
-                sp->obtained_exp = (totalexp / 2) / monCount;
-                if (sp->obtained_exp == 0)
-                {
-                    sp->obtained_exp = 1;
-                }
-                sp->exp_share_obtained_exp = (totalexp / 2) / monCountFromItem;
-                if (sp->exp_share_obtained_exp == 0)
-                {
-                    sp->exp_share_obtained_exp = 1;
-                }
-            }
-            else
-            {
-                sp->obtained_exp = totalexp / monCount;
-                if (sp->obtained_exp == 0)
-                {
-                    sp->obtained_exp = 1;
-                }
-                sp->exp_share_obtained_exp = 0;
-            }
+            SetObtainedExp(sp, totalexp, !(sp->obtained_exp_right_flag[client_no] & No2Bit(sel_mons_no)));
         }
     }
 
@@ -1493,58 +1493,10 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
     if (expcalc->seq_no < 37) // prevents NULL access
     {
         u32 totalexp;
-        struct Party *party = BattleWorkPokePartyGet(expcalc->bw, 0);
-
-        // count how many pokémon are getting experience
-        if (expcalc->seq_no == 0)
-        {
-            monCount = 0;
-            monCountFromItem = 0;
-            for (int i = 0; i < party->count; i++)
-            {
-                struct PartyPokemon *pploop = BattleWorkPokemonParamGet(expcalc->bw, exp_client_no, i);
-                if ((GetMonData(pploop, MON_DATA_SPECIES, NULL)) && (GetMonData(pploop, MON_DATA_HP, NULL)))
-                {
-                    if (sp->obtained_exp_right_flag[client_no /*(sp->fainting_client >> 1) & 1*/] & No2Bit(i))
-                    {
-                        monCount++;
-                    }
-
-                    item = GetMonData(pploop, MON_DATA_HELD_ITEM, NULL);
-                    eqp = BattleItemDataGet(sp, item, 1);
-
-                    if (eqp == HOLD_EFFECT_EXP_SHARE)
-                    {
-                        monCountFromItem++;
-                    }
-                }
-            }
-        }
         // multiply by 255/390 (map audino to 255) to not get massively inflated experience rates
         totalexp = 255 * GetSpeciesBaseExp(sp->battlemon[sp->fainting_client].species, sp->battlemon[sp->fainting_client].form_no) / 390;//PokePersonalParaGet(sp->battlemon[sp->fainting_client].species, PERSONAL_EXP_YIELD);
         totalexp = (totalexp * sp->battlemon[sp->fainting_client].level) / 7;
-        if (monCountFromItem)
-        {
-            sp->obtained_exp = (totalexp / 2) / monCount;
-            if (sp->obtained_exp == 0)
-            {
-                sp->obtained_exp = 1;
-            }
-            sp->exp_share_obtained_exp = (totalexp / 2) / monCountFromItem;
-            if (sp->exp_share_obtained_exp == 0)
-            {
-                sp->exp_share_obtained_exp = 1;
-            }
-        }
-        else
-        {
-            sp->obtained_exp = totalexp / monCount;
-            if (sp->obtained_exp == 0)
-            {
-                sp->obtained_exp = 1;
-            }
-            sp->exp_share_obtained_exp = 0;
-        }
+        SetObtainedExp(sp, totalexp, !(sp->obtained_exp_right_flag[client_no] & No2Bit(sel_mons_no)));
     }
 
 #ifdef DEBUG_PRINT_EXPERIENCE_VALUES
@@ -1565,7 +1517,10 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
     }
 
 _skipAllThis:
+    // the bench slots join the flags only for the duration of the call: Task_DistributeExp clears the flag of the slot it pays, and nothing may stay set afterwards
+    sp->obtained_exp_right_flag[client_no] |= benchMask;
     Task_DistributeExp(arg0, work);
+    sp->obtained_exp_right_flag[client_no] &= ~benchMask;
 }
 
 
@@ -1616,8 +1571,9 @@ BOOL Task_DistributeExp_capture_experience(void *arg0, void *work, u32 get_clien
 
     if (expcalc->seq_no == 0) // set first pokemon gaining experience to a specific one so that it doesn't try to give experience to something that doesn't need it
     {
-        int sel_mons_no, item, eqp;
+        int sel_mons_no;
         struct PartyPokemon *pp;
+        u32 benchMask = GetExpShareBenchMask(expcalc, 0);
 
         // grab the pokémon that is actually gaining the experience, factor in experience share here because i don't want to expose the whole main task
         for (sel_mons_no = 0; sel_mons_no < BattleWorkPokeCountGet(expcalc->bw, 0); sel_mons_no++)
@@ -1630,10 +1586,8 @@ BOOL Task_DistributeExp_capture_experience(void *arg0, void *work, u32 get_clien
                     expcalc->work[6] = BattleWorkPokeCountGet(expcalc->bw, 0);
                     break;
                 }
-                item = GetMonData(pp, MON_DATA_HELD_ITEM, NULL);
-                eqp = GetItemData(item, ITEM_PARAM_HOLD_EFFECT, 5);
 
-                if ((eqp == HOLD_EFFECT_EXP_SHARE) || (expcalc->sp->obtained_exp_right_flag[(expcalc->sp->fainting_client >> 1) & 1] & No2Bit(sel_mons_no)))
+                if ((expcalc->sp->obtained_exp_right_flag[(expcalc->sp->fainting_client >> 1) & 1] | benchMask) & No2Bit(sel_mons_no))
                 {
                     expcalc->work[6] = sel_mons_no;
                     trackPartyExperience |= No2Bit(sel_mons_no);
@@ -1655,6 +1609,7 @@ BOOL Task_DistributeExp_capture_experience(void *arg0, void *work, u32 get_clien
         ret = TRUE;
 
         store_current_exp_step = 0;
+        trackPartyExperience = 0; // otherwise the next capture would skip every slot paid by this one
         for (int i = 0; i < (s32)NELEMS(store_work_params); i++) // reset and pass back to main func
         {
             store_work_params[i] = 0;
