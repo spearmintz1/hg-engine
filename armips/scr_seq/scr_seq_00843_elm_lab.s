@@ -619,6 +619,7 @@ scr_seq_0843_0804:
 
 // saves that got past the starter scene before the Exp. Share existed, or whose bag was full then, get it when they next talk to Elm
 scr_seq_0843_exp_share_catch_up:
+    migrate_exp_share
     hasitem ITEM_EXP_SHARE, 1, VAR_SPECIAL_RESULT
     compare VAR_SPECIAL_RESULT, 0
     call_if_eq scr_seq_0843_give_exp_share
@@ -629,10 +630,12 @@ scr_seq_0843_give_exp_share:
     closemsg
     goto_if_no_item_space ITEM_EXP_SHARE, 1, scr_seq_0843_exp_share_bag_full
     callstd std_give_item_verbose
+    closemsg
     return
 
 scr_seq_0843_exp_share_bag_full:
     callstd std_bag_is_full
+    closemsg
     return
 
 scr_seq_0843_0959:
