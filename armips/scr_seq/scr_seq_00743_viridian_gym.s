@@ -304,6 +304,7 @@ _040B:
     releaseall
     end
 
+    .align 2
 scr_seq_0743_042C:
     step 2, 1
     step 75, 1

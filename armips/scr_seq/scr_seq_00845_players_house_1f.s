@@ -398,6 +398,7 @@ scr_seq_0845_0488:
     releaseall
     end
 
+    .align 2
 scr_seq_0845_0490:
     step 62, 1
     step 33, 1

@@ -304,6 +304,7 @@ scr_seq_0943_03D2:
     clearflag FLAG_UNK_2EF
     end
 
+    .align 2
 scr_seq_0943_03D8:
     step 1, 2
     step 2, 2

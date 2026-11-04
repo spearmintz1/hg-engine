@@ -205,6 +205,7 @@ scr_seq_0922_026A:
     releaseall
     end
 
+    .align 2
 scr_seq_0922_0274:
     step 1, 2
     step 2, 2

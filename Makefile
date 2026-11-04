@@ -277,6 +277,7 @@ all: $(TOOLS) $(OUTPUT) $(OVERLAY_OUTPUTS)
 	$(NARCHIVE) extract $(FILESYS)/a/0/2/8 -o $(BUILD)/a028/ -nf
 	$(PYTHON) scripts/make.py $(AUTO_TEST_FLAGS)
 	$(MAKE) move_narc
+	$(PYTHON) scripts/check_movement_align.py $(SCR_SEQ_TARGET)
 	$(ARMIPS) armips/global.s
 	$(NARCHIVE) create $(FILESYS)/a/0/2/8 $(BUILD)/a028/ -nf
 	@echo "Making ROM..."

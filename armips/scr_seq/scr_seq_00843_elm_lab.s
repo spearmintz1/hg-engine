@@ -1205,6 +1205,7 @@ scr_seq_0843_11A2:
     scrcmd_604 48
     return
 
+    .align 4
 scr_seq_0843_11C2:
     step 3, 1
     step_end
