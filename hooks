@@ -349,6 +349,7 @@ arm9 Summary_Entry_Hook 0208D2C4 1
 
 
 arm9 CanUseItemOnMonInParty_hook 020902BC 5
+arm9 LevelUpItemExp_hook 0209043E 1
 #ifdef IMPLEMENT_LEVEL_CAP
 
 0012 ImplementLevelCap_hook 02245A28 3
@@ -531,6 +532,8 @@ arm9 DestroyHeap_hook 0201AA24 3
 
 arm9 PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop_Case6_hook 02081E54 0
 arm9 PartyMenu_ItemUseFunc_ReuseItem_hook 0208138C 3
+arm9 PartyMenu_ItemUseFunc_LevelUp_PrintResult_hook 02081B48 0
+arm9 PartyMenu_ItemUseFunc_LevelUp_SetState_hook 02081C08 0
 
 # pc anywhere
 0001 ClearOverworldRequestFlags 021E6880 1

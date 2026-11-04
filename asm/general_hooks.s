@@ -55,6 +55,25 @@ ldr r3, =0x0208FEFA | 1
 bx r3
 
 
+// replaces "exp = ExpToNextLevel(mon)" in the vanilla item effect (r5 is the mon, [sp, #4] the item) so EXP Candies can add more
+.global LevelUpItemExp_hook
+LevelUpItemExp_hook:
+mov r0, r5
+ldr r3, =0x0206FCA8 | 1 // experience missing for the next level
+bl bx_r3
+mov r2, r0
+mov r0, r5
+ldr r1, [sp, #4]
+bl GetLevelUpItemExp
+mov r2, r0
+mov r0, r5
+mov r1, #8 // MON_DATA_EXPERIENCE
+ldr r3, =0x02090448 | 1 // the add-to-mon-data call
+bx r3
+
+.pool
+
+
 // still needed because function itself is not 0x1C bytes long
 .global Bag_HasSpaceForItem_hook
 Bag_HasSpaceForItem_hook:
@@ -121,3 +140,25 @@ mov r0, r4
 bl PartyMenu_ItemUseFunc_ReuseItem
 ldr r3, =0x02081398 | 1
 bx r3
+
+// replaces the "was elevated to Lv." message block of the vanilla level-up item function (r5 is the work, r4 the mon)
+.global PartyMenu_ItemUseFunc_LevelUp_PrintResult_hook
+PartyMenu_ItemUseFunc_LevelUp_PrintResult_hook:
+mov r0, r5
+mov r1, r4
+bl PartyMenu_ItemUseFunc_LevelUp_PrintResult
+ldr r0, =0x02081B98 | 1
+bx r0
+
+.pool
+
+// replaces "state = 0; return 5" at the end of the vanilla level-up item function (r5 is the work)
+.global PartyMenu_ItemUseFunc_LevelUp_SetState_hook
+PartyMenu_ItemUseFunc_LevelUp_SetState_hook:
+mov r0, r5
+bl PartyMenu_ItemUseFunc_LevelUp_SetState
+mov r0, #5
+ldr r1, =0x02081C10 | 1
+bx r1
+
+.pool

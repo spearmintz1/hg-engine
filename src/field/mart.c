@@ -45,6 +45,11 @@ static const struct BadgeMartItem sBadgeMart[] = {
     { ITEM_SHINY_CHARM,    0, FALSE },
     // sold once the Hall of Fame has been entered
     { ITEM_RARE_CANDY,     0, AFTER_GAME_CLEAR },
+    { ITEM_EXP_CANDY_XS,   0, AFTER_GAME_CLEAR },
+    { ITEM_EXP_CANDY_S,    0, AFTER_GAME_CLEAR },
+    { ITEM_EXP_CANDY_M,    0, AFTER_GAME_CLEAR },
+    { ITEM_EXP_CANDY_L,    0, AFTER_GAME_CLEAR },
+    { ITEM_EXP_CANDY_XL,   0, AFTER_GAME_CLEAR },
     { ITEM_GRISEOUS_ORB,   0, AFTER_GAME_CLEAR },
     { ITEM_GRISEOUS_CORE,  0, AFTER_GAME_CLEAR },
     { ITEM_ADAMANT_ORB,    0, AFTER_GAME_CLEAR },
