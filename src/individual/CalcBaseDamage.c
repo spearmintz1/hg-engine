@@ -1535,8 +1535,10 @@ int UNUSED CalcBaseDamage(void *bw, struct BattleStruct *sp, int moveno, u32 sid
 #endif
 
     // Step 4.3. Psyshock / Psystrike / Secret Sword
+    u8 defensiveSplit = movesplit;
     if ((moveno == MOVE_PSYSHOCK) || (moveno == MOVE_PSYSTRIKE) || (moveno == MOVE_SECRET_SWORD)) {
         DefendingMon.sp_defense = DefendingMon.defense;
+        defensiveSplit = SPLIT_PHYSICAL;
     }
 
 #ifdef DEBUG_DAMAGE_CALC
@@ -1651,7 +1653,7 @@ int UNUSED CalcBaseDamage(void *bw, struct BattleStruct *sp, int moveno, u32 sid
             // handle Protosynthesis and Quark Drive
             // https://www.smogon.com/forums/threads/scarlet-violet-battle-mechanics-research.3709545/page-20#post-9423025
             if ((DefendingMon.ability == ABILITY_PROTOSYNTHESIS || DefendingMon.ability == ABILITY_QUARK_DRIVE)
-                && ((movesplit == SPLIT_PHYSICAL && sp->paradoxBoostedStat[defender] == STAT_DEFENSE) || (movesplit == SPLIT_SPECIAL && sp->paradoxBoostedStat[defender] == STAT_SPDEF))) {
+                && ((defensiveSplit == SPLIT_PHYSICAL && sp->paradoxBoostedStat[defender] == STAT_DEFENSE) || (defensiveSplit == SPLIT_SPECIAL && sp->paradoxBoostedStat[defender] == STAT_SPDEF))) {
                 defenseModifier = QMul_RoundUp(defenseModifier, UQ412__1_3);
             }
         }

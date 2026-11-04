@@ -111,7 +111,7 @@ SDATTOOL := $(PYTHON) tools/SDATTool.py
 LDFLAGS = rom.ld -T $(C_SUBDIR)/linker.ld
 # the ARM9 is an ARMv5TE: without an -march binutils assembles things like `ldr r1, =const` into Thumb-2 (movw), which it cannot run
 ASFLAGS = -mthumb -march=armv5te
-CFLAGS = -mthumb -mno-thumb-interwork -mcpu=arm7tdmi -mtune=arm7tdmi -mno-long-calls -march=armv4t -Wall -Wextra -Wno-builtin-declaration-mismatch -Wno-sequence-point -Wno-address-of-packed-member -Os -fira-loop-pressure -fipa-pta
+CFLAGS = -mthumb -mno-thumb-interwork -mcpu=arm7tdmi -mtune=arm7tdmi -mno-long-calls -march=armv4t -Wall -Wextra -Wno-builtin-declaration-mismatch -Wno-sequence-point -Wno-address-of-packed-member -Werror=override-init -Os -fira-loop-pressure -fipa-pta
 
 # `make AUTO_TEST=Y` builds the headless battle-test ROM (see data/battle_tests/README.md).  Objects are not rebuilt when
 # this flag changes, so run `make clean_code` when switching between a normal and an AUTO_TEST build.
@@ -267,6 +267,7 @@ $(OUTPUT):$(LINK)
 	$(OBJCOPY) -O binary $< $@
 
 all: $(TOOLS) $(OUTPUT) $(OVERLAY_OUTPUTS)
+	$(PYTHON) scripts/check_subscripts.py
 	$(PYTHON) scripts/check_thumb2.py --objdump $(OBJDUMP) $(LINKED_OUTPUTS)
 	rm -rf $(BASE)
 	@mkdir -p $(REQUIRED_DIRECTORIES)

@@ -3080,6 +3080,15 @@ u16 LONG_CALL ActivateParadoxAbility(void *bsys, struct BattleStruct *ctx, u8 cl
 u16 LONG_CALL ActivateHospitality(void *bsys, struct BattleStruct *ctx, u8 client);
 
 /**
+ *  @brief set the terrain overlay and its duration, which the holder's Terrain Extender lengthens
+ *
+ *  @param ctx global battle structure
+ *  @param client battler whose Terrain Extender applies
+ *  @param terrainType the terrain to set, or TERRAIN_NONE to clear it
+ */
+void LONG_CALL UpdateTerrainOverlay(struct BattleStruct *ctx, u8 client, enum TerrainOverlayType terrainType);
+
+/**
  *  @brief get a client's stat (STAT_ATTACK to STAT_SPDEF) with its stat stage applied
  */
 u16 LONG_CALL GetStatValueWithStages(struct BattleStruct *ctx, u32 client, u8 stat);

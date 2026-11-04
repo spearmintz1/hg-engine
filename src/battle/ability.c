@@ -346,6 +346,29 @@ u16 LONG_CALL GetStatValueWithStages(struct BattleStruct *ctx, u32 client, u8 st
 }
 
 /**
+ *  @brief Set the terrain overlay and its duration.  Takes the client explicitly so that abilities
+ *         can set a terrain mid-move without touching current_move_index or calc_work.
+ *
+ *  @param ctx global battle structure
+ *  @param client battler whose Terrain Extender applies
+ *  @param terrainType the terrain to set, or TERRAIN_NONE to clear it
+ */
+void LONG_CALL UpdateTerrainOverlay(struct BattleStruct *ctx, u8 client, enum TerrainOverlayType terrainType)
+{
+    ctx->terrainOverlay.type = terrainType;
+
+    if (terrainType != TERRAIN_NONE) {
+        int item = GetBattleMonItem(ctx, client);
+        ctx->terrainOverlay.numberOfTurnsLeft = 5;
+        if (item == ITEM_TERRAIN_EXTENDER) {
+            ctx->terrainOverlay.numberOfTurnsLeft += BattleItemDataGet(ctx, item, 2);
+        }
+    } else {
+        ctx->terrainOverlay.numberOfTurnsLeft = 0;
+    }
+}
+
+/**
  *  @brief Function to activate paradox abilities Protosynthesis and Quark Drive.
  *         Used in multiple stages of SwitchInAbilityCheck and in the weather and terrain subscripts,
  *         due to it activating after any weather or terrain is changed respectively.
