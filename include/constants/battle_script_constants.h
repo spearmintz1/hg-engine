@@ -460,16 +460,21 @@
 #define SUB_SEQ_SPIKY_SHIELD                          (450)
 #define SUB_SEQ_HANDLE_ANGER_SHELL                    (451)
 #define SUB_SEQ_HANDLE_GEM_ACTIVATION_MESSAGE         (452)
-#define SUB_SEQ_BOOSTER_ENERGY                        (453)
-#define SUB_SEQ_FIELD_CONDITION_PARADOX_ABILITY       (454)
-#define SUB_SEQ_PARADOX_ABILITY_END                   (455)
-#define SUB_SEQ_ORICHALCUM_PULSE                      (456)
-#define SUB_SEQ_HADRON_ENGINE_NO_TERRAIN_SETUP        (457)
-#define SUB_SEQ_SOUL_HEART                            (458)
-#define SUB_SEQ_HANDLE_HOSPITALITY                    (459)
-#define SUB_SEQ_SEED_SOWER                            (460)
+#define SUB_SEQ_LIFE_DEW_HEAL                         (453)
+#define SUB_SEQ_CLEAR_SMOG                            (454)
+#define SUB_SEQ_ENTRAINMENT                           (455)
+#define SUB_SEQ_DECORATE                              (456)
+#define SUB_SEQ_COACHING                              (457)
+#define SUB_SEQ_BOOSTER_ENERGY                        (458)
+#define SUB_SEQ_FIELD_CONDITION_PARADOX_ABILITY       (459)
+#define SUB_SEQ_PARADOX_ABILITY_END                   (460)
+#define SUB_SEQ_ORICHALCUM_PULSE                      (461)
+#define SUB_SEQ_HADRON_ENGINE_NO_TERRAIN_SETUP        (462)
+#define SUB_SEQ_SOUL_HEART                            (463)
+#define SUB_SEQ_HANDLE_HOSPITALITY                    (464)
+#define SUB_SEQ_SEED_SOWER                            (465)
 
-#define MAX_BASE_SUBSCRIPT_NUM 460
+#define MAX_BASE_SUBSCRIPT_NUM 465
 
 // define your custom subscripts below like this
 // #define MOVE_SUBSCRIPT_PTR_CUSTOM_1 (MAX_BASE_SUBSCRIPT_NUM + 1)
@@ -670,6 +675,10 @@
 #define ADD_STATUS_EFF_MORTAL_SPIN                     (189)
 #define ADD_STATUS_EFF_TIDY_UP                         (190)
 #define ADD_STATUS_EFF_BURN_AND_DRAIN_HEALTH           (191)
+#define ADD_STATUS_EFF_CLEAR_SMOG                      (192)
+#define ADD_STATUS_EFF_ENTRAINMENT                     (193)
+#define ADD_STATUS_EFF_DECORATE                        (194)
+#define ADD_STATUS_EFF_COACHING                        (195)
 
 
 // additional effect constants

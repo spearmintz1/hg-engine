@@ -92,8 +92,9 @@ BOOL btl_scr_cmd_101_addentryhazardtoqueue(void *bsys UNUSED, struct BattleStruc
 void BattleContext_RemoveEntryHazardFromQueue(struct BattleStruct *ctx, u32 side, u32 hazard);
 BOOL btl_scr_cmd_102_removeentryhazardfromqueue(void *bsys UNUSED, struct BattleStruct *ctx);
 BOOL btl_scr_cmd_103_checkprotectcontactmoves(void *bsys, struct BattleStruct *ctx);
-BOOL btl_scr_cmd_104_activateparadoxability(void *bsys, struct BattleStruct *ctx);
-BOOL btl_scr_cmd_105_resetparadoxability(void *bsys, struct BattleStruct *ctx);
+BOOL btl_scr_cmd_104_getallyasmsgbattler(void *bw, struct BattleStruct *sp);
+BOOL btl_scr_cmd_105_activateparadoxability(void *bsys, struct BattleStruct *ctx);
+BOOL btl_scr_cmd_106_resetparadoxability(void *bsys, struct BattleStruct *ctx);
 BOOL BtlCmd_GoToMoveScript(struct BattleSystem *bsys, struct BattleStruct *ctx);
 BOOL BtlCmd_WeatherHPRecovery(void *bw, struct BattleStruct *sp);
 BOOL BtlCmd_CalcWeatherBallParams(void *bw, struct BattleStruct *sp);
@@ -377,6 +378,7 @@ const u8 *BattleScrCmdNames[] =
     "AddEntryHazardToQueue",
     "RemoveEntryHazardFromQueue",
     "CheckProtectContactMoves",
+    "GetAllyAsMsgBattler",
     "ActivateParadoxAbility",
     "ResetParadoxAbility",
     // "YourCustomCommand",
@@ -425,8 +427,9 @@ const btl_scr_cmd_func NewBattleScriptCmdTable[] =
     [0x101 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_101_addentryhazardtoqueue,
     [0x102 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_102_removeentryhazardfromqueue,
     [0x103 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_103_checkprotectcontactmoves,
-    [0x104 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_104_activateparadoxability,
-    [0x105 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_105_resetparadoxability,
+    [0x104 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_104_getallyasmsgbattler,
+    [0x105 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_105_activateparadoxability,
+    [0x106 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_106_resetparadoxability,
     // [BASE_ENGINE_BTL_SCR_CMDS_MAX - START_OF_NEW_BTL_SCR_CMDS + 1] = btl_scr_cmd_custom_01_your_custom_command,
 };
 
@@ -1799,6 +1802,8 @@ BOOL CheckMoveIsChargeMove(struct BattleStruct *sp, int moveNo) {
     case MOVE_EFFECT_CHARGE_TURN_ATK_SP_ATK_SPEED_UP_2:
     case MOVE_EFFECT_CHARGE_TURN_SP_ATK_UP:
     case MOVE_EFFECT_CHARGE_TURN_SP_ATK_UP_RAIN_SKIPS:
+    case MOVE_EFFECT_CHARGE_TURN_BURN_HIT:
+    case MOVE_EFFECT_CHARGE_TURN_PARALYZE_HIT:
         return TRUE;
     }
     return FALSE;
@@ -3277,6 +3282,8 @@ BOOL BtlCmd_WeatherHPRecovery(void *bw, struct BattleStruct *sp) {
         // sprintf(buf, "Recover half\n");
         // debugsyscall(buf);
         sp->hp_calc_work = sp->battlemon[sp->attack_client].maxhp / 2;
+    } else if (sp->current_move_index == MOVE_SHORE_UP) {
+        sp->hp_calc_work = (sp->field_condition & WEATHER_SANDSTORM_ANY) ? BattleDamageDivide(sp->battlemon[sp->attack_client].maxhp * 20, 30) : sp->battlemon[sp->attack_client].maxhp / 2;
     } else if (sp->field_condition & WEATHER_SUNNY_ANY) {
         // sprintf(buf, "Recover 2/3\n");
         // debugsyscall(buf);
@@ -3981,6 +3988,29 @@ BOOL BtlCmd_TrySwapItems(void* bw, struct BattleStruct *sp)
 }
 
 /**
+ *  @brief script command to set the attacker's ally as the message battler, or jump if it has no valid ally
+ *
+ *  @param bw battle work structure
+ *  @param sp global battle structure
+ *  @return FALSE
+ */
+BOOL btl_scr_cmd_104_getallyasmsgbattler(void *bw, struct BattleStruct *sp)
+{
+    IncrementBattleScriptPtr(sp, 1);
+
+    int address = read_battle_script_param(sp);
+    int ally = BATTLER_ALLY(sp->attack_client);
+
+    if ((BattleTypeGet(bw) & (BATTLE_TYPE_DOUBLE | BATTLE_TYPE_MULTI)) && sp->battlemon[ally].hp) {
+        sp->battlerIdTemp = ally;
+    } else {
+        IncrementBattleScriptPtr(sp, address);
+    }
+
+    return FALSE;
+}
+
+/**
  * @brief Activate all clients' Paradox Abilities depending on input.
  *        ActivateParadoxAbility will do the other checks
  *
@@ -3991,7 +4021,7 @@ BOOL BtlCmd_TrySwapItems(void* bw, struct BattleStruct *sp)
  * @param ctx BattleContext
  * @return FALSE
  */
-BOOL btl_scr_cmd_104_activateparadoxability(void *bsys, struct BattleStruct *ctx)
+BOOL btl_scr_cmd_105_activateparadoxability(void *bsys, struct BattleStruct *ctx)
 {
     IncrementBattleScriptPtr(ctx, 1);
 
@@ -4033,7 +4063,7 @@ BOOL btl_scr_cmd_104_activateparadoxability(void *bsys, struct BattleStruct *ctx
  * @param ctx BattleContext
  * @return FALSE
  */
-BOOL btl_scr_cmd_105_resetparadoxability(void *bsys, struct BattleStruct *ctx)
+BOOL btl_scr_cmd_106_resetparadoxability(void *bsys, struct BattleStruct *ctx)
 {
     IncrementBattleScriptPtr(ctx, 1);
 

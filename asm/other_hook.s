@@ -922,17 +922,20 @@ bx r3
 .pool
 
 
-// the Frontier display structs in overlay 83 keep the ability as a u8 beside the species (u16, form not kept), so the
-// full id is recovered from the species before it is buffered into the message.  the form is unknown here, so form 0's abilities are searched
-// 02242382 (r4 = display struct, ability +0x810, species +0x80c), replaces: movs r2, #0x81; lsls r2, r2, #4; ldrb r2, [r4, r2]; ldr r0, [r4, #0x24]; movs r1, #0
+// the Frontier display structs in overlay 83 keep the ability as a u8 beside the species (u16) and form (u8), so the
+// full id is recovered from them before it is buffered into the message
+// 02242382 (r4 = display struct, ability +0x810, species +0x80c, form +0x826), replaces: movs r2, #0x81; lsls r2, r2, #4; ldrb r2, [r4, r2]; ldr r0, [r4, #0x24]; movs r1, #0
 .global Frontier_DisplayAbility_ov83_a
 Frontier_DisplayAbility_ov83_a:
 mov r2, #0x81
 lsl r2, r2, #4
 sub r3, r2, #4
 ldrh r0, [r4, r3]
+mov r1, #0x82
+lsl r1, r1, #4
+add r1, #6
+ldrb r1, [r4, r1]
 ldrb r2, [r4, r2]
-mov r1, #0
 ldr r3, =ResolveAbilityFromLowByte
 bl bx_r3
 mov r2, r0
@@ -943,14 +946,16 @@ bx r3
 
 .pool
 
-// 02246328 (r5 = display struct, r2 = 0x554, ability +0x5C8, species +0x5C4), replaces: adds r2, #0x74; ldrb r2, [r5, r2]; ldr r0, [r5, #0x24]; movs r1, #0
+// 02246328 (r5 = display struct, r2 = 0x554, ability +0x5C8, species +0x5C4, form +0x5DE), replaces: adds r2, #0x74; ldrb r2, [r5, r2]; ldr r0, [r5, #0x24]; movs r1, #0
 .global Frontier_DisplayAbility_ov83_b
 Frontier_DisplayAbility_ov83_b:
 add r2, #0x74
 sub r3, r2, #4
 ldrh r0, [r5, r3]
+mov r1, #0x16
+add r1, r1, r2
+ldrb r1, [r5, r1]
 ldrb r2, [r5, r2]
-mov r1, #0
 ldr r3, =ResolveAbilityFromLowByte
 bl bx_r3
 mov r2, r0

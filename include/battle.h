@@ -702,7 +702,9 @@ struct __attribute__((packed)) OneTurnEffect
                u32 numberOfKOs : 3;
                u32 pendingFocusPunchFlag : 1;
                u32 gainedProtectFlagFromAlly : 1;
-               u32 : 10;
+               u32 fellStingerProcessedFlag : 1;
+               u32 forceOutProcessedFlag : 1;
+               u32 : 8;
 
     /* 0x04 */ int physical_damage[4];    /**< [don't use] physical damage as indexed by battler.  Counter doesn't use this, use OneSelfTurnEffect's physical_damage (sp->oneSelfFlag[battler].physical_damage) */
     /* 0x14 */ int physical_damager;      /**< [don't use] last battler that physically damaged this pokémon.  Counter doesn't use this, use OneSelfTurnEffect's physical_damager (sp->oneSelfFlag[battler].physical_damager) */
@@ -1741,6 +1743,7 @@ struct __attribute__((packed)) ILLUSION_STRUCT
     u8 illusionPos[4];
     u8 illusionClient[4];
     u8 isSideInIllusion;
+    u8 illusionCopiedPos[4]; // party slot of the mon the disguise copies, fixed when the disguise is set
 };
 
 struct __attribute__((packed)) SWITCH_MESSAGE_PARAM
@@ -2869,6 +2872,22 @@ u32 LONG_CALL ServerWazaHitAfterCheckAct(void *bw, struct BattleStruct *sp);
  */
 BOOL LONG_CALL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no);
 
+/**
+ *  @brief check whether a Dragon Tail / Circle Throw hit landed and can be followed by a drag attempt
+ *
+ *  @param ctx global battle structure
+ *  @return TRUE if the move has the force-switch-hit effect, dealt damage to a living, non-Dynamaxed target (not through a Substitute) and its user is alive; FALSE otherwise
+ */
+BOOL LONG_CALL ForceSwitchHitLanded(struct BattleStruct *ctx);
+
+/**
+ *  @brief check whether a Dragon Tail / Circle Throw hit will actually drag its target out
+ *
+ *  @param ctx global battle structure
+ *  @return TRUE if ForceSwitchHitLanded and the target is not anchored by Suction Cups or Ingrain; FALSE otherwise
+ */
+BOOL LONG_CALL ForceSwitchHitWillDrag(struct BattleStruct *ctx);
+
 
 // defined in battle_script_commands.c
 enum
@@ -3459,7 +3478,9 @@ BOOL LONG_CALL BattleContext_CheckMoveImprisoned(struct BattleSystem *bsys, stru
 
 BOOL LONG_CALL BattleContext_CheckMoveUnuseableInGravity(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo);
 
+BOOL LONG_CALL BattleContext_CheckMoveHealBlockedBase(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo);
 BOOL LONG_CALL BattleContext_CheckMoveHealBlocked(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo);
+BOOL LONG_CALL BattleContext_CheckMoveCallable(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo);
 
 //Buffer messages related to being unable to select moves?
 BOOL LONG_CALL ov12_02251A28(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int movePos, MESSAGE_PARAM *msg);
@@ -3808,6 +3829,7 @@ void LONG_CALL BufferItemNameWithIndefArticle(u32 *msgFmt, u32 fieldno, u32 item
 int LONG_CALL MoveCheckDamageNegatingAbilities(struct BattleStruct *sp, int attacker, int defender);
 
 int LONG_CALL GetTypeEffectiveness(struct BattleSystem *bw, struct BattleStruct *sp, int attack_client, int defence_client, int move_type, u32 *flag);
+u8 UpdateTypeEffectiveness(u32 move_no, u8 defender_type, u8 defaultEffectiveness);
 
 BOOL LONG_CALL CanItemBeRemovedFromSpecies(u16 species, u16 item);
 

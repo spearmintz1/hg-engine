@@ -232,7 +232,8 @@ BOOL btl_scr_cmd_33_statbuffchange(void *bw, struct BattleStruct *sp)
         }
         if ((sp->addeffect_flag & ADD_STATUS_NO_ABILITY) == 0)
         {
-            if (sp->attack_client != sp->state_client)
+            // a held item lowering its own holder's stats (Contrary Weakness Policy) is not an opponent's stat drop: mist, flower veil and the like never block it
+            if (sp->attack_client != sp->state_client && sp->addeffect_type != ADD_EFFECT_HELD_ITEM)
             {
                 // infiltrator bypasses mist
                 if (sp->scw[IsClientEnemy(bw, sp->state_client)].mistCount && GetBattlerAbility(sp, sp->attack_client) != ABILITY_INFILTRATOR)

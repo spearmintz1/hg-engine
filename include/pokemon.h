@@ -657,9 +657,16 @@ struct PLIST_WORK
     /* 0x658 */ void* /*SpriteRenderer **/ spriteRenderer;
     /* 0x65C */ void* /*SpriteGfxHandler **/ spriteGfxHandler;
     /* 0x660 */ void* /*Sprite **/ sprites[_PARTY_MENU_SPRITE_ID_MAX]; // 0x660
-    /* 0x6D4 */ u8 padding_x6D4[0xC65-0x660-0x74];
-    u8 pos;
+    /* 0x6D4 */ u8 padding_x6D4[0x7C0-0x6D4];
+    /* 0x7C0 */ void *msgData;    // MsgData of the party menu text (data/text/300.txt)
+    /* 0x7C4 */ u32 *msgFormat;   // MessageFormat the text placeholders are buffered into
+    /* 0x7C8 */ void *msgString;  // String the expanded message is written to and printed from
+    /* 0x7CC */ u8 padding_x7CC[0xC65-0x7CC];
+    /* 0xC65 */ u8 pos;
+    /* 0xC66 */ u8 padding_xC66;
+    /* 0xC67 */ u8 subState;      // state of the active subtask (PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop and friends)
 };
+_Static_assert(__builtin_offsetof(struct PLIST_WORK, subState) == 0xC67, "PLIST_WORK fields are read at fixed offsets by the arm9 code");
 
 struct IconFormChangeData {
     int state;
@@ -1663,6 +1670,14 @@ BOOL LONG_CALL HandleBoxPokemonFormeChanges(struct BoxPokemon* bp);
 BOOL LONG_CALL CanUseRevealGlass(struct PartyPokemon *pp);
 
 /**
+ *  @brief check if the prison bottle can be used on a PartyPokemon
+ *
+ *  @param pp PartyPokemon to check the prison bottle against
+ *  @return TRUE if the prison bottle can be used; FALSE otherwise
+ */
+BOOL LONG_CALL CanUsePrisonBottle(struct PartyPokemon *pp);
+
+/**
  *  @brief check if DNA splicers can be used, return position in party if so
  *
  *  @param pp PartyPokemon to check for
@@ -1858,6 +1873,28 @@ u32 LONG_CALL GetLevelCap(void);
  *  @return TRUE if level >= level cap; FALSE otherwise
  */
 u32 LONG_CALL IsLevelAtLevelCap(u32 level);
+
+/**
+ *  @brief experience a level-up item grants; the vanilla Rare Candy amount is exactly one level, EXP Candies give a fixed amount
+ *         that stops at the level cap
+ *
+ *  @param mon PartyPokemon the item is used on
+ *  @param item item being used
+ *  @param nextLevelExp experience vanilla would grant: what is missing to reach the next level
+ *  @return experience to add to mon
+ */
+u32 LONG_CALL GetLevelUpItemExp(struct PartyPokemon *mon, u32 item, u32 nextLevelExp);
+
+/**
+ *  level the mon the last level-up item was used on had before the item was applied; the party menu reads it to learn every
+ *  move between that level and the new one, and to tell whether the item raised the level at all
+ */
+extern u8 gLevelUpItemFromLevel;
+
+/**
+ *  experience the last level-up item granted
+ */
+extern u32 gLevelUpItemExp;
 
 /**
  *  @brief grab the nature of a BoxPokemon factoring in the nature mint override field

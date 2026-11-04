@@ -794,6 +794,17 @@ BOOL LONG_CALL CanUseRevealGlass(struct PartyPokemon *pp)
 }
 
 /**
+ *  @brief check if the prison bottle can be used on a PartyPokemon
+ *
+ *  @param pp PartyPokemon to check the prison bottle against
+ *  @return TRUE if the prison bottle can be used; FALSE otherwise
+ */
+BOOL LONG_CALL CanUsePrisonBottle(struct PartyPokemon *pp)
+{
+    return GetMonData(pp, MON_DATA_SPECIES, NULL) == SPECIES_HOOPA;
+}
+
+/**
  *  @brief check if a certain type of nectar can be used on a PartyPokemon
  *
  *  @param pp PartyPokemon to check the nectar against
@@ -952,6 +963,20 @@ u32 LONG_CALL UseItemMonAttrChangeCheck(struct PLIST_WORK *wk, void *dat)
         sys_FreeMemoryEz(dat);
         PokeList_FormDemoOverlayLoad(wk);
         ChangePartyPokemonToForm(pp, wk->dat->after_mons); // this works alright
+        return TRUE;
+    }
+
+    // handle hoopa: the bottle toggles between confined and unbound, and unbound-only Hyperspace Fury goes back to Hole
+
+    if (wk->dat->item == ITEM_PRISON_BOTTLE
+     && CanUsePrisonBottle(pp) == TRUE)
+    {
+        wk->dat->after_mons = GetMonData(pp, MON_DATA_FORM, NULL) ^ 1;
+        sys_FreeMemoryEz(dat);
+        PokeList_FormDemoOverlayLoad(wk);
+        ChangePartyPokemonToForm(pp, wk->dat->after_mons);
+        if (wk->dat->after_mons == 0)
+            SwapPartyPokemonMove(pp, MOVE_HYPERSPACE_FURY, MOVE_HYPERSPACE_HOLE);
         return TRUE;
     }
 
@@ -2225,6 +2250,48 @@ u32 LONG_CALL IsLevelAtLevelCap(u32 level)
 }
 
 
+u8 gLevelUpItemFromLevel;
+u32 gLevelUpItemExp;
+
+/**
+ *  @brief experience a level-up item grants; the vanilla Rare Candy amount is exactly one level, EXP Candies give a fixed amount
+ *         that stops at the level cap.  Remembers the level and the experience for the party menu, which has to learn the moves
+ *         of every level gained and say so when the item raised no level.
+ *
+ *  @param mon PartyPokemon the item is used on
+ *  @param item item being used
+ *  @param nextLevelExp experience vanilla would grant: what is missing to reach the next level
+ *  @return experience to add to mon
+ */
+u32 LONG_CALL GetLevelUpItemExp(struct PartyPokemon *mon, u32 item, u32 nextLevelExp)
+{
+    u32 amount;
+
+    gLevelUpItemFromLevel = GetMonData(mon, MON_DATA_LEVEL, NULL);
+
+    switch ((u16)item) {
+    case ITEM_EXP_CANDY_XS: amount = 100; break;
+    case ITEM_EXP_CANDY_S:  amount = 800; break;
+    case ITEM_EXP_CANDY_M:  amount = 3000; break;
+    case ITEM_EXP_CANDY_L:  amount = 10000; break;
+    case ITEM_EXP_CANDY_XL: amount = 30000; break;
+    default:
+        gLevelUpItemExp = nextLevelExp;
+        return nextLevelExp;
+    }
+
+    u32 species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    u32 exp = GetMonData(mon, MON_DATA_EXPERIENCE, NULL);
+    u32 maxExp = GetExpByGrowthRateAndLevel(PokePersonalParaGet(species, PERSONAL_EXP_GROUP), GetLevelCap());
+
+    if (exp >= maxExp)
+        amount = 0;
+    else if (amount > maxExp - exp)
+        amount = maxExp - exp;
+    gLevelUpItemExp = amount;
+    return amount;
+}
+
 #ifdef IMPLEMENT_LEVEL_CAP
 
 /**
@@ -2359,6 +2426,7 @@ u32 LONG_CALL GenerateShinyPIDKeepSubstructuresIntact(u32 otId, u32 pid)
 /**
  *  @brief try learning a move upon level up
 *          edited to allow for moves to be learned on evolution at level 0
+*          and, in the party menu after a level-up item, to learn the moves of every level gained since the item was used
  *
  *  @param mon PartyPokemon whose level is checked for moves
  *  @param last_i last entry in the level up learnset table that was checked
@@ -2368,10 +2436,15 @@ u32 LONG_CALL GenerateShinyPIDKeepSubstructuresIntact(u32 otId, u32 pid)
 u32 MonTryLearnMoveOnLevelUp(struct PartyPokemon *mon, int * last_i, u16 * sp0)
 {
     BOOL isMonEvolving = FALSE;
+    BOOL isLevelUpItem = FALSE;
     register u32 retAddr asm("lr");
     if (retAddr == 0x020764EB) // right at the end of the massive evolution callback
     {
         isMonEvolving = TRUE;
+    }
+    else if (retAddr == 0x02081D03) // right after the call in PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop
+    {
+        isLevelUpItem = TRUE;
     }
     u32 ret = 0;
     u32 *levelUpLearnset = sys_AllocMemory(HEAPID_DEFAULT, LEARNSET_TOTAL_MOVES * sizeof(u32));
@@ -2384,9 +2457,14 @@ u32 MonTryLearnMoveOnLevelUp(struct PartyPokemon *mon, int * last_i, u16 * sp0)
     if (isMonEvolving && LEVEL_UP_LEARNSET_LEVEL(levelUpLearnset[*last_i]) == 0) // when evolving, try to learn moves at level 0
         level = 0;
 
+    u32 minLevel = level;
+    if (isLevelUpItem) // an item can raise the level by many levels at once
+        minLevel = gLevelUpItemFromLevel + 1;
+
     for (; levelUpLearnset[*last_i] != LEVEL_UP_LEARNSET_END; (*last_i)++)
     {
-        if (LEVEL_UP_LEARNSET_LEVEL(levelUpLearnset[*last_i]) != level)
+        u32 learnLevel = LEVEL_UP_LEARNSET_LEVEL(levelUpLearnset[*last_i]);
+        if (learnLevel < minLevel || learnLevel > level)
             continue;
         if (isMonEvolving && level != 0) // a mon that is evolving may have a move at the current level that it already attempted to learn at level 0, so skip it
         {

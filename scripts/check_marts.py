@@ -4,7 +4,8 @@
 Follows the special mart pointer table at 0x0210FA3C in arm9 into the field extension overlay, checks that each list terminates
 inside its own symbol (no overrun into a neighbour), has no duplicates and only valid item ids, and that the table matches
 the `repoints` file.  The general mart (src/field/mart.c sBadgeMart) is read from the same overlay and resolved for a few
-badge/game-clear states.  Exits 1 on any failure.
+badge/game-clear states.  Every item a mart sells must also have a non-zero price in data/itemdata/itemdata.c.  Exits 1 on any
+failure.
 
 usage: scripts/check_marts.py [rom.nds]
 """
@@ -57,6 +58,23 @@ def load_item_names():
             continue
         names[value] = name[len("ITEM_"):]
     return names
+
+
+def load_item_prices():
+    """{item name: buy price} from the item data source; an entry header is `[ITEM_X]` or `[ITEM_X - NUM_UNKNOWN_SLOTS...]`
+    and the first `.price` after it belongs to that item."""
+    prices = {}
+    current = None
+    for line in (ROOT / "data/itemdata/itemdata.c").read_text().splitlines():
+        header = re.match(r"\[ITEM_(\w+)[^\]]*\] =", line)
+        if header:
+            current = header.group(1)
+            continue
+        price = re.match(r"\s*\.price = (\d+),", line)
+        if price and current:
+            prices[current] = int(price.group(1))
+            current = None
+    return prices
 
 
 def extract(rom, out):
@@ -127,7 +145,7 @@ def fmt(ids, names):
     return ", ".join(names.get(i, f"?{i}") for i in ids)
 
 
-def check_list(label, items, names, size_bytes=None):
+def check_list(label, items, names, prices, size_bytes=None):
     if len(items) == 0:
         fail(f"{label}: empty list")
     if len(items) > MART_UI_MAX_ITEMS:
@@ -138,16 +156,19 @@ def check_list(label, items, names, size_bytes=None):
     bad = [i for i in items if i not in names]
     if bad:
         fail(f"{label}: invalid item ids {bad}")
+    unpriced = [names[i] for i in items if i in names and not prices.get(names[i])]
+    if unpriced:
+        fail(f"{label}: sold with no price in the item data {unpriced}")
     if size_bytes is not None and size_bytes != 2 * (len(items) + 1):
         fail(f"{label}: terminator ends the list at {2 * (len(items) + 1)} bytes but the symbol is {size_bytes} bytes")
 
 
-def resolve_general(read, addr, size, names):
+def resolve_general(read, addr, size, names, prices):
     entry = 4
     if size % entry:
         fail(f"sBadgeMart size {size} is not a multiple of {entry}")
     entries = [struct.unpack("<HBB", read(addr + i * entry, entry)) for i in range(size // entry)]
-    check_list("general mart (all entries)", [e[0] for e in entries], names)
+    check_list("general mart (all entries)", [e[0] for e in entries], names, prices)
     for item, badges, clear in entries:
         if badges > 16 or clear > 1:
             fail(f"general mart entry {names.get(item, item)}: badges {badges} / clear {clear} out of range")
@@ -167,6 +188,7 @@ def main():
     if not rom.exists():
         sys.exit(f"{rom} not found; run make first")
     names = load_item_names()
+    prices = load_item_prices()
     symbols = nm_symbols()
     repoints = repoint_symbols()
 
@@ -196,7 +218,7 @@ def main():
             fail("sBadgeMart not found in build/field_linked.o")
         else:
             addr, size = symbols["sBadgeMart"]
-            resolve_general(read, addr, size, names)
+            resolve_general(read, addr, size, names, prices)
 
         print()
         for mart_id in range(NUM_MARTS):
@@ -214,14 +236,14 @@ def main():
             items, terminated = read_u16s_until_terminator(read, ptr)
             if not terminated:
                 fail(f"{label}: list at {ptr:#010x} does not terminate")
-            check_list(label, items, names, sym_size)
+            check_list(label, items, names, prices, sym_size)
             print(f"{mart_id:2} {ptr:#010x} {sym} ({len(items)} items)\n     {fmt(items, names)}")
 
     print()
     if failures:
         print(f"{len(failures)} check(s) FAILED")
         sys.exit(1)
-    print(f"OK: general mart and all {NUM_MARTS} special marts terminate, have no duplicates and only valid item ids")
+    print(f"OK: general mart and all {NUM_MARTS} special marts terminate, have no duplicates, only valid item ids and a price for every item")
 
 
 if __name__ == "__main__":

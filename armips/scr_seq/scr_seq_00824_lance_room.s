@@ -347,6 +347,7 @@ scr_seq_0824_04C3:
     releaseall
     end
 
+    .align 2
 scr_seq_0824_05BC:
     step 12, 2
     step 15, 1

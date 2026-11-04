@@ -1432,13 +1432,18 @@
     .long 259
     .endm
 
-    .macro ActivateParadoxAbility arg_0
+    .macro GetAllyAsMsgBattler label
     .long 260
+    .long (((\label - .) / 4) - 1)
+    .endm
+
+    .macro ActivateParadoxAbility arg_0
+    .long 261
     .long \arg_0
     .endm
 
     .macro ResetParadoxAbility arg_0
-    .long 261
+    .long 262
     .long \arg_0
     .endm
 
