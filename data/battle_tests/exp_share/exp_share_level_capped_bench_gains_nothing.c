@@ -39,7 +39,7 @@ BEGIN_TEST
     .enemyParty = {
         {
             .species = SPECIES_PIDGEY,
-            .level = 30,
+            .level = 5,
             .form = 0,
             .ability = ABILITY_NONE,
             .item = ITEM_NONE,
@@ -94,8 +94,10 @@ BEGIN_TEST
         { ACTION_NONE, 0 },
 } },
     .expectations = {
-        { .expectationType = EXPECTATION_TYPE_MESSAGE_CONTAINS, .expectationValue.message = "Pikachu gained" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE_CONTAINS, .expectationValue.message = "Pikachu gained a boosted" },
+        // the participant is far from a level-up, so the very next message is the victory line unless the bench gained: DOES_NOT_CONTAIN only checks that one message
         { .expectationType = EXPECTATION_TYPE_MESSAGE_DOES_NOT_CONTAIN, .expectationValue.message = "gained" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "You got $1008 for winning!" },
     },
 }
 END_TEST

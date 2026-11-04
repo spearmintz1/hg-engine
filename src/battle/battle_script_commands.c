@@ -1,4 +1,5 @@
 #include "../../include/types.h"
+#include "../../include/bag.h"
 #include "../../include/battle.h"
 #include "../../include/config.h"
 #include "../../include/debug.h"
@@ -1337,28 +1338,16 @@ BOOL btl_scr_cmd_27_shouldgetexp(void *bw, struct BattleStruct *sp)
 // global variables to track experience
 u8 ALIGN4 scratchpad[4] = {0, 0, 0, 0};
 
-#define monCount scratchpad[0]
 #define trackPartyExperience scratchpad[2]
 
 /**
- *  @brief count the pokémon that battled and can still gain experience; their number is the divisor of the experience
+ *  @brief whether the Exp. Share gives experience to the party: the player owns the key item and has not switched it off
  *
- *  @param expcalc exp calculator structure
+ *  @return TRUE if the pokémon that did not battle gain experience
  */
-static void CountExpRecipients(struct EXP_CALCULATOR *expcalc)
+static BOOL IsExpShareActive(void)
 {
-    struct Party *party = BattleWorkPokePartyGet(expcalc->bw, 0);
-    u32 participants = expcalc->sp->obtained_exp_right_flag[(expcalc->sp->fainting_client >> 1) & 1];
-
-    monCount = 0;
-    for (int i = 0; i < party->count; i++)
-    {
-        struct PartyPokemon *pploop = BattleWorkPokemonParamGet(expcalc->bw, 0, i);
-        if (GetMonData(pploop, MON_DATA_SPECIES, NULL) && GetMonData(pploop, MON_DATA_HP, NULL) && (participants & No2Bit(i)))
-        {
-            monCount++;
-        }
-    }
+    return !CheckScriptFlag(FLAG_EXP_SHARE_OFF) && Bag_HasItem(Sav2_Bag_get(SaveBlock2_get()), ITEM_EXP_SHARE, 1, HEAPID_BATTLE_HEAP);
 }
 
 /**
@@ -1366,14 +1355,14 @@ static void CountExpRecipients(struct EXP_CALCULATOR *expcalc)
  *
  *  @param expcalc exp calculator structure
  *  @param firstSlot first party slot that has not been paid yet
- *  @return bit mask of party slots, 0 if the Exp. Share is turned off
+ *  @return bit mask of party slots, 0 if the Exp. Share is not active
  */
 static u32 GetExpShareBenchMask(struct EXP_CALCULATOR *expcalc, int firstSlot)
 {
     u32 participants = expcalc->sp->obtained_exp_right_flag[(expcalc->sp->fainting_client >> 1) & 1];
     u32 mask = 0;
 
-    if (CheckScriptFlag(FLAG_EXP_SHARE_OFF))
+    if (!IsExpShareActive())
     {
         return 0;
     }
@@ -1392,17 +1381,13 @@ static u32 GetExpShareBenchMask(struct EXP_CALCULATOR *expcalc, int firstSlot)
  *  @brief set the experience the pokémon being paid gains before the multipliers of Task_DistributeExp
  *
  *  @param sp global battle structure
- *  @param totalexp experience of the fainted pokémon, shared among the pokémon that battled
- *  @param isExpShareOnly whether the pokémon being paid did not battle, so it only gets half a share
+ *  @param totalexp experience of the fainted pokémon; every pokémon that battled gets all of it
+ *  @param isExpShareOnly whether the pokémon being paid did not battle, so it only gets half
  */
 static void SetObtainedExp(struct BattleStruct *sp, u32 totalexp, BOOL isExpShareOnly)
 {
-    u32 share = totalexp / (monCount ? monCount : 1); // monCount is 0 when every pokémon that battled has fainted, e.g. to Explosion
+    u32 share = isExpShareOnly ? totalexp / 2 : totalexp;
 
-    if (isExpShareOnly)
-    {
-        share /= 2;
-    }
     sp->obtained_exp = share ? share : 1;
     sp->exp_share_obtained_exp = 0; // only read for pokémon holding the old Exp. Share, which no longer exists
 }
@@ -1441,12 +1426,6 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
                 break;
             }
         }
-    }
-
-    // the flags of the pokémon already paid are cleared as the distribution goes on, so the participants can only be counted before the first payout
-    if (expcalc->seq_no == 0 && expcalc->work[6] == 0)
-    {
-        CountExpRecipients(expcalc);
     }
 
 #if EXPERIENCE_FORMULA_GEN == 5 || EXPERIENCE_FORMULA_GEN > 6 // scaled exp rate
@@ -1586,11 +1565,6 @@ BOOL Task_DistributeExp_capture_experience(void *arg0, void *work, u32 get_clien
         int sel_mons_no;
         struct PartyPokemon *pp;
         u32 benchMask = GetExpShareBenchMask(expcalc, 0);
-
-        if (!trackPartyExperience) // first pokémon of this capture; the flags of the ones paid later are already cleared
-        {
-            CountExpRecipients(expcalc);
-        }
 
         // grab the pokémon that is actually gaining the experience, factor in experience share here because i don't want to expose the whole main task
         for (sel_mons_no = 0; sel_mons_no < BattleWorkPokeCountGet(expcalc->bw, 0); sel_mons_no++)

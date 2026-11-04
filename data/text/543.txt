@@ -105,4 +105,4 @@ Professor Elm: {STRVAR_1 3, 0, 0}!\nI’m truly surprised!\rI can’t believe th
 Hmm...\nAs far as I know, there are no\fPokémon like this at Johto...\rJust like Mr. Pokémon was saying\nover the phone.\rYou seem to be there when\nsomething exciting happens,\f{STRVAR_1 3, 0, 0}!\rYou are making me all excited!\nI’ll give you a present for that.\fPlease take it.\r
 Hmm...\nAs far as I know, there are no\fPokémon like this at Johto...\rJust like Mr. Pokémon was saying\nover the phone.\rYou seem to be there when\nsomething exciting happens,\f{STRVAR_1 3, 0, 0}!\rYou are making me all excited!\nI’ll give you a present for that.\fPlease take it.\r
 Don’t forget some candy for the\ntrip! It will increase a Pokémon’s level!\r
-Professor Elm: Oh, before you go!\nTake this Exp. Share with you.\rWhen it’s on, your whole team gets\nExp. Points, even if they sit out.\rYou can turn it on or off from the\nKey Items pocket in your Bag.\r
+Professor Elm: Oh, I almost forgot!\nTake this Exp. Share with you.\rWhen it’s on, your whole team gets\nExp. Points, even if they sit out.\rYou can turn it on or off from the\nKey Items pocket in your Bag.\r

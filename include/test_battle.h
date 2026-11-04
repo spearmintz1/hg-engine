@@ -82,7 +82,8 @@ struct PACKED TestBattleScenario {
     u32 fieldCondition; // FIELD_CONDITION_TRICK_ROOM_INIT, etc.
     u8 terrain; // GRASSY_TERRAIN, MISTY_TERRAIN, etc.
     u8 expShareOff; // TRUE switches the Exp. Share key item off for the scenario, FALSE (the default) leaves it on
-    u8 _padding[2]; // together with expShareOff, the 3 bytes of padding that align the struct to 4 bytes
+    u8 expShareNotOwned; // TRUE takes the Exp. Share key item out of the bag for the scenario, FALSE (the default) puts it in
+    u8 _padding; // together with expShareOff and expShareNotOwned, the 3 bytes of padding that align the struct to 4 bytes
     struct TestBattlePokemon playerParty[6]; // Player party
     struct TestBattlePokemon enemyParty[6]; // Enemy's party
 

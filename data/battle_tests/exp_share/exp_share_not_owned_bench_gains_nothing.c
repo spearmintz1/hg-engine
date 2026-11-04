@@ -1,9 +1,9 @@
-// Test: Every pokemon that battled gets the same share of the experience; paying one of them must not change the divisor for the next
+// Test: Without the Exp. Share key item in the bag, only the pokemon that battled gains experience, even though the switch is on
 #include "../battle_tests.h"
 BEGIN_TEST
 {
-    .battleType = BATTLE_TYPE_DOUBLES,
-    .expShareOff = TRUE,
+    .battleType = BATTLE_TYPE_TRAINER,
+    .expShareNotOwned = TRUE,
     .weather = FIELD_CONDITION_NONE,
     .fieldCondition = 0,
     .terrain = TERRAIN_NONE,
@@ -21,7 +21,7 @@ BEGIN_TEST
             .moveEffectFlags = 0,
         },
         {
-            .species = SPECIES_RATTATA,
+            .species = SPECIES_ODDISH,
             .level = 10,
             .form = 0,
             .ability = ABILITY_NONE,
@@ -40,7 +40,7 @@ BEGIN_TEST
     .enemyParty = {
         {
             .species = SPECIES_PIDGEY,
-            .level = 30,
+            .level = 5,
             .form = 0,
             .ability = ABILITY_NONE,
             .item = ITEM_NONE,
@@ -50,18 +50,7 @@ BEGIN_TEST
             .condition2 = 0,
             .moveEffectFlags = 0,
         },
-        {
-            .species = SPECIES_PIDGEY,
-            .level = 30,
-            .form = 0,
-            .ability = ABILITY_NONE,
-            .item = ITEM_NONE,
-            .moves = { MOVE_SPLASH, MOVE_NONE, MOVE_NONE, MOVE_NONE },
-            .hp = FULL_HP,
-            .status = 0,
-            .condition2 = 0,
-            .moveEffectFlags = 0,
-        },
+        { .species = SPECIES_NONE },
         { .species = SPECIES_NONE },
         { .species = SPECIES_NONE },
         { .species = SPECIES_NONE },
@@ -77,7 +66,7 @@ BEGIN_TEST
         { ACTION_NONE, 0 },
         { ACTION_NONE, 0 },
 }, {
-        { ACTION_MOVE_SLOT_1, BATTLER_ENEMY_FIRST },
+        { ACTION_NONE, 0 },
         { ACTION_NONE, 0 },
         { ACTION_NONE, 0 },
         { ACTION_NONE, 0 },
@@ -96,7 +85,7 @@ BEGIN_TEST
         { ACTION_NONE, 0 },
         { ACTION_NONE, 0 },
 }, {
-        { ACTION_MOVE_SLOT_1, BATTLER_PLAYER_FIRST },
+        { ACTION_NONE, 0 },
         { ACTION_NONE, 0 },
         { ACTION_NONE, 0 },
         { ACTION_NONE, 0 },
@@ -106,8 +95,10 @@ BEGIN_TEST
         { ACTION_NONE, 0 },
 } },
     .expectations = {
-        { .expectationType = EXPECTATION_TYPE_MESSAGE_CONTAINS, .expectationValue.message = "Pikachu gained a boosted 756 Exp. Points" },
-        { .expectationType = EXPECTATION_TYPE_MESSAGE_CONTAINS, .expectationValue.message = "Rattata gained a boosted 756 Exp. Points" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE_CONTAINS, .expectationValue.message = "Pikachu gained a boosted" },
+        // the participant is far from a level-up, so the very next message is the victory line unless the bench gained: DOES_NOT_CONTAIN only checks that one message
+        { .expectationType = EXPECTATION_TYPE_MESSAGE_DOES_NOT_CONTAIN, .expectationValue.message = "gained" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "You got $1008 for winning!" },
     },
 }
 END_TEST

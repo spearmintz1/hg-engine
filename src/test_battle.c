@@ -4,6 +4,7 @@
 
 #ifdef DEBUG_BATTLE_SCENARIOS
 
+#include "../include/bag.h"
 #include "../include/battle.h"
 #include "../include/constants/file.h"
 #include "../include/constants/generated/test_battle.h"
@@ -246,6 +247,12 @@ void LONG_CALL TestBattle_OverrideParties(struct BATTLE_PARAM *bp)
 
     ResetScriptIndices();
 
+    BAG_DATA *bag = Sav2_Bag_get(SaveBlock2_get());
+    if (scenario->expShareNotOwned) {
+        Bag_TakeItem(bag, ITEM_EXP_SHARE, 1, HEAPID_WORLD);
+    } else if (!Bag_HasItem(bag, ITEM_EXP_SHARE, 1, HEAPID_WORLD)) {
+        Bag_AddItem(bag, ITEM_EXP_SHARE, 1, HEAPID_WORLD);
+    }
     if (scenario->expShareOff) {
         SetScriptFlag(FLAG_EXP_SHARE_OFF);
     } else {
