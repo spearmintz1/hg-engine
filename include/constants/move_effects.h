@@ -378,8 +378,13 @@
 #define MOVE_EFFECT_HEAL_TARGET                             372
 #define MOVE_EFFECT_LIFE_DEW                                373
 #define MOVE_EFFECT_HOWL                                    374
+#define MOVE_EFFECT_FORCE_SWITCH_HIT                        375
+#define MOVE_EFFECT_CLEAR_SMOG                              376
+#define MOVE_EFFECT_ENTRAINMENT                             377
+#define MOVE_EFFECT_DECORATE                                378
+#define MOVE_EFFECT_COACHING                                379
 
-#define MAX_BASE_MOVE_EFFECT_NUM                            374
+#define MAX_BASE_MOVE_EFFECT_NUM                            379
 
 // define your custom move effects below like this
 // #define MOVE_EFFECT_CUSTOM_1 (MAX_BASE_MOVE_EFFECT_NUM + 1)

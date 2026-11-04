@@ -15,6 +15,13 @@
 #include "../../include/overlay.h"
 
 /**
+ * oneSelfFlag damager fields default to 0, which is a valid battler id, so a damager match only counts when damage was actually dealt.
+ */
+static BOOL WasSpeciallyDamagedBy(struct BattleStruct *ctx, int defender, int attacker) {
+    return ctx->oneSelfFlag[defender].special_damage != 0 && ctx->oneSelfFlag[defender].special_damager == attacker;
+}
+
+/**
  * Platinum version as reference
  * BattleController_MoveEnd
  * https://github.com/pret/pokeplatinum/blob/447c17a0f12b4a7656dded8aaa6e41ae9694cd09/src/battle/battle_controller.c#L3965
@@ -49,7 +56,7 @@ void LONG_CALL BattleController_MoveEndInternal(struct BattleSystem *bsys, struc
             // Count how many mons were hit by Sparkling Aria
             for (i = 0; i < client_set_max; i++) {
                 client_no = ctx->turnOrder[i];
-                if (ctx->oneSelfFlag[client_no].special_damager == ctx->attack_client) {
+                if (WasSpeciallyDamagedBy(ctx, client_no, ctx->attack_client)) {
                     numberOfClientsHitBySparklingAria++;
                 }
             }
@@ -57,7 +64,7 @@ void LONG_CALL BattleController_MoveEndInternal(struct BattleSystem *bsys, struc
             // Heal Burn loop
             for (i = 0; i < client_set_max; i++) {
                 client_no = ctx->turnOrder[i];
-                if ((ctx->oneSelfFlag[client_no].special_damager == ctx->attack_client)
+                if (WasSpeciallyDamagedBy(ctx, client_no, ctx->attack_client)
                 && (ctx->battlemon[client_no].condition & STATUS_BURN)
                 && (ctx->battlemon[client_no].hp)) {
                     if (numberOfClientsHitBySparklingAria > 1 || GetBattlerAbility(ctx, client_no) != ABILITY_SHIELD_DUST) {
@@ -96,6 +103,35 @@ void LONG_CALL BattleController_MoveEndInternal(struct BattleSystem *bsys, struc
                     ctx->battlemon[ctx->attack_client].effect_of_moves &= ~MOVE_EFFECT_FLAG_CHARGE;
                 }
                 ctx->oneTurnFlag[ctx->attack_client].chargeProcessedFlag = 1;
+        }
+
+        // Fell Stinger: +3 Attack when the target is knocked out by the move
+        if (ctx->current_move_index == MOVE_FELL_STINGER
+            && ctx->oneTurnFlag[ctx->attack_client].fellStingerProcessedFlag == FALSE
+            && ctx->defence_client != BATTLER_NONE
+            && ctx->battlemon[ctx->defence_client].hp == 0
+            && ctx->oneSelfFlag[ctx->defence_client].physical_damager == ctx->attack_client
+            && ctx->battlemon[ctx->attack_client].hp != 0
+            && ctx->battlemon[ctx->attack_client].states[STAT_ATTACK] < 12) {
+            ctx->oneTurnFlag[ctx->attack_client].fellStingerProcessedFlag = TRUE;
+            ctx->addeffect_param = ADD_STATUS_EFF_BOOST_STATS_ATTACK_UP_3;
+            ctx->addeffect_type = ADD_EFFECT_INDIRECT;
+            ctx->state_client = ctx->attack_client;
+            LoadBattleSubSeqScript(ctx, 1, SUB_SEQ_BOOST_STATS);
+            ctx->next_server_seq_no = ctx->server_seq_no;
+            ctx->server_seq_no = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
+        }
+
+        // Dragon Tail / Circle Throw: drag the target out only after the hit and its contact punishment (Rocky Helmet, Rough Skin) resolved, and not if the user fainted
+        if (ctx->oneTurnFlag[ctx->attack_client].forceOutProcessedFlag == FALSE
+            && ForceSwitchHitLanded(ctx)) {
+            ctx->oneTurnFlag[ctx->attack_client].forceOutProcessedFlag = TRUE;
+            ctx->addeffect_type = ADD_EFFECT_INDIRECT;
+            LoadBattleSubSeqScript(ctx, 1, SUB_SEQ_FORCE_OUT);
+            ctx->next_server_seq_no = ctx->server_seq_no;
+            ctx->server_seq_no = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
         }
 
         switch (GetBattlerAbility(ctx, ctx->attack_client)) {
@@ -226,6 +262,8 @@ void LONG_CALL BattleController_MoveEndInternal(struct BattleSystem *bsys, struc
 
     ctx->oneTurnFlag[ctx->attack_client].chargeProcessedFlag = 0;
     ctx->oneTurnFlag[ctx->attack_client].rampageProcessedFlag = 0;
+    ctx->oneTurnFlag[ctx->attack_client].fellStingerProcessedFlag = 0;
+    ctx->oneTurnFlag[ctx->attack_client].forceOutProcessedFlag = 0;
     // debug_printf("locked into move: %d\n", (ctx->battlemon[ctx->attack_client].condition2 & STATUS2_LOCKED_INTO_MOVE));
     // debug_printf("BATTLE_STATUS_CHARGE_MOVE_HIT %d\n", ctx->server_status_flag & BATTLE_STATUS_CHARGE_MOVE_HIT);
 

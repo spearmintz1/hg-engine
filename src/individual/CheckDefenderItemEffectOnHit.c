@@ -158,6 +158,8 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                 // Damage was dealt
                 && ((sp->oneSelfFlag[sp->defence_client].physical_damage)
                     || (sp->oneSelfFlag[sp->defence_client].special_damage))
+                // Dragon Tail / Circle Throw drag the holder out first, so the item does not activate
+                && !ForceSwitchHitWillDrag(sp)
                 && sp->multiHitCount <= 1) {
                 u32 temp = sp->attack_client;                   // swap attacker and defender so subseq handles it correctly
                 sp->battlerIdTemp = sp->defence_client;
@@ -175,6 +177,8 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                 // Damage was dealt
                 && ((sp->oneSelfFlag[sp->defence_client].physical_damage)
                     || (sp->oneSelfFlag[sp->defence_client].special_damage))
+                // Dragon Tail / Circle Throw drag the holder out first, so the item does not activate
+                && !ForceSwitchHitWillDrag(sp)
                 && sp->multiHitCount <= 1) {
                 u32 temp = sp->attack_client;                   // swap attacker and defender so subseq handles it correctly
                 sp->battlerIdTemp = sp->defence_client;

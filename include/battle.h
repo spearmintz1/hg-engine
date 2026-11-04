@@ -702,7 +702,9 @@ struct __attribute__((packed)) OneTurnEffect
                u32 numberOfKOs : 3;
                u32 pendingFocusPunchFlag : 1;
                u32 gainedProtectFlagFromAlly : 1;
-               u32 : 10;
+               u32 fellStingerProcessedFlag : 1;
+               u32 forceOutProcessedFlag : 1;
+               u32 : 8;
 
     /* 0x04 */ int physical_damage[4];    /**< [don't use] physical damage as indexed by battler.  Counter doesn't use this, use OneSelfTurnEffect's physical_damage (sp->oneSelfFlag[battler].physical_damage) */
     /* 0x14 */ int physical_damager;      /**< [don't use] last battler that physically damaged this pokémon.  Counter doesn't use this, use OneSelfTurnEffect's physical_damager (sp->oneSelfFlag[battler].physical_damager) */
@@ -2868,6 +2870,22 @@ u32 LONG_CALL ServerWazaHitAfterCheckAct(void *bw, struct BattleStruct *sp);
  */
 BOOL LONG_CALL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no);
 
+/**
+ *  @brief check whether a Dragon Tail / Circle Throw hit landed and can be followed by a drag attempt
+ *
+ *  @param ctx global battle structure
+ *  @return TRUE if the move has the force-switch-hit effect, dealt damage to a living, non-Dynamaxed target (not through a Substitute) and its user is alive; FALSE otherwise
+ */
+BOOL LONG_CALL ForceSwitchHitLanded(struct BattleStruct *ctx);
+
+/**
+ *  @brief check whether a Dragon Tail / Circle Throw hit will actually drag its target out
+ *
+ *  @param ctx global battle structure
+ *  @return TRUE if ForceSwitchHitLanded and the target is not anchored by Suction Cups or Ingrain; FALSE otherwise
+ */
+BOOL LONG_CALL ForceSwitchHitWillDrag(struct BattleStruct *ctx);
+
 
 // defined in battle_script_commands.c
 enum
@@ -3429,6 +3447,7 @@ BOOL LONG_CALL BattleContext_CheckMoveUnuseableInGravity(struct BattleSystem *bs
 
 BOOL LONG_CALL BattleContext_CheckMoveHealBlockedBase(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo);
 BOOL LONG_CALL BattleContext_CheckMoveHealBlocked(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo);
+BOOL LONG_CALL BattleContext_CheckMoveCallable(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo);
 
 //Buffer messages related to being unable to select moves?
 BOOL LONG_CALL ov12_02251A28(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int movePos, MESSAGE_PARAM *msg);
