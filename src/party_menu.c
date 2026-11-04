@@ -7,6 +7,7 @@
 #include "../include/constants/moves.h"
 #include "../include/constants/species.h"
 #include "../include/constants/file.h"
+#include "../include/msgdata.h"
 #include "../include/party_menu.h"
 
 u8 LONG_CALL sub_0207B0B0(struct PLIST_WORK *wk, u8 *buf)
@@ -155,4 +156,52 @@ int PartyMenu_ItemUseFunc_ReuseItem(struct PLIST_WORK *wk) {
         return 0x4;
     }
     return 0x20;
+}
+
+// messages of data/text/300.txt
+#define PARTY_MENU_MSG_ELEVATED_TO_LEVEL 177
+#define PARTY_MENU_MSG_GAINED_EXP        220
+
+// states of the vanilla PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop: the stat windows come first, so the one that waits for the text
+// printer and then learns the moves is the way into the loop when there is nothing to show
+#define LEVEL_UP_LEARN_LOOP_STATE_STAT_WINDOWS 0
+#define LEVEL_UP_LEARN_LOOP_STATE_WAIT_TEXT    4
+
+static BOOL LevelUpItemRaisedLevel(struct PartyPokemon *mon)
+{
+    return GetMonData(mon, MON_DATA_LEVEL, NULL) > gLevelUpItemFromLevel;
+}
+
+/*
+ * @brief replaces the message vanilla PartyMenu_ItemUseFunc_LevelUp prints once a level-up item has been applied:
+ * the level reached, or the experience gained when the item did not raise the level
+ */
+void LONG_CALL PartyMenu_ItemUseFunc_LevelUp_PrintResult(struct PLIST_WORK *wk, struct PartyPokemon *mon)
+{
+    BOOL raisedLevel = LevelUpItemRaisedLevel(mon);
+    String *str = NewString_ReadMsgData(wk->msgData, raisedLevel ? PARTY_MENU_MSG_ELEVATED_TO_LEVEL : PARTY_MENU_MSG_GAINED_EXP);
+
+    BufferBoxMonNickname(wk->msgFormat, 0, (struct BoxPokemon *)mon);
+    if (raisedLevel)
+        BufferIntegerAsString(wk->msgFormat, 1, GetMonData(mon, MON_DATA_LEVEL, NULL), 3, 0, 1);
+    else
+        BufferIntegerAsString(wk->msgFormat, 1, gLevelUpItemExp, 5, 0, 1);
+    StringExpandPlaceholders(wk->msgFormat, wk->msgString, str);
+    String_Delete(str);
+}
+
+/*
+ * @brief picks the state PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop starts in after PartyMenu_ItemUseFunc_LevelUp_PrintResult:
+ * a raised level shows the stat windows and then learns the moves of every level gained; an item that raised none has no
+ * stat change to show, so it only waits for its message and then ends like any other level-up item
+ */
+void LONG_CALL PartyMenu_ItemUseFunc_LevelUp_SetState(struct PLIST_WORK *wk)
+{
+    if (LevelUpItemRaisedLevel(Party_GetMonByIndex(wk->dat->pp, wk->pos)))
+    {
+        wk->subState = LEVEL_UP_LEARN_LOOP_STATE_STAT_WINDOWS;
+        return;
+    }
+    wk->dat->lv_cnt = 0;
+    wk->subState = LEVEL_UP_LEARN_LOOP_STATE_WAIT_TEXT;
 }

@@ -178,5 +178,6 @@ void LONG_CALL PartyMenu_PrintMessageOnWindow33(struct PLIST_WORK *wk, int msgId
 void LONG_CALL thunk_Sprite_SetPalIndex(void* sprites, int);
 void LONG_CALL FreeToHeapExplicit(u32 heapId, void *ptr);
 void LONG_CALL PartyMenu_PrintMessageOnWindow32(struct PLIST_WORK *partyMenu, int msgId, BOOL drawFrame);
+void LONG_CALL BufferBoxMonNickname(u32 *msgFormat, u32 idx, struct BoxPokemon *boxMon);
 
 #endif // POKEHEARTGOLD_PARTY_MENU_H

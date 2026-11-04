@@ -764,5 +764,6 @@ BattleController_EmitShowWaitMessage = 0x02263F30 | 1;
 ov12_0223BDDC = 0x0223BDDC | 1;
 NewString_ReadMsgData = 0x0200BBA0 | 1;
 StringExpandPlaceholders = 0x0200CBBC | 1;
+BufferBoxMonNickname = 0x0200BF8C | 1;
 BattleSystem_SetBattleOutcomeFlags = 0x0223BD20 | 1;
 InitMartUI = 0x02256D34 | 1;

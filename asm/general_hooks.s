@@ -140,3 +140,25 @@ mov r0, r4
 bl PartyMenu_ItemUseFunc_ReuseItem
 ldr r3, =0x02081398 | 1
 bx r3
+
+// replaces the "was elevated to Lv." message block of the vanilla level-up item function (r5 is the work, r4 the mon)
+.global PartyMenu_ItemUseFunc_LevelUp_PrintResult_hook
+PartyMenu_ItemUseFunc_LevelUp_PrintResult_hook:
+mov r0, r5
+mov r1, r4
+bl PartyMenu_ItemUseFunc_LevelUp_PrintResult
+ldr r0, =0x02081B98 | 1
+bx r0
+
+.pool
+
+// replaces "state = 0; return 5" at the end of the vanilla level-up item function (r5 is the work)
+.global PartyMenu_ItemUseFunc_LevelUp_SetState_hook
+PartyMenu_ItemUseFunc_LevelUp_SetState_hook:
+mov r0, r5
+bl PartyMenu_ItemUseFunc_LevelUp_SetState
+mov r0, #5
+ldr r1, =0x02081C10 | 1
+bx r1
+
+.pool
