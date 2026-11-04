@@ -15,6 +15,13 @@
 #include "../../include/overlay.h"
 
 /**
+ * oneSelfFlag damager fields default to 0, which is a valid battler id, so a damager match only counts when damage was actually dealt.
+ */
+static BOOL WasSpeciallyDamagedBy(struct BattleStruct *ctx, int defender, int attacker) {
+    return ctx->oneSelfFlag[defender].special_damage != 0 && ctx->oneSelfFlag[defender].special_damager == attacker;
+}
+
+/**
  * Platinum version as reference
  * BattleController_MoveEnd
  * https://github.com/pret/pokeplatinum/blob/447c17a0f12b4a7656dded8aaa6e41ae9694cd09/src/battle/battle_controller.c#L3965
@@ -49,7 +56,7 @@ void LONG_CALL BattleController_MoveEndInternal(struct BattleSystem *bsys, struc
             // Count how many mons were hit by Sparkling Aria
             for (i = 0; i < client_set_max; i++) {
                 client_no = ctx->turnOrder[i];
-                if (ctx->oneSelfFlag[client_no].special_damager == ctx->attack_client) {
+                if (WasSpeciallyDamagedBy(ctx, client_no, ctx->attack_client)) {
                     numberOfClientsHitBySparklingAria++;
                 }
             }
@@ -57,7 +64,7 @@ void LONG_CALL BattleController_MoveEndInternal(struct BattleSystem *bsys, struc
             // Heal Burn loop
             for (i = 0; i < client_set_max; i++) {
                 client_no = ctx->turnOrder[i];
-                if ((ctx->oneSelfFlag[client_no].special_damager == ctx->attack_client)
+                if (WasSpeciallyDamagedBy(ctx, client_no, ctx->attack_client)
                 && (ctx->battlemon[client_no].condition & STATUS_BURN)
                 && (ctx->battlemon[client_no].hp)) {
                     if (numberOfClientsHitBySparklingAria > 1 || GetBattlerAbility(ctx, client_no) != ABILITY_SHIELD_DUST) {
@@ -117,15 +124,8 @@ void LONG_CALL BattleController_MoveEndInternal(struct BattleSystem *bsys, struc
         }
 
         // Dragon Tail / Circle Throw: drag the target out only after the hit and its contact punishment (Rocky Helmet, Rough Skin) resolved, and not if the user fainted
-        if (ctx->moveTbl[ctx->current_move_index].effect == MOVE_EFFECT_FORCE_SWITCH_HIT
-            && ctx->oneTurnFlag[ctx->attack_client].forceOutProcessedFlag == FALSE
-            && ctx->defence_client != BATTLER_NONE
-            && ctx->battlemon[ctx->attack_client].hp != 0
-            && ctx->battlemon[ctx->defence_client].hp != 0
-            && ctx->battlemon[ctx->defence_client].is_currently_dynamaxed == FALSE
-            && !(ctx->oneSelfFlag[ctx->defence_client].status_flag & SELF_STATUS_FLAG_SUBSTITUTE_HIT)
-            && (ctx->oneSelfFlag[ctx->defence_client].physical_damager == ctx->attack_client
-                || ctx->oneSelfFlag[ctx->defence_client].special_damager == ctx->attack_client)) {
+        if (ctx->oneTurnFlag[ctx->attack_client].forceOutProcessedFlag == FALSE
+            && ForceSwitchHitLanded(ctx)) {
             ctx->oneTurnFlag[ctx->attack_client].forceOutProcessedFlag = TRUE;
             ctx->addeffect_type = ADD_EFFECT_INDIRECT;
             LoadBattleSubSeqScript(ctx, 1, SUB_SEQ_FORCE_OUT);

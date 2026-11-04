@@ -3608,3 +3608,28 @@ const u8 InternalTypeToHGType[] = {
 int GetSanitisedType(int type) {
     return InternalTypeToHGType[HGTypeToInternalType[type] & 0x1F];
 }
+
+/**
+ * Dragon Tail / Circle Throw landed a real hit that can be followed by a drag attempt:
+ * the user and target are alive, the target is not Dynamaxed, and the hit did not land on a Substitute.
+ */
+BOOL LONG_CALL ForceSwitchHitLanded(struct BattleStruct *ctx) {
+    return ctx->moveTbl[ctx->current_move_index].effect == MOVE_EFFECT_FORCE_SWITCH_HIT
+        && ctx->defence_client != BATTLER_NONE
+        && !(ctx->waza_status_flag & MOVE_STATUS_FLAG_FAILURE_ANY)
+        && (ctx->oneSelfFlag[ctx->defence_client].physical_damage || ctx->oneSelfFlag[ctx->defence_client].special_damage)
+        && ctx->battlemon[ctx->attack_client].hp != 0
+        && ctx->battlemon[ctx->defence_client].hp != 0
+        && ctx->battlemon[ctx->defence_client].is_currently_dynamaxed == FALSE
+        && !(ctx->oneSelfFlag[ctx->defence_client].status_flag & SELF_STATUS_FLAG_SUBSTITUTE_HIT);
+}
+
+/**
+ * The target will actually leave the field: a landed Dragon Tail / Circle Throw hit on a target not anchored by Suction Cups or Ingrain.
+ * Red Card and Eject Button stand down when this is true.
+ */
+BOOL LONG_CALL ForceSwitchHitWillDrag(struct BattleStruct *ctx) {
+    return ForceSwitchHitLanded(ctx)
+        && !MoldBreakerAbilityCheck(ctx, ctx->attack_client, ctx->defence_client, ABILITY_SUCTION_CUPS)
+        && !(ctx->battlemon[ctx->defence_client].effect_of_moves & MOVE_EFFECT_FLAG_INGRAIN);
+}

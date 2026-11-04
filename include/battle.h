@@ -2869,6 +2869,22 @@ u32 LONG_CALL ServerWazaHitAfterCheckAct(void *bw, struct BattleStruct *sp);
  */
 BOOL LONG_CALL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no);
 
+/**
+ *  @brief check whether a Dragon Tail / Circle Throw hit landed and can be followed by a drag attempt
+ *
+ *  @param ctx global battle structure
+ *  @return TRUE if the move has the force-switch-hit effect, dealt damage to a living, non-Dynamaxed target (not through a Substitute) and its user is alive; FALSE otherwise
+ */
+BOOL LONG_CALL ForceSwitchHitLanded(struct BattleStruct *ctx);
+
+/**
+ *  @brief check whether a Dragon Tail / Circle Throw hit will actually drag its target out
+ *
+ *  @param ctx global battle structure
+ *  @return TRUE if ForceSwitchHitLanded and the target is not anchored by Suction Cups or Ingrain; FALSE otherwise
+ */
+BOOL LONG_CALL ForceSwitchHitWillDrag(struct BattleStruct *ctx);
+
 
 // defined in battle_script_commands.c
 enum
