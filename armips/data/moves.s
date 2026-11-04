@@ -13036,16 +13036,16 @@ movedata MOVE_CORROSIVE_GAS, "Corrosive Gas"
     movedescription MOVE_CORROSIVE_GAS, "The user surrounds\neverything around it\nwith highly acidic gas\nand melts away items\nheld by other Pokémon."
 
 movedata MOVE_COACHING, "Coaching"
-    battleeffect MOVE_EFFECT_HIT
+    battleeffect MOVE_EFFECT_COACHING
     pss SPLIT_STATUS
     basepower 0
     type TYPE_FIGHTING
     accuracy 0
     pp 10
     effectchance 100
-    target RANGE_USER_SIDE
+    target RANGE_ALLY
     priority 0
-    flags FLAG_MIRROR_MOVE | FLAG_PROTECT | FLAG_MAGIC_COAT
+    flags FLAG_MIRROR_MOVE | FLAG_MAGIC_COAT
     appeal 0x00
     contesttype CONTEST_COOL
     terminatedata

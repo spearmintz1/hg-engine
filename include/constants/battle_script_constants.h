@@ -464,8 +464,9 @@
 #define SUB_SEQ_CLEAR_SMOG                            (454)
 #define SUB_SEQ_ENTRAINMENT                           (455)
 #define SUB_SEQ_DECORATE                              (456)
+#define SUB_SEQ_COACHING                              (457)
 
-#define MAX_BASE_SUBSCRIPT_NUM 456
+#define MAX_BASE_SUBSCRIPT_NUM 457
 
 // define your custom subscripts below like this
 // #define MOVE_SUBSCRIPT_PTR_CUSTOM_1 (MAX_BASE_SUBSCRIPT_NUM + 1)
@@ -669,6 +670,7 @@
 #define ADD_STATUS_EFF_CLEAR_SMOG                      (192)
 #define ADD_STATUS_EFF_ENTRAINMENT                     (193)
 #define ADD_STATUS_EFF_DECORATE                        (194)
+#define ADD_STATUS_EFF_COACHING                        (195)
 
 
 // additional effect constants

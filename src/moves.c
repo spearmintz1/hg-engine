@@ -207,6 +207,7 @@ u16 move_effect_to_subscripts[] =
     [ADD_STATUS_EFF_CLEAR_SMOG]                  = SUB_SEQ_CLEAR_SMOG,
     [ADD_STATUS_EFF_ENTRAINMENT]                 = SUB_SEQ_ENTRAINMENT,
     [ADD_STATUS_EFF_DECORATE]                    = SUB_SEQ_DECORATE,
+    [ADD_STATUS_EFF_COACHING]                    = SUB_SEQ_COACHING,
 };
 
 

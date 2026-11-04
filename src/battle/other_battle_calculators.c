@@ -2985,6 +2985,32 @@ BOOL LONG_CALL BattleContext_CheckMoveHealBlocked(struct BattleSystem *bsys, str
     return FALSE;
 }
 
+extern u16 sMetronomeMimicMoveBanList[];
+
+/**
+ *  @brief checks if the battler may call the move through Metronome, Assist or Copycat
+ *
+ *  Replaces the base game's check, which only knew its own Heal Block moves.
+ *
+ *  @param bsys battle system
+ *  @param ctx global battle structure
+ *  @param battlerId battler calling the move
+ *  @param moveNo move index
+ *  @return TRUE if the move can be called
+ */
+BOOL LONG_CALL BattleContext_CheckMoveCallable(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo)
+{
+    if (BattleContext_CheckMoveUnuseableInGravity(bsys, ctx, battlerId, moveNo) || BattleContext_CheckMoveHealBlocked(bsys, ctx, battlerId, moveNo)) {
+        return FALSE;
+    }
+    for (u32 i = 0; sMetronomeMimicMoveBanList[i] != 0xFFFF; i++) {
+        if (sMetronomeMimicMoveBanList[i] == moveNo) {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
 u32 LONG_CALL StruggleCheck(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, u32 nonSelectableMoves, u32 struggleCheckFlags) {
     // u8 buf[64];
     // sprintf(buf, "In StruggleCheck\n");

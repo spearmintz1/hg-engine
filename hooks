@@ -73,6 +73,8 @@ arm9 set_starter_hidden_ability_hook 02096158 5
 0012 CalcAccuracy 0224BCC4
 0012 CalcSpeed 0224FC48
 0012 CalcCritical 02257C5C
+# Metronome, Assist and Copycat: whether the user may call a move
+0012 BattleContext_CheckMoveCallable 02257DA4
 #022555EC
 0012 GetBattleMonItem 0801DD2C 2
 0012 MoldBreakerAbilityCheck 02252834

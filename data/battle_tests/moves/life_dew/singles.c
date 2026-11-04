@@ -84,6 +84,7 @@ BEGIN_TEST {
         { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "Poliwag used Life Dew!" },
         { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "Poliwag had its HP restored." },
         { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The opposing Squirtle used Life Dew!" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "But it failed!" },
     },
 }
 END_TEST

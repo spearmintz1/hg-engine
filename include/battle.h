@@ -3427,6 +3427,7 @@ BOOL LONG_CALL BattleContext_CheckMoveUnuseableInGravity(struct BattleSystem *bs
 
 BOOL LONG_CALL BattleContext_CheckMoveHealBlockedBase(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo);
 BOOL LONG_CALL BattleContext_CheckMoveHealBlocked(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo);
+BOOL LONG_CALL BattleContext_CheckMoveCallable(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo);
 
 //Buffer messages related to being unable to select moves?
 BOOL LONG_CALL ov12_02251A28(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int movePos, MESSAGE_PARAM *msg);
