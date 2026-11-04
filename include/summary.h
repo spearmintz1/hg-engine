@@ -66,7 +66,7 @@ struct SummaryPokemonData {
     /* 0x2E */ u16 spDefense;
     /* 0x30 */ u16 speed;
 
-    /* 0x32 */ u8  ability;
+    /* 0x32 */ u8  form;
     /* 0x33 */ u8  nature;
 
     /* 0x34 */ u16 moves[4];
@@ -83,7 +83,7 @@ struct SummaryPokemonData {
     /* 0x4B */ u8  favoriteFlavor;
     
     /* 0x4C */ u16 mark;
-    /* 0x4E */ u16 form;
+    /* 0x4E */ u16 ability;
 
     /* 0x50 */ u32 status      :28,
                    isEgg       :1,

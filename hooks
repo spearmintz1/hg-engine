@@ -45,6 +45,18 @@ arm9 GetItemArcData 08077CE8 3
 arm9 GetPokemonOwNum 0206A304 1
 arm9 GetMonIconPalette 02074364 3
 
+# ability expansion
+arm9 GetBoxMonData_EditedCases_hook 0206E6E0 3
+arm9 SetBoxMonData_EditedCases_hook 0206EE28 0
+arm9 AddBoxMonData_EditedCases_hook 0206F67C 0
+0012 BtlCmd_Transform_CopyAbility 022417C8 0
+0010 AI_AbilityMemoryRead_hook 0221D1D0 1
+0012 AI_ClearBattlerAbility_u16 0225859C 3
+0080 Frontier_SetAbility_ov80 0222A298 3
+0025 Frontier_SetAbility_ov25 02259C7A 3
+0083 Frontier_DisplayAbility_ov83_a 02242382 3
+0083 Frontier_DisplayAbility_ov83_b 02246328 3
+
 # wild mon hidden ability/form stuff
 #02247910
 0002 get_form_out_of_encounter_species_rare 02247910 4
@@ -184,6 +196,9 @@ arm9 get_mon_ow_tag 08069D70 3
 arm9 ArceusBoxPokemonFormeChange 08071BD0 3
 #pc screen forme change
 0014 HandleBoxPokemonFormeChanges 08000BD0 3
+#pc screen ability store
+0014 BoxDisplayMon_StoreAbility 021E73B0 0
+0014 BoxDisplayMon_GrabAbility 021F52AE 1
 
 #use item attribute change
 arm9 UseItemMonAttrChangeCheck_hook 0807C29C 0
@@ -334,6 +349,7 @@ arm9 Summary_Entry_Hook 0208D2C4 1
 
 
 arm9 CanUseItemOnMonInParty_hook 020902BC 5
+arm9 LevelUpItemExp_hook 0209043E 1
 #ifdef IMPLEMENT_LEVEL_CAP
 
 0012 ImplementLevelCap_hook 02245A28 3
@@ -516,6 +532,8 @@ arm9 DestroyHeap_hook 0201AA24 3
 
 arm9 PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop_Case6_hook 02081E54 0
 arm9 PartyMenu_ItemUseFunc_ReuseItem_hook 0208138C 3
+arm9 PartyMenu_ItemUseFunc_LevelUp_PrintResult_hook 02081B48 0
+arm9 PartyMenu_ItemUseFunc_LevelUp_SetState_hook 02081C08 0
 
 # pc anywhere
 0001 ClearOverworldRequestFlags 021E6880 1
@@ -531,4 +549,9 @@ arm9 PartyMenu_ItemUseFunc_ReuseItem_hook 0208138C 3
 0012 TestBattle_WaitMonSelection 0223E978 2
 0012 CheckTrainerMessage 02250D4C 2
 0012 BattleMessage_ExpandPlaceholders 0223CEF4
+#endif
+
+#ifdef MART_EXPANSION
+# the general mart (ScrCmd_MartBuy, 19 vanilla entries) is replaced wholesale by src/field/mart.c
+arm9 ScrCmd_MartBuy 02048060 1
 #endif

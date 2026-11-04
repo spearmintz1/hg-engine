@@ -203,9 +203,11 @@ typedef struct {
     /* 0x00 */ u16 species;
     /* 0x02 */ u16 heldItem;
     /* 0x04 */ u32 otID; // low 16: visible; high 16: secret
-    /* 0x08 */ u32 exp;
+    /* 0x08 */ u32 exp : 21; // the maximum experience (1,640,000) fits in 21 bits
+               u32 unused : 10;
+               u32 abilityMSB : 1; // bit 8 of the ability index: no stored experience ever reaches bit 31
     /* 0x0C */ u8 friendship;
-    /* 0x0D */ u8 ability;
+    /* 0x0D */ u8 ability; // low 8 bits of the ability index
     /* 0x0E */ u8 markings; // circle, triangle, square, heart, star, diamond
     /* 0x0F */ u8 originLanguage;
     /* 0x10 */ u8 hpEV;
@@ -655,9 +657,16 @@ struct PLIST_WORK
     /* 0x658 */ void* /*SpriteRenderer **/ spriteRenderer;
     /* 0x65C */ void* /*SpriteGfxHandler **/ spriteGfxHandler;
     /* 0x660 */ void* /*Sprite **/ sprites[_PARTY_MENU_SPRITE_ID_MAX]; // 0x660
-    /* 0x6D4 */ u8 padding_x6D4[0xC65-0x660-0x74];
-    u8 pos;
+    /* 0x6D4 */ u8 padding_x6D4[0x7C0-0x6D4];
+    /* 0x7C0 */ void *msgData;    // MsgData of the party menu text (data/text/300.txt)
+    /* 0x7C4 */ u32 *msgFormat;   // MessageFormat the text placeholders are buffered into
+    /* 0x7C8 */ void *msgString;  // String the expanded message is written to and printed from
+    /* 0x7CC */ u8 padding_x7CC[0xC65-0x7CC];
+    /* 0xC65 */ u8 pos;
+    /* 0xC66 */ u8 padding_xC66;
+    /* 0xC67 */ u8 subState;      // state of the active subtask (PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop and friends)
 };
+_Static_assert(__builtin_offsetof(struct PLIST_WORK, subState) == 0xC67, "PLIST_WORK fields are read at fixed offsets by the arm9 code");
 
 struct IconFormChangeData {
     int state;
@@ -751,8 +760,8 @@ typedef struct EncounterInfo
     BOOL unk8;
     u8 level;
     u8 isEgg;
-    u8 ability;
-    u8 unkE[2];
+    u16 ability;
+    u8 unk10;
     u8 unk11;
 } EncounterInfo; // size = 0x12
 
@@ -1176,6 +1185,15 @@ u32 LONG_CALL PokeListProc_End(void *proc, int *seq);
 u32 LONG_CALL PokeParaLevelExpGet(struct PartyPokemon *pp);
 
 /**
+ *  @brief grab the level of a species given its experience
+ *
+ *  @param species species index to calculate for
+ *  @param exp total experience the species has
+ *  @return level the species is at with given experience
+ */
+u32 LONG_CALL CalcLevelBySpeciesAndExp(u32 species, u32 exp);
+
+/**
  *  @brief check if a PartyPokemon should level up
  *
  *  @param pp PartyPokemon to potentially level up
@@ -1586,6 +1604,8 @@ u16 LONG_CALL GetPokemonOwNum(u16 species);
  *  @return hidden ability of specific pokémon
  */
 u16 LONG_CALL GetMonHiddenAbility(u16 species, u32 form);
+void LONG_CALL Frontier_SetMonAbility(struct PartyPokemon *mon, u8 *storedAbility);
+u16 LONG_CALL ResolveAbilityFromLowByte(u16 species, u32 form, u8 lowByte);
 
 /**
  *  @brief set a box mon's ability--modified to account for hidden ability flag--should only be used in scripted wild encounters/givepokemon contexts
@@ -1648,6 +1668,14 @@ BOOL LONG_CALL HandleBoxPokemonFormeChanges(struct BoxPokemon* bp);
  *  @return TRUE if reveal glass can be used; FALSE otherwise
  */
 BOOL LONG_CALL CanUseRevealGlass(struct PartyPokemon *pp);
+
+/**
+ *  @brief check if the prison bottle can be used on a PartyPokemon
+ *
+ *  @param pp PartyPokemon to check the prison bottle against
+ *  @return TRUE if the prison bottle can be used; FALSE otherwise
+ */
+BOOL LONG_CALL CanUsePrisonBottle(struct PartyPokemon *pp);
 
 /**
  *  @brief check if DNA splicers can be used, return position in party if so
@@ -1796,7 +1824,7 @@ u16 LONG_CALL get_mon_ow_tag(u16 species, u32 form, u32 isFemale);
  *  @param encounterType encounter type
  *  @return TRUE if successful; FALSE otherwise
  */
-BOOL LONG_CALL GiveMon(int heapId, void *saveData, int species, int level, int forme, u8 ability, u16 heldItem, int ball, int encounterType);
+BOOL LONG_CALL GiveMon(int heapId, void *saveData, int species, int level, int forme, u16 ability, u16 heldItem, int ball, int encounterType);
 
 //BOOL LONG_CALL AddWildPartyPokemon(int inTarget, EncounterInfo *encounterInfo, struct PartyPokemon *encounterPartyPokemon, struct BATTLE_PARAM *encounterBattleParam);
 
@@ -1845,6 +1873,28 @@ u32 LONG_CALL GetLevelCap(void);
  *  @return TRUE if level >= level cap; FALSE otherwise
  */
 u32 LONG_CALL IsLevelAtLevelCap(u32 level);
+
+/**
+ *  @brief experience a level-up item grants; the vanilla Rare Candy amount is exactly one level, EXP Candies give a fixed amount
+ *         that stops at the level cap
+ *
+ *  @param mon PartyPokemon the item is used on
+ *  @param item item being used
+ *  @param nextLevelExp experience vanilla would grant: what is missing to reach the next level
+ *  @return experience to add to mon
+ */
+u32 LONG_CALL GetLevelUpItemExp(struct PartyPokemon *mon, u32 item, u32 nextLevelExp);
+
+/**
+ *  level the mon the last level-up item was used on had before the item was applied; the party menu reads it to learn every
+ *  move between that level and the new one, and to tell whether the item raised the level at all
+ */
+extern u8 gLevelUpItemFromLevel;
+
+/**
+ *  experience the last level-up item granted
+ */
+extern u32 gLevelUpItemExp;
 
 /**
  *  @brief grab the nature of a BoxPokemon factoring in the nature mint override field

@@ -95,6 +95,7 @@ sub_02017FE4 = 0x02017FE4 | 1;
 SetEggStats = 0x0206C8B8 | 1;
 SaveMisc_SetTogepiPersonalityGender = 0x0202ABB0 | 1;
 SaveMisc_GetTogepiPersonalityGender = 0x0202ABBC | 1;
+CalcLevelBySpeciesAndExp = 0x0206FDA8 | 1;
 
 SaveData_GetRepelPtr = 0x0202DB05;
 SaveData_GetEventPtr = 0x020503D0 | 1;
@@ -671,7 +672,7 @@ GetNaturalGiftType = 0x022558A4 | 1;
 
 BattleContext_CheckMoveImprisoned = 0x02252C74 | 1;
 BattleContext_CheckMoveUnuseableInGravity = 0x02252DC4 | 1;
-BattleContext_CheckMoveHealBlocked = 0x02252DF8 | 1;
+BattleContext_CheckMoveHealBlockedBase = 0x02252DF8 | 1;
 
 CanUseItemOnPokemon = 0x0208FD9C | 1;
 
@@ -766,4 +767,6 @@ BattleController_EmitShowWaitMessage = 0x02263F30 | 1;
 ov12_0223BDDC = 0x0223BDDC | 1;
 NewString_ReadMsgData = 0x0200BBA0 | 1;
 StringExpandPlaceholders = 0x0200CBBC | 1;
+BufferBoxMonNickname = 0x0200BF8C | 1;
 BattleSystem_SetBattleOutcomeFlags = 0x0223BD20 | 1;
+InitMartUI = 0x02256D34 | 1;

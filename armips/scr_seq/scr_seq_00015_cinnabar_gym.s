@@ -365,6 +365,7 @@ scr_seq_0015_0472:
 scr_seq_0015_0478:
     end
 
+    .align 2
 scr_seq_0015_047A:
     step 15, 1
     step 2, 1

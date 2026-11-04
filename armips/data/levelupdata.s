@@ -1005,8 +1005,8 @@ levelup SPECIES_PARAS
 
 
 levelup SPECIES_PARASECT
-    learnset MOVE_CROSS_POISON, 1
     learnset MOVE_SHADOW_SNEAK, 0
+    learnset MOVE_CROSS_POISON, 1
     learnset MOVE_STUN_SPORE, 1
     learnset MOVE_POISON_POWDER, 1
     learnset MOVE_ABSORB, 1
@@ -20246,10 +20246,10 @@ levelup SPECIES_DRAKLOAK
 
 
 levelup SPECIES_DRAGAPULT
+    learnset MOVE_DRAGON_DARTS, 0
     learnset MOVE_ASTONISH, 1
     learnset MOVE_DRAGON_BREATH, 1
     learnset MOVE_SUCKER_PUNCH, 1
-    learnset MOVE_DRAGON_DARTS, 0
     learnset MOVE_INFESTATION, 1
     learnset MOVE_QUICK_ATTACK, 1
     learnset MOVE_BITE, 1

@@ -20,6 +20,11 @@
 
 #define NUM_FURTHER_TEST_PARAMS 4
 
+// .ability sentinels that generate the ability from the species data instead of forcing an id (an id above 0x1FF is never a real ability)
+#define TEST_ABILITY_PERSONAL_SLOT_1 0xFFFD // first ability slot in personal data
+#define TEST_ABILITY_PERSONAL_SLOT_2 0xFFFE // second ability slot in personal data
+#define TEST_ABILITY_HIDDEN          0xFFFF // hidden ability from the hidden ability table
+
 // Battle action for scripted tests
 struct PACKED BattleAction {
     u8 action; // 0-3 = move slot, 4-9 = switch to party slot (action - 4)
@@ -81,9 +86,9 @@ struct PACKED TestBattleScenario {
     u32 weather; // WEATHER_RAIN, WEATHER_SANDSTORM, etc.
     u32 fieldCondition; // FIELD_CONDITION_TRICK_ROOM_INIT, etc.
     u8 terrain; // GRASSY_TERRAIN, MISTY_TERRAIN, etc.
+    u8 johtoBadges; // Johto badge bitmask given to the player for the scenario (it sets the level cap); 0, the default, leaves no badges
     u8 expShareOff; // TRUE switches the Exp. Share key item off for the scenario, FALSE (the default) leaves it on
     u8 expShareNotOwned; // TRUE takes the Exp. Share key item out of the bag for the scenario, FALSE (the default) puts it in
-    u8 _padding; // together with expShareOff and expShareNotOwned, the 3 bytes of padding that align the struct to 4 bytes
     struct TestBattlePokemon playerParty[6]; // Player party
     struct TestBattlePokemon enemyParty[6]; // Enemy's party
 
@@ -139,6 +144,7 @@ void LONG_CALL SendValueThroughCommunicationSendHole(int value);
 BOOL LONG_CALL TestBattle_HasMoreExpectations();
 BOOL LONG_CALL TestBattle_HasMoreTests();
 BOOL LONG_CALL TestBattle_IsComplete();
+void LONG_CALL TestBattle_MarkComplete(void);
 void LONG_CALL TestBattle_QueueNextTest();
 void LONG_CALL TestBattle_OverrideParties(struct BATTLE_PARAM *bp);
 void LONG_CALL TestBattle_ApplyBattleState(struct BattleStruct *sp);
