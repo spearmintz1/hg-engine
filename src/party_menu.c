@@ -124,13 +124,19 @@ void LONG_CALL sub_0207AFC4(struct PLIST_WORK *wk)
     thunk_Sprite_SetPalIndex(wk->sprites[PARTY_MENU_SPRITE_ID_CURSOR], 1);
 }
 
+static BOOL LevelUpItemRaisedLevel(struct PartyPokemon *mon)
+{
+    return GetMonData(mon, MON_DATA_LEVEL, NULL) > gLevelUpItemFromLevel;
+}
+
 /*
  * @brief hooks rare candy usage in the bag to allow for repeated use without returning to the bag between each
  * thanks to yako for the for the format
  */
 int PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop_Case6(struct PLIST_WORK *wk) {
     struct PartyPokemon *mon = Party_GetMonByIndex(wk->dat->pp, wk->pos);
-    wk->dat->after_mons = GetMonEvolution(wk->dat->pp, mon, EVOCTX_LEVELUP, EVO_NONE, (int *)&wk->dat->shinka_cond);
+    // an item that raised no level has no level-up to evolve on
+    wk->dat->after_mons = LevelUpItemRaisedLevel(mon) ? GetMonEvolution(wk->dat->pp, mon, EVOCTX_LEVELUP, EVO_NONE, (int *)&wk->dat->shinka_cond) : SPECIES_NONE;
     if (wk->dat->after_mons != SPECIES_NONE) {
         wk->dat->ret_mode = 0x9;
         return 0x20;
@@ -166,11 +172,6 @@ int PartyMenu_ItemUseFunc_ReuseItem(struct PLIST_WORK *wk) {
 // printer and then learns the moves is the way into the loop when there is nothing to show
 #define LEVEL_UP_LEARN_LOOP_STATE_STAT_WINDOWS 0
 #define LEVEL_UP_LEARN_LOOP_STATE_WAIT_TEXT    4
-
-static BOOL LevelUpItemRaisedLevel(struct PartyPokemon *mon)
-{
-    return GetMonData(mon, MON_DATA_LEVEL, NULL) > gLevelUpItemFromLevel;
-}
 
 /*
  * @brief replaces the message vanilla PartyMenu_ItemUseFunc_LevelUp prints once a level-up item has been applied:
