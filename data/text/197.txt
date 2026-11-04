@@ -1574,3 +1574,20 @@ The opposing {STRVAR_1 1, 0, 0}’s {STRVAR_1 5, 1, 0}\nboosted the attack!
 {STRVAR_1 1, 0, 0} had its\nHP restored.
 The wild {STRVAR_1 1, 0, 0} had its\nHP restored.
 The opposing {STRVAR_1 1, 0, 0} had its\nHP restored.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{STRVAR_1 1, 0, 0}’s stat\nchanges were removed!
+The wild {STRVAR_1 1, 0, 0}’s stat\nchanges were removed!
+The opposing {STRVAR_1 1, 0, 0}’s stat\nchanges were removed!

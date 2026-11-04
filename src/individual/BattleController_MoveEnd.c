@@ -116,6 +116,24 @@ void LONG_CALL BattleController_MoveEndInternal(struct BattleSystem *bsys, struc
             return;
         }
 
+        // Dragon Tail / Circle Throw: drag the target out only after the hit and its contact punishment (Rocky Helmet, Rough Skin) resolved, and not if the user fainted
+        if (ctx->moveTbl[ctx->current_move_index].effect == MOVE_EFFECT_FORCE_SWITCH_HIT
+            && ctx->oneTurnFlag[ctx->attack_client].forceOutProcessedFlag == FALSE
+            && ctx->defence_client != BATTLER_NONE
+            && ctx->battlemon[ctx->attack_client].hp != 0
+            && ctx->battlemon[ctx->defence_client].hp != 0
+            && ctx->battlemon[ctx->defence_client].is_currently_dynamaxed == FALSE
+            && !(ctx->oneSelfFlag[ctx->defence_client].status_flag & SELF_STATUS_FLAG_SUBSTITUTE_HIT)
+            && (ctx->oneSelfFlag[ctx->defence_client].physical_damager == ctx->attack_client
+                || ctx->oneSelfFlag[ctx->defence_client].special_damager == ctx->attack_client)) {
+            ctx->oneTurnFlag[ctx->attack_client].forceOutProcessedFlag = TRUE;
+            ctx->addeffect_type = ADD_EFFECT_INDIRECT;
+            LoadBattleSubSeqScript(ctx, 1, SUB_SEQ_FORCE_OUT);
+            ctx->next_server_seq_no = ctx->server_seq_no;
+            ctx->server_seq_no = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
+        }
+
         switch (GetBattlerAbility(ctx, ctx->attack_client)) {
             case ABILITY_BEAST_BOOST:
                 if (ctx->oneTurnFlag[ctx->attack_client].numberOfKOs) {
@@ -244,6 +262,8 @@ void LONG_CALL BattleController_MoveEndInternal(struct BattleSystem *bsys, struc
 
     ctx->oneTurnFlag[ctx->attack_client].chargeProcessedFlag = 0;
     ctx->oneTurnFlag[ctx->attack_client].rampageProcessedFlag = 0;
+    ctx->oneTurnFlag[ctx->attack_client].fellStingerProcessedFlag = 0;
+    ctx->oneTurnFlag[ctx->attack_client].forceOutProcessedFlag = 0;
     // debug_printf("locked into move: %d\n", (ctx->battlemon[ctx->attack_client].condition2 & STATUS2_LOCKED_INTO_MOVE));
     // debug_printf("BATTLE_STATUS_CHARGE_MOVE_HIT %d\n", ctx->server_status_flag & BATTLE_STATUS_CHARGE_MOVE_HIT);
 
