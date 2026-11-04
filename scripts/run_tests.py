@@ -10,10 +10,16 @@ import tempfile
 import time
 from typing import Union
 
+from desmume.controls import Keys, keymask
 from desmume.emulator import DeSmuME, DeSmuME_Memory
 
 # Settings
 BASE_IDLE_TIMEOUT_SECONDS = 1 * 90  # 1.5 minute
+# A test that reports nothing for this many emulated frames is waiting on a button (the level-up stat box); tap A until it reports
+STALLED_FRAMES_BEFORE_TAPPING_A = 1800
+TAP_A_PERIOD_FRAMES = 6
+TAP_A_HOLD_FRAMES = 3
+TAPPING_IDLE_TIMEOUT_MULTIPLIER = 6  # each level-up takes seconds of emulation, so a tapped-through stat box gets longer before it counts as stuck
 
 g_EmulatorCommunicationSendHoleAddress = 0x02FFF81C
 TEST_CASE_PASS = -1
@@ -60,6 +66,7 @@ known_failing_test_case_names: list[str] = list()
 current_test_case = 0
 return_value = 0
 last_activity_time = time.monotonic()
+stalled_frames = 0
 TEST_START_INDEX = 0
 TEST_END_INDEX = 0
 TOTAL_NUMBER_OF_TESTS = 0
@@ -144,8 +151,11 @@ def callback_function_when_game_put_thing_into_communication_hole(address, size)
     global current_test_case
     global return_value
     global last_activity_time
+    global stalled_frames
 
     last_activity_time = time.monotonic()
+    stalled_frames = 0
+    emu.input.keypad_rm_key(keymask(Keys.KEY_A))
 
     value = read_communication_hole_value()
 
@@ -313,6 +323,7 @@ def run_single_partition(args) -> int:
     global test_case_names
     global skipped_test_case_names
     global last_activity_time
+    global stalled_frames
 
     partition_count = get_partition_count()
     partition_index = get_partition_index()
@@ -375,7 +386,8 @@ def run_single_partition(args) -> int:
 
     # Run the emulation as fast as possible until testing complete
     while not has_finished_testing():
-        if (time.monotonic() - last_activity_time) > idle_timeout_seconds:
+        tapping = stalled_frames > STALLED_FRAMES_BEFORE_TAPPING_A
+        if (time.monotonic() - last_activity_time) > idle_timeout_seconds * (TAPPING_IDLE_TIMEOUT_MULTIPLIER if tapping else 1):
             current_test_name = get_current_test_name()
             current_global_test_index = get_current_global_test_index()
             timeout_message = (
@@ -400,6 +412,14 @@ def run_single_partition(args) -> int:
 
         if window is not None:
             window.draw()
+
+        stalled_frames += 1
+        if tapping:
+            phase = stalled_frames % TAP_A_PERIOD_FRAMES
+            if phase == 0:
+                emu.input.keypad_add_key(keymask(Keys.KEY_A))
+            elif phase == TAP_A_HOLD_FRAMES:
+                emu.input.keypad_rm_key(keymask(Keys.KEY_A))
 
         emu.cycle(False)
 

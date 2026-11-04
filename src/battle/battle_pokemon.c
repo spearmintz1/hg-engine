@@ -1016,6 +1016,7 @@ void BattleEndRevertFormChange(struct BattleSystem *bw)
     } else {
         SendValueThroughCommunicationSendHole(TEST_CASE_PASS);
     }
+    TestBattle_MarkComplete();
 
 #endif // DEBUG_BATTLE_SCENARIOS
 }

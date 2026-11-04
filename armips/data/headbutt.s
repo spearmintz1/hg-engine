@@ -974,7 +974,7 @@ headbuttheader  37,   4,   0   // Route 33
     treecoords 472, 477, 473, 477, -1, -1, -1, -1, -1, -1, -1, -1
 .close
 
-headbuttheader  38,  15,   1   // Route 34
+headbuttheader  38,  15,   0   // Route 34
     // normal slots
     headbuttencounter SPECIES_HOOTHOOT, 9, 10
     headbuttencounter SPECIES_PINECO, 9, 10

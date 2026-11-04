@@ -153,7 +153,18 @@ static void LONG_CALL TestBattle_OverridePokemon(struct PartyPokemon *mon, u16 s
 
     PokeParaSet(mon, species, level, 31, FALSE, 0, 0, 0);
     SetMonData(mon, MON_DATA_FORM, &form);
-    SetMonData(mon, MON_DATA_ABILITY, &ability);
+    if (ability == TEST_ABILITY_HIDDEN || ability == TEST_ABILITY_PERSONAL_SLOT_1 || ability == TEST_ABILITY_PERSONAL_SLOT_2) {
+        if (ability == TEST_ABILITY_HIDDEN) {
+            SET_MON_HIDDEN_ABILITY_BIT(mon);
+        } else {
+            u32 pid = GetMonData(mon, MON_DATA_PERSONALITY, NULL);
+            pid = (ability == TEST_ABILITY_PERSONAL_SLOT_2) ? (pid | 1) : (pid & ~1u); // an odd personality picks the second slot, an even one the first
+            SetMonData(mon, MON_DATA_PERSONALITY, &pid);
+        }
+        ResetPartyPokemonAbility(mon);
+    } else {
+        SetMonData(mon, MON_DATA_ABILITY, &ability);
+    }
     SetMonData(mon, MON_DATA_HELD_ITEM, &item);
     SET_MON_NATURE_OVERRIDE(mon, NATURE_HARDY);
 
@@ -244,6 +255,7 @@ void LONG_CALL TestBattle_OverrideParties(struct BATTLE_PARAM *bp)
     const struct TestBattleScenario *scenario = sCurrentScenario;
 
     ResetScriptIndices();
+    Sav2_PlayerData_GetProfileAddr(SaveBlock2_get())->johtoBadges = scenario->johtoBadges;
 
     int enemyCount = 0;
     for (int i = 0; i < 6; i++) {
@@ -459,6 +471,19 @@ static void LONG_CALL TestBattle_CheckScriptCompletion()
         // } else {
         //     *g_EmulatorCommunicationSendHole = TEST_CASE_PASS;
         // }
+    }
+}
+
+/**
+ * @brief Mark the current test complete once its result has been sent
+ *
+ * CheckScriptCompletion only runs when a new turn starts, so a battle that ends on a KO
+ * would otherwise never be marked complete and the next test would never start.
+ */
+void LONG_CALL TestBattle_MarkComplete(void)
+{
+    if (sCurrentScenario != NULL) {
+        SetTestComplete(TRUE);
     }
 }
 

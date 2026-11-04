@@ -536,6 +536,136 @@ void LONG_CALL SetBoxMonAbility(struct BoxPokemon *boxmon) // actually takes box
 }
 
 /**
+ *  @brief recover a full ability id from the low byte a u8 ability field kept
+ *
+ *  @param species pokémon species
+ *  @param form form number
+ *  @param lowByte stored low byte of the ability
+ *  @return the first of the species' ability 1, ability 2 and hidden ability whose low byte matches, otherwise lowByte
+ */
+u16 ResolveAbilityFromLowByte(u16 species, u32 form, u8 lowByte)
+{
+    u16 candidates[3];
+    u32 i;
+
+    candidates[0] = PokeFormNoPersonalParaGet(species, form, PERSONAL_ABILITY_1);
+    candidates[1] = PokeFormNoPersonalParaGet(species, form, PERSONAL_ABILITY_2);
+    candidates[2] = GetMonHiddenAbility(species, form);
+    for (i = 0; i < NELEMS(candidates); i++) {
+        if ((candidates[i] & 0xFF) == lowByte) {
+            return candidates[i];
+        }
+    }
+    return lowByte;
+}
+
+/**
+ *  @brief Battle Frontier ability restore.  the Frontier structs keep the ability as one byte, so the full id is recovered from the mon's species and form
+ *
+ *  @param mon mon with species and form already set
+ *  @param storedAbility pointer to the byte stored in the Frontier struct
+ */
+void Frontier_SetMonAbility(struct PartyPokemon *mon, u8 *storedAbility)
+{
+    u16 species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    u32 form = GetMonData(mon, MON_DATA_FORM, NULL);
+    u16 ability = ResolveAbilityFromLowByte(species, form, *storedAbility);
+
+    SetMonData(mon, MON_DATA_ABILITY, &ability);
+}
+
+struct BoxMonSubstructs {
+    PokemonDataBlockA *blockA;
+    PokemonDataBlockB *blockB;
+    PokemonDataBlockC *blockC;
+    PokemonDataBlockD *blockD;
+};
+
+/**
+ *  @brief edited fields in SetBoxMonData.  experience is edited because it shares its word with the top bit of the ability index
+ *
+ *  @param blocks unencrypted data blocks from BoxPokemon structure
+ *  @param field MON_DATA_* constant to set
+ *  @param data pointer to set data from
+ *  @return signal to the hook that it shouldn't return to vanilla handling
+ */
+BOOL SetBoxMonData_EditedCases(struct BoxMonSubstructs *blocks, u32 field, void *data)
+{
+    PokemonDataBlockA *blockA = blocks->blockA;
+
+    switch (field) {
+    case MON_DATA_ABILITY: {
+        u16 ability = *((u16 *)data);
+        blockA->ability = ability & 0xFF;
+        blockA->abilityMSB = (ability >> 8) & 0x01;
+        return TRUE;
+    }
+    case MON_DATA_EXPERIENCE:
+        blockA->exp = *((u32 *)data);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/**
+ *  @brief edited fields in GetBoxMonData.  experience and level are edited because vanilla would read the ability's top bit as part of the experience
+ *
+ *  @param blocks unencrypted data blocks from BoxPokemon structure
+ *  @param field MON_DATA_* constant to retrieve
+ *  @param data pointer to return data in (if necessary as a structure)
+ *  @param retBool pointer to signal to the hook that it shouldn't return to vanilla handling
+ *  @return result of GetBoxMonData if one of these fields applies and return data is containable in variable
+ */
+u32 GetBoxMonData_EditedCases(struct BoxMonSubstructs *blocks, u32 field, void *data UNUSED, BOOL *retBool)
+{
+    PokemonDataBlockA *blockA = blocks->blockA;
+
+    *retBool = TRUE;
+    switch (field) {
+    case MON_DATA_ABILITY:
+        return (blockA->abilityMSB << 8) | blockA->ability;
+    case MON_DATA_EXPERIENCE:
+        return blockA->exp;
+    case MON_DATA_LEVEL:
+        return CalcLevelBySpeciesAndExp(blockA->species, blockA->exp);
+    }
+    *retBool = FALSE;
+    return 0;
+}
+
+/**
+ *  @brief edited fields in AddBoxMonData.  experience is edited because it shares its word with the top bit of the ability index
+ *
+ *  @param blocks unencrypted data blocks from BoxPokemon structure
+ *  @param field MON_DATA_* constant to modify
+ *  @param data value to add (or, for the ability, to set)
+ *  @return signal to the hook that it shouldn't return to vanilla handling
+ */
+BOOL AddBoxMonData_EditedCases(struct BoxMonSubstructs *blocks, u32 field, int data)
+{
+    PokemonDataBlockA *blockA = blocks->blockA;
+
+    switch (field) {
+    case MON_DATA_EXPERIENCE: {
+        u32 maxExp = PokeLevelExpGet(blockA->species, 100);
+        if (blockA->exp + (u32)data > maxExp) {
+            blockA->exp = maxExp;
+        } else {
+            blockA->exp += (u32)data;
+        }
+        return TRUE;
+    }
+    case MON_DATA_ABILITY: {
+        u16 ability = (u16)data;
+        blockA->ability = ability & 0xFF;
+        blockA->abilityMSB = (ability >> 8) & 0x01;
+        return TRUE;
+    }
+    }
+    return FALSE;
+}
+
+/**
  *  @brief get species base experience, modified for form.  base experience is no longer in personal
  *
  *  @param species species index
@@ -1258,7 +1388,7 @@ u8 LONG_CALL LoadEggMoves(struct PartyPokemon *pokemon, u16 *dest)
     offset = 0;
 
     species = PokeOtherFormMonsNoGet(GetMonData(pokemon, MON_DATA_SPECIES, NULL), GetMonData(pokemon, MON_DATA_FORM, NULL));
-    for (i = 0; i < NUM_EGG_MOVES_TOTAL; i++) {
+    for (i = 0; i < NUM_EGG_MOVES_TOTAL && kowaza_list[i] != 0xFFFF; i++) {
         if (species + 20000 == kowaza_list[i]) {
             offset = i + 1;
             break;
@@ -1380,8 +1510,7 @@ u16 LONG_CALL GetMonEvolution(struct Party *party, struct PartyPokemon *pokemon,
  */
 u32 LONG_CALL GrabSexFromSpeciesAndForm(u32 species, u32 pid, u32 form)
 {
-    u32 realSpecies = PokeOtherFormMonsNoGet(species, form);
-    u32 genderRatio = PokeFormNoPersonalParaGet(realSpecies, form, PERSONAL_GENDER_RATIO);
+    u32 genderRatio = PokeFormNoPersonalParaGet(species, form, PERSONAL_GENDER_RATIO);
     switch (genderRatio)
     {
         case 0:   // fully male
@@ -1481,7 +1610,7 @@ u16 LONG_CALL get_mon_ow_tag(u16 species, u32 form, u32 isFemale)
  *  @param encounterType encounter type
  *  @return TRUE if successful; FALSE otherwise
  */
-BOOL LONG_CALL GiveMon(int heapId, void *saveData, int species, int level, int forme, u8 ability, u16 heldItem, int ball, int encounterType) {
+BOOL LONG_CALL GiveMon(int heapId, void *saveData, int species, int level, int forme, u16 ability, u16 heldItem, int ball, int encounterType) {
     struct Party *party;
     struct PartyPokemon *pokemon;
     void *profile;
@@ -2049,24 +2178,43 @@ u32 SpeciesAndFormeToWazaOshieIndex(u32 species, u32 form)
     return ret;
 }
 
+#ifdef IMPLEMENT_LEVEL_CAP
+
+// level cap indexed by number of badges owned:  row 0 is before the game is cleared (johto badges), row 1 is after (kanto badges)
+static const u8 sLevelCaps[2][9] = {
+    { 13, 17, 21, 27, 35, 40, 40, 45, 55 },
+    { 65, 65, 65, 65, 65, 65, 80, 90, 100 },
+};
+
+static u32 CountBadges(u8 badgeMask)
+{
+    u32 count = 0;
+    for (; badgeMask != 0; badgeMask >>= 1)
+        count += badgeMask & 1;
+    return count;
+}
+
+#endif // IMPLEMENT_LEVEL_CAP
+
 /**
- *  @brief get level cap from the script variable defined by LEVEL_CAP_VARIABLE
+ *  @brief get level cap from the badges owned and whether the game has been cleared, so that script writes cannot desync it
  *
- *  @return level cap from LEVEL_CAP_VARIABLE script variable or 100 if it's not set at all
+ *  @return level cap from sLevelCaps or 100 if IMPLEMENT_LEVEL_CAP is not defined
  */
 u32 LONG_CALL GetLevelCap(void)
 {
 #ifdef IMPLEMENT_LEVEL_CAP
-    u32 levelCap = GetScriptVar(LEVEL_CAP_VARIABLE);
-    if (levelCap > 100 || levelCap == 0) levelCap = 100;
-    return levelCap;
+    struct PlayerProfile *profile = Sav2_PlayerData_GetProfileAddr(SaveBlock2_get());
+    if (CheckScriptFlag(FLAG_GAME_CLEAR))
+        return sLevelCaps[1][CountBadges(profile->kantoBadges)];
+    return sLevelCaps[0][CountBadges(profile->johtoBadges)];
 #else
     return 100;
 #endif // IMPLEMENT_LEVEL_CAP
 }
 
 /**
- *  @brief check if the level is at or above the level cap defined in LEVEL_CAP_VARIABLE
+ *  @brief check if the level is at or above the level cap returned by GetLevelCap
  *
  *  @param level level to check
  *  @return TRUE if level >= level cap; FALSE otherwise
@@ -2236,36 +2384,29 @@ u32 MonTryLearnMoveOnLevelUp(struct PartyPokemon *mon, int * last_i, u16 * sp0)
     if (isMonEvolving && LEVEL_UP_LEARNSET_LEVEL(levelUpLearnset[*last_i]) == 0) // when evolving, try to learn moves at level 0
         level = 0;
 
-    if (levelUpLearnset[*last_i] == LEVEL_UP_LEARNSET_END)
+    for (; levelUpLearnset[*last_i] != LEVEL_UP_LEARNSET_END; (*last_i)++)
     {
-        sys_FreeMemoryEz(levelUpLearnset);
-        return 0;
-    }
-    while ((levelUpLearnset[*last_i] & LEVEL_UP_LEARNSET_LEVEL_MASK) != (level << LEVEL_UP_LEARNSET_LEVEL_SHIFT))
-    {
-        (*last_i)++;
-        if (levelUpLearnset[*last_i] == LEVEL_UP_LEARNSET_END) {
-            sys_FreeMemoryEz(levelUpLearnset);
-            return 0;
-        }
-        if (isMonEvolving) // if a mon is evolving, it is possible that the current level move also corresponds with a move that it learns on evolution.  need to skip the entry if it has already been attempted to learn a move
+        if (LEVEL_UP_LEARNSET_LEVEL(levelUpLearnset[*last_i]) != level)
+            continue;
+        if (isMonEvolving && level != 0) // a mon that is evolving may have a move at the current level that it already attempted to learn at level 0, so skip it
         {
             u32 currMove = LEVEL_UP_LEARNSET_MOVE(levelUpLearnset[*last_i]);
+            BOOL alreadyAttempted = FALSE;
             for (s32 i = 0; i < *last_i; i++)
             {
                 if (LEVEL_UP_LEARNSET_MOVE(levelUpLearnset[i]) == currMove && LEVEL_UP_LEARNSET_LEVEL(levelUpLearnset[i]) == 0)
                 {
-                    (*last_i)++;
+                    alreadyAttempted = TRUE;
                     break;
                 }
             }
+            if (alreadyAttempted)
+                continue;
         }
-    }
-    if ((levelUpLearnset[*last_i] & LEVEL_UP_LEARNSET_LEVEL_MASK) == (level << LEVEL_UP_LEARNSET_LEVEL_SHIFT))
-    {
         *sp0 = LEVEL_UP_LEARNSET_MOVE(levelUpLearnset[*last_i]);
         (*last_i)++;
         ret = TryAppendMonMove(mon, *sp0);
+        break;
     }
     sys_FreeMemoryEz(levelUpLearnset);
     return ret;

@@ -95,6 +95,7 @@ sub_02017FE4 = 0x02017FE4 | 1;
 SetEggStats = 0x0206C8B8 | 1;
 SaveMisc_SetTogepiPersonalityGender = 0x0202ABB0 | 1;
 SaveMisc_GetTogepiPersonalityGender = 0x0202ABBC | 1;
+CalcLevelBySpeciesAndExp = 0x0206FDA8 | 1;
 
 SaveData_GetRepelPtr = 0x0202DB05;
 SaveData_GetEventPtr = 0x020503D0 | 1;
@@ -112,6 +113,7 @@ VarGet = 0x020403AC | 1;
 GF_CpuCopy8 = 0x0204D450;
 GetEvScriptWorkMemberAdrs = 0x020402F0 |1;
 WORDSET_RegisterAbilityName = 0x0200C060|1;
+BufferIntegerAsString = 0x0200BFCC | 1;
 EventSet_Script = 0x0203FE74 |1;
 
 sys_AllocMemory = 0x0201AA8C | 1;
@@ -763,3 +765,4 @@ ov12_0223BDDC = 0x0223BDDC | 1;
 NewString_ReadMsgData = 0x0200BBA0 | 1;
 StringExpandPlaceholders = 0x0200CBBC | 1;
 BattleSystem_SetBattleOutcomeFlags = 0x0223BD20 | 1;
+InitMartUI = 0x02256D34 | 1;

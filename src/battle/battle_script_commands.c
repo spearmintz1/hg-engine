@@ -1388,7 +1388,7 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
     u32 totalexp = 0;
 
     // count how many pokémon are getting experience
-    if (!expcalc->work[6])
+    if (expcalc->seq_no == 0)
     {
         monCount = 0;
         monCountFromItem = 0;
@@ -1490,7 +1490,7 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
         struct Party *party = BattleWorkPokePartyGet(expcalc->bw, 0);
 
         // count how many pokémon are getting experience
-        if (!expcalc->work[6])
+        if (expcalc->seq_no == 0)
         {
             monCount = 0;
             monCountFromItem = 0;
@@ -1550,7 +1550,7 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
 
     //distribute effort values to level_cap pokémon who would otherwise not get it
     //把基础点数分配给已经到达等级上限的宝可梦。
-    if (expcalc->seq_no == 0 && sel_mons_no < BattleWorkPokeCountGet(expcalc->bw, exp_client_no) && GetMonData(BattleWorkPokemonParamGet(expcalc->bw, exp_client_no, sel_mons_no), MON_DATA_LEVEL, NULL) == GetLevelCap())
+    if (expcalc->seq_no == 0 && sel_mons_no < BattleWorkPokeCountGet(expcalc->bw, exp_client_no) && IsLevelAtLevelCap(GetMonData(BattleWorkPokemonParamGet(expcalc->bw, exp_client_no, sel_mons_no), MON_DATA_LEVEL, NULL)))
     {
         DistributeEffortValues(BattleWorkPokePartyGet(expcalc->bw, exp_client_no),
                                sel_mons_no,
@@ -3857,7 +3857,8 @@ extern const u8 sHoneyGatherChanceTable[10];
 BOOL BtlCmd_GenerateEndOfBattleItem(struct BattleSystem *bw, struct BattleStruct *sp) {
     int rnd, i, j, k;
     u16 species, item;
-    u8 ability, lvl;
+    u16 ability;
+    u8 lvl;
     struct PartyPokemon *mon;
 
     IncrementBattleScriptPtr(sp, 1);

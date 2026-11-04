@@ -203,9 +203,11 @@ typedef struct {
     /* 0x00 */ u16 species;
     /* 0x02 */ u16 heldItem;
     /* 0x04 */ u32 otID; // low 16: visible; high 16: secret
-    /* 0x08 */ u32 exp;
+    /* 0x08 */ u32 exp : 21; // the maximum experience (1,640,000) fits in 21 bits
+               u32 unused : 10;
+               u32 abilityMSB : 1; // bit 8 of the ability index: no stored experience ever reaches bit 31
     /* 0x0C */ u8 friendship;
-    /* 0x0D */ u8 ability;
+    /* 0x0D */ u8 ability; // low 8 bits of the ability index
     /* 0x0E */ u8 markings; // circle, triangle, square, heart, star, diamond
     /* 0x0F */ u8 originLanguage;
     /* 0x10 */ u8 hpEV;
@@ -751,8 +753,8 @@ typedef struct EncounterInfo
     BOOL unk8;
     u8 level;
     u8 isEgg;
-    u8 ability;
-    u8 unkE[2];
+    u16 ability;
+    u8 unk10;
     u8 unk11;
 } EncounterInfo; // size = 0x12
 
@@ -1176,6 +1178,15 @@ u32 LONG_CALL PokeListProc_End(void *proc, int *seq);
 u32 LONG_CALL PokeParaLevelExpGet(struct PartyPokemon *pp);
 
 /**
+ *  @brief grab the level of a species given its experience
+ *
+ *  @param species species index to calculate for
+ *  @param exp total experience the species has
+ *  @return level the species is at with given experience
+ */
+u32 LONG_CALL CalcLevelBySpeciesAndExp(u32 species, u32 exp);
+
+/**
  *  @brief check if a PartyPokemon should level up
  *
  *  @param pp PartyPokemon to potentially level up
@@ -1586,6 +1597,8 @@ u16 LONG_CALL GetPokemonOwNum(u16 species);
  *  @return hidden ability of specific pokémon
  */
 u16 LONG_CALL GetMonHiddenAbility(u16 species, u32 form);
+void LONG_CALL Frontier_SetMonAbility(struct PartyPokemon *mon, u8 *storedAbility);
+u16 LONG_CALL ResolveAbilityFromLowByte(u16 species, u32 form, u8 lowByte);
 
 /**
  *  @brief set a box mon's ability--modified to account for hidden ability flag--should only be used in scripted wild encounters/givepokemon contexts
@@ -1796,7 +1809,7 @@ u16 LONG_CALL get_mon_ow_tag(u16 species, u32 form, u32 isFemale);
  *  @param encounterType encounter type
  *  @return TRUE if successful; FALSE otherwise
  */
-BOOL LONG_CALL GiveMon(int heapId, void *saveData, int species, int level, int forme, u8 ability, u16 heldItem, int ball, int encounterType);
+BOOL LONG_CALL GiveMon(int heapId, void *saveData, int species, int level, int forme, u16 ability, u16 heldItem, int ball, int encounterType);
 
 //BOOL LONG_CALL AddWildPartyPokemon(int inTarget, EncounterInfo *encounterInfo, struct PartyPokemon *encounterPartyPokemon, struct BATTLE_PARAM *encounterBattleParam);
 
@@ -1832,14 +1845,14 @@ bool8 LONG_CALL RevertFormChange(struct PartyPokemon *pp, u16 species, u8 form_n
 void LONG_CALL ClearMonMoves(struct PartyPokemon *pokemon);
 
 /**
- *  @brief get level cap from the script variable defined by LEVEL_CAP_VARIABLE
+ *  @brief get level cap from the badges owned and whether the game has been cleared
  *
- *  @return level cap from LEVEL_CAP_VARIABLE script variable
+ *  @return level cap from the table in pokemon.c or 100 if IMPLEMENT_LEVEL_CAP is not defined
  */
 u32 LONG_CALL GetLevelCap(void);
 
 /**
- *  @brief check if the level is at or above the level cap defined in LEVEL_CAP_VARIABLE
+ *  @brief check if the level is at or above the level cap returned by GetLevelCap
  *
  *  @param level level to check
  *  @return TRUE if level >= level cap; FALSE otherwise

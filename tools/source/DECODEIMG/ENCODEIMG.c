@@ -246,7 +246,10 @@ int main(int argc, char** argv)
         {
             for (r2 = 0; r2 < 8; r2++)
             {
-                switch (image.pixels[(r+r2)*image.width + c])
+                uint8_t pixel = image.pixels[(r+r2)*image.width + c];
+                if (!image.hasPalette) // grayscale PNG: map the 4 gray levels (255, 168, 80, 0) to palette indices
+                    pixel = (pixel >= 212) ? 0b00 : (pixel >= 124) ? 0b01 : (pixel >= 40) ? 0b10 : 0b11;
+                switch (pixel)
                 {
                 case 0b00: // white - do nothing
                     break;
@@ -260,7 +263,7 @@ int main(int argc, char** argv)
                     encoded[k] |= (0x101 << r2);
                     break;
                 default:
-                    printf("invalid pixel detected. %02X\n", image.pixels[(r+r2)*image.width + c]);
+                    printf("invalid pixel detected. %02X\n", pixel);
                     break;
                 }
             }

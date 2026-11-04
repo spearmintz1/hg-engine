@@ -3,6 +3,13 @@
 # NARC_FILES handles prereqs for move_narc
 # MSGDATA_COMPILETIME_DEPENDENCIES handles prereqs for msgdata
 
+# narcpy packs every file in a directory, so a stale build output (left by a renamed or deleted source) would shift
+# every later NARC index. pack_built_narc(dir,objs) removes anything in dir that is not one of objs, then packs dir into $@.
+define pack_built_narc
+	rm -f $(filter-out $(2),$(wildcard $(1)/*))
+	$(NARCHIVE) create $@ $(1) -nf
+endef
+
 MSGDATA_DIR := $(BUILD)/text
 MSGDATA_NARC := $(BUILD_NARC)/msg_data.narc
 MSGDATA_TARGET := $(FILESYS)/a/0/2/7
@@ -95,7 +102,7 @@ NARC_FILES += $(OPENDEMO_NARC)
 MONDATA_DIR := $(BUILD)/a002
 MONDATA_NARC := $(BUILD_NARC)/mondata.narc
 MONDATA_TARGET := $(FILESYS)/a/0/0/2
-MONDATA_DEPENDENCIES := armips/data/mondata.s armips/data/tmlearnset.txt
+MONDATA_DEPENDENCIES := armips/data/mondata.s armips/data/tmlearnset.txt armips/include/macros.s scripts/tm_learnset.py
 MONDATA_NAMES_DIR := $(BUILD)/rawtext/237 $(BUILD)/rawtext/238 $(BUILD)/rawtext/817
 MONDATA_DESCRIPTIONS_DIR := $(BUILD)/rawtext/803
 MONDATA_CLASSIFICATIONS_DIR := $(BUILD)/rawtext/816 $(BUILD)/rawtext/823
@@ -287,7 +294,7 @@ $(MOVEANIM_DIR)/0_%:$(MOVEANIM_DEPENDENCIES_DIR)/%.s
 	$(ARMIPS) $<
 
 $(MOVEANIM_NARC): $(MOVEANIM_OBJS)
-	$(NARCHIVE) create $@ $(MOVEANIM_DIR) -nf
+	$(call pack_built_narc,$(MOVEANIM_DIR),$(MOVEANIM_OBJS))
 
 NARC_FILES += $(MOVEANIM_NARC)
 REQUIRED_DIRECTORIES += $(MOVEANIM_DIR)
@@ -305,7 +312,7 @@ $(MOVESUBANIM_DIR)/1_%:$(MOVESUBANIM_DEPENDENCIES_DIR)/%.s
 	$(ARMIPS) $<
 
 $(MOVESUBANIM_NARC): $(MOVESUBANIM_OBJS)
-	$(NARCHIVE) create $@ $(MOVESUBANIM_DIR) -nf
+	$(call pack_built_narc,$(MOVESUBANIM_DIR),$(MOVESUBANIM_OBJS))
 
 NARC_FILES += $(MOVESUBANIM_NARC)
 REQUIRED_DIRECTORIES += $(MOVESUBANIM_DIR)
@@ -336,7 +343,7 @@ $(MOVE_SEQ_DIR)/1_%:$(MOVE_SEQ_CUSTOM_DIR)/%.s
 	$(OBJCOPY) -O binary $(patsubst $(MOVE_SEQ_CUSTOM_DIR)/%.s,$(MOVE_SEQ_OBJ_DIR)/1_%_linked.o,$<) $@
 
 $(MOVE_SEQ_NARC): $(MOVE_SEQ_OBJS)
-	$(NARCHIVE) create $@ $(MOVE_SEQ_DIR) -nf
+	$(call pack_built_narc,$(MOVE_SEQ_DIR),$(MOVE_SEQ_OBJS))
 
 $(OUTPUT):$(LINK)
 
@@ -367,7 +374,7 @@ $(BATTLE_EFF_DIR)/1_%:$(BATTLE_EFF_CUSTOM_DIR)/%.s
 	$(OBJCOPY) -O binary $(patsubst $(BATTLE_EFF_CUSTOM_DIR)/%.s,$(BATTLE_EFF_OBJ_DIR)/1_%_linked.o,$<) $@
 
 $(BATTLE_EFF_NARC): $(BATTLE_EFF_OBJS)
-	$(NARCHIVE) create $@ $(BATTLE_EFF_DIR) -nf
+	$(call pack_built_narc,$(BATTLE_EFF_DIR),$(BATTLE_EFF_OBJS))
 
 NARC_FILES += $(BATTLE_EFF_NARC)
 REQUIRED_DIRECTORIES += $(BATTLE_EFF_DIR) $(BATTLE_EFF_OBJ_DIR)
@@ -396,7 +403,7 @@ $(BATTLE_SUB_DIR)/2_%:$(BATTLE_SUB_CUSTOM_DIR)/%.s
 	$(OBJCOPY) -O binary $(patsubst $(BATTLE_SUB_CUSTOM_DIR)/%.s,$(BATTLE_SUB_OBJ_DIR)/2_%_linked.o,$<) $@
 
 $(BATTLE_SUB_NARC): $(BATTLE_SUB_OBJS)
-	$(NARCHIVE) create $@ $(BATTLE_SUB_DIR) -nf
+	$(call pack_built_narc,$(BATTLE_SUB_DIR),$(BATTLE_SUB_OBJS))
 
 NARC_FILES += $(BATTLE_SUB_NARC)
 REQUIRED_DIRECTORIES += $(BATTLE_SUB_DIR) $(BATTLE_SUB_OBJ_DIR)
@@ -627,6 +634,11 @@ $(PW_POKEGRA_DIR)/%.lz: $(PW_POKEGRA_ART_DIR)/%.2bpp
 $(PW_POKEGRA_NARC): $(PW_POKEGRA_OBJS)
 	$(NARCHIVE) create $@ $(PW_POKEGRA_DIR) -nf
 
+# the number of members in the narc, so that GrabPokewalkerMonSpriteIndex never indexes past its end
+# (CFLAGS is expanded when the object rules are generated, so it cannot be a target-specific variable)
+CFLAGS += -DPOKEWALKER_SPRITE_COUNT=$(words $(PW_POKEGRA_OBJS))
+$(BUILD)/field/pokewalker.o: $(PW_POKEGRA_DEPENDENCIES)
+
 NARC_FILES += $(PW_POKEGRA_NARC)
 REQUIRED_DIRECTORIES += $(PW_POKEGRA_DIR) $(PW_POKEGRA_ART_DIR)
 
@@ -701,6 +713,10 @@ $(TRAINER_GFX_DIR)/8_%-00.NCGR:$(TRAINER_GFX_DEPENDENCIES_DIR)/%.png
 $(TRAINER_GFX_DIR)/8_%-01.NCLR:$(TRAINER_GFX_DEPENDENCIES_DIR)/%.png
 	$(GFX) $< $@ -ir -bitdepth 4
 
+# class 102 (Battle Castle Owner) is the only trainer whose cells use OAM palette 1, so it ships 32 colours
+$(TRAINER_GFX_DIR)/8_102-01.NCLR:$(TRAINER_GFX_DEPENDENCIES_DIR)/102.pal
+	$(GFX) $< $@ -ir -bitdepth 4
+
 $(TRAINER_GFX_DIR)/8_%-02.NCER:$(TRAINER_GFX_DEPENDENCIES_DIR)/%_cell.json
 	$(GFX) $< $@
 
@@ -708,7 +724,7 @@ $(TRAINER_GFX_DIR)/8_%-03.NANR:$(TRAINER_GFX_DEPENDENCIES_DIR)/%_anim.json
 	$(GFX) $< $@
 
 $(TRAINER_GFX_DIR)/8_%-04.NCGR:$(TRAINER_GFX_DEPENDENCIES_DIR)/%_enc.png
-	$(GFX) $< $@ -clobbersize -version101 -bitdepth 4 -scanfronttoback -mwidth 20
+	$(GFX) $< $@ -bitdepth 4 -scanned -mwidth 20
 
 $(TRAINER_GFX_NARC): $(TRAINER_GFX_DEPENDENCIES) $(TRAINER_GFX_OBJS)
 	$(NARCHIVE) create $@ $(TRAINER_GFX_DIR) -nf
@@ -722,5 +738,5 @@ REQUIRED_DIRECTORIES += $(TRAINER_GFX_DIR)
 
 $(MSGDATA_NARC): $(MSGDATA_DEPENDENCIES) $(MSGDATA_COMPILETIME_DEPENDENCIES)
 	$(NARCHIVE) extract $(MSGDATA_TARGET) -o $(MSGDATA_DIR) -nf
-	for file in $^; do $(MSGENC) -e -c $(CHARMAP) $$file $(MSGDATA_DIR)/7_$$(basename $$file .txt); done
+	for file in $^; do $(MSGENC) -e -c $(CHARMAP) $$file $(MSGDATA_DIR)/7_$$(basename $$file .txt) || exit 1; done
 	$(NARCHIVE) create $@ $(MSGDATA_DIR) -nf

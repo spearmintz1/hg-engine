@@ -139,9 +139,13 @@ u16 sMapOldSpeciesToBaseFormIndex[][2] = {
 };
 
 
-// grab the pokewalker index in a256
-// the icon function shouldn't need to be changed.  just need to add new ones
-u32 GrabPokewalkerMonSpriteIndex(u32 species, u32 isFemale, u32 form)
+#ifndef POKEWALKER_SPRITE_COUNT
+#error "POKEWALKER_SPRITE_COUNT (number of members in the pokewalker sprite narc, a256) is defined by narcs.mk"
+#endif
+
+
+// the index this species would have if the narc had a sprite for it
+static u32 GrabPokewalkerMonSpriteIndexUnchecked(u32 species, u32 isFemale, u32 form)
 {
     int i;
     
@@ -173,4 +177,26 @@ u32 GrabPokewalkerMonSpriteIndex(u32 species, u32 isFemale, u32 form)
     {
         return (species - SPECIES_VICTINI + POKEWALKER_SPRITE_BASE_NEW_MONS);
     }
+}
+
+
+// grab the pokewalker index in a256
+// the icon function shouldn't need to be changed.  just need to add new ones
+// the result is always a member of the narc: a species without a sprite falls back to its base species, then to the first sprite
+u32 GrabPokewalkerMonSpriteIndex(u32 species, u32 isFemale, u32 form)
+{
+    u32 index = GrabPokewalkerMonSpriteIndexUnchecked(species, isFemale, form);
+
+    if (index >= POKEWALKER_SPRITE_COUNT)
+    {
+        if (form >= 32) // rows of the form table are 32 wide
+            form = 0;
+        species = GetSpeciesBasedOnForm(species, form);
+        if (species > MAX_SPECIES_INCLUDING_FORMS) // the form mapping table is only valid for real species
+            return 0;
+        index = GrabPokewalkerMonSpriteIndexUnchecked(GetBaseSpeciesFromAdjustedForm(species), isFemale, 0);
+        if (index >= POKEWALKER_SPRITE_COUNT)
+            return 0;
+    }
+    return index;
 }

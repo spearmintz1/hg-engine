@@ -154,7 +154,7 @@ void *LONG_CALL ItemDataTableLoad(int heapID)
 {
     int max;
 
-    max = GetItemIndex(NEW_ITEM_MAX, ITEM_GET_DATA);
+    max = GetItemIndex(NEW_ITEM_MAX, ITEM_GET_DATA) + 1; // entry count, not last index
 
     return ArchiveDataLoadMallocOfs(ARC_ITEM_DATA, 0, heapID, 0, sizeof(ITEMDATA) * max);//800757Ch
 }

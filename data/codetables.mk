@@ -72,20 +72,25 @@ NARC_FILES += $(FORMREVERSION_BIN)
 # headless battle test scenarios, only built into the ROM for `make AUTO_TEST=Y`
 BATTLETESTS_OUTPUT_DIR := build/battle_tests
 BATTLETESTS_TARGET := $(BUILD)/a028/9_14
+BATTLETESTS_HEADER := include/constants/generated/test_battle.h
 
 ifeq ($(AUTO_TEST),Y)
-BATTLETESTS_HEADER := include/constants/generated/test_battle.h
 BATTLETESTS_DEPENDENCIES := $(BATTLETESTS_OUTPUT_DIR)/BattleTests.c
 BATTLETESTS_OBJS := $(patsubst %.c,%.o,$(BATTLETESTS_DEPENDENCIES))
 BATTLETESTS_BIN := $(patsubst %.c,%.bin,$(BATTLETESTS_DEPENDENCIES))
 
-# the generator is re-run whenever any scenario changes, including in nested directories
+# The test listing (added/deleted/renamed scenarios) and test_filter.txt are inputs a make prerequisite
+# cannot express, so the generator runs on every build. It rewrites its outputs only when their content
+# changes, which keeps everything downstream incremental. Edits to a scenario body rebuild the bin below.
 BATTLETESTS_SOURCES := $(shell find data/battle_tests -name '*.c')
 
-$(BATTLETESTS_HEADER) $(BATTLETESTS_DEPENDENCIES) &: $(BATTLETESTS_SOURCES) scripts/build_tests.py
+$(BATTLETESTS_HEADER) $(BATTLETESTS_DEPENDENCIES) &: FORCE
 	$(PYTHON) scripts/build_tests.py
 
-$(BATTLETESTS_BIN): $(BATTLETESTS_DEPENDENCIES)
+.PHONY: FORCE
+FORCE:
+
+$(BATTLETESTS_BIN): $(BATTLETESTS_DEPENDENCIES) $(BATTLETESTS_SOURCES)
 	$(CC) $(CFLAGS) -c $< -o $(BATTLETESTS_OBJS)
 	$(OBJCOPY) -O binary $(BATTLETESTS_OBJS) $@
 
