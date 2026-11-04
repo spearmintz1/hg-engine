@@ -12,15 +12,15 @@ Professor Elm: How do you like walking\nwith your Pokémon? It’s not bad, is i
 You should heal it with this machine.\rIt’s so easy to use.\nJust check the PC on my desk!\r
 Professor Elm: Mr. Pokémon goes\neverywhere and finds rarities.\fHis house is past Cherrygrove City.\rGo north a little past Cherrygrove.\fI’m counting on you, {STRVAR_1 3, 0, 0}!
 Professor Elm: Mr. Pokémon goes\neverywhere and finds rarities.\fHis house is past Cherrygrove City.\rGo north a little past Cherrygrove.\fI’m counting on you, {STRVAR_1 3, 0, 0}!
-This PC is connected to the\nhealing machine!\rYou can also access the PC from\n anywhere using the L BUTTON.\r
+This PC is connected to the\nhealing machine!\rYou can also access the PC from\nanywhere using the L BUTTON.\r
 There are two valuable Pokémon left!\n...But they belong to Professor Elm.
 There is one valuable Pokémon left!\nYou didn’t notice before, but it is\fbehind thick glass walls now so\fnothing bad can happen to it!
 There are no valuable Pokémon left...\rYou wonder who Professor Elm gave the\nlast Pokémon to?
 Huh? Me?\nI’m not the professor.\rHe’s at the back of the room.\n
 {STRVAR_1 3, 0, 0}, I want you to have these\nrepels and some prototypes to help\nyou with your task.\r
 {STRVAR_1 3, 0, 0}, I want you to have these\nrepels and some prototypes to help\nyou with your task.\r
-The repels will keep weaker Pokémon\naway while traveling.\rThe Rejuvenator will restore HP and PP\nbetween battles.\rThe ashes will fully heal and restore\nall fainted Pokémon in your party,\r
-The repels will keep weaker Pokémon\naway while traveling.\rThe Rejuvenator will restore HP and PP\nbetween battles.\rThe ashes will fully heal and restore\nall fainted Pokémon in your party,\r
+The repels will keep weaker Pokémon\naway while traveling.\rThe Rejuvenator will restore HP and PP\nbetween battles.\rThe ashes will fully heal and restore\nall fainted Pokémon in your party.\r
+The repels will keep weaker Pokémon\naway while traveling.\rThe Rejuvenator will restore HP and PP\nbetween battles.\rThe ashes will fully heal and restore\nall fainted Pokémon in your party.\r
 Who are you?\nWe are investigating the case of the\fmissing Pokémon here...\rRule number one!\n“Whoever did it will come\fback to the site.”\rOh my... So you must be...\nthe one who did it?\r
 Lyra: Hold on a second!\nHe has nothing to do with it!\rI saw it.\nThere was a red-haired boy\flooking into the building!\r
 Ethan: Hold on a second!\nShe has nothing to do with it!\rI saw it.\nThere was a red-haired boy\flooking into the building!\r
@@ -65,8 +65,8 @@ The Master Ball is the best!\rIt’s the ultimate Poké Ball! It’ll catch\nany
 By the way...\rWe just had a group of beautiful\nKimono Girls looking for you.\r
 By the way...\rWe just had a group of beautiful\nKimono Girls looking for you.\r
 The Kimono Girls told me they are\nwaiting for you at the Ecruteak\fDance Theater.\rI know you’ve gone through many things\nsince that Egg got you involved in\fall this...\rI hope you’ll carry through it.\r
-Lyra: {STRVAR_1 3, 0, 0}, people are talking\nabout you!\rI heard you helped Kimono Girls?\rYou’ve been helping all these people!\nYou make me proud to be your friend.\r
-Ethan: {STRVAR_1 3, 0, 0}, people are talking\nabout you!\rI heard you helped Kimono Girls?\rYou’ve been helping all these people!\nYou make me proud to be your friend.\r
+Lyra: {STRVAR_1 3, 0, 0}, people are talking\nabout you!\rI heard you helped the Kimono Girls?\rYou’ve been helping all these people!\nYou make me proud to be your friend.\r
+Ethan: {STRVAR_1 3, 0, 0}, people are talking\nabout you!\rI heard you helped the Kimono Girls?\rYou’ve been helping all these people!\nYou make me proud to be your friend.\r
 Professor Elm: The Kimono Girls are\nwaiting for you at the\fEcruteak Dance Theater.
 Professor Elm: Hahaha... Good job!\rThat Egg that appeared to be rare has\nbrought you so much trouble, I guess.\rThe Kimono Girls said something\nabout me?\fI don’t have anything to do with it.\rYou made up your mind yourself\nand went through with your decision.\rHaving achieved such a thing,\nyou should be able to take on\fthe Pokémon League now!\rYou should head for the\nIndigo Plateau!\rDo you know how to get there?\nFollow Route 27 to reach Route 26.\fOnce you get there, go straight north!
 Professor Elm: {STRVAR_1 3, 0, 0}!\nThere you are!\rI called because I have something\nfor you.\rSee? It’s an S.S. Ticket.\nNow you can catch Pokémon in Kanto.\r
@@ -102,6 +102,6 @@ I’d love to take a look at the\nPokémon that hatched from\fthat Egg, {STRVAR_
 I’d love to take a look at the\nPokémon that hatched from\fthat Egg, {STRVAR_1 3, 0, 0}.
 Professor Elm: {STRVAR_1 3, 0, 0}!\nI’m truly surprised!\rI can’t believe that such a great\nTrainer has been so close by\fall this time!\r{STRVAR_1 3, 0, 0}, you have been helping\nme understand what it means to\fwalk with Pokémon.\rIt is that...\fthere is no end to the relationship\fbetween people and Pokémon!\rLet me thank you once again for\nyour support!
 Professor Elm: {STRVAR_1 3, 0, 0}!\nI’m truly surprised!\rI can’t believe that such a great\nTrainer has been so close by\fall this time!\r{STRVAR_1 3, 0, 0}, you have been helping\nme understand what it means to\fwalk with Pokémon.\rIt is that...\fthere is no end to the relationship\fbetween people and Pokémon!\rLet me thank you once again for\nyour support!
-Hmm...\nAs far as I know, there are no\fPokémon like this at Johto...\rJust like Mr. Pokémon was saying\nover the phone.\rYou seem to be there when\nsomething exciting happens,\f{STRVAR_1 3, 0, 0}!\rYou are making me all excited!\nI’ll give you a present for that.\fPlease take it.\r
-Hmm...\nAs far as I know, there are no\fPokémon like this at Johto...\rJust like Mr. Pokémon was saying\nover the phone.\rYou seem to be there when\nsomething exciting happens,\f{STRVAR_1 3, 0, 0}!\rYou are making me all excited!\nI’ll give you a present for that.\fPlease take it.\r
+Hmm...\nAs far as I know, there are no\fPokémon like this in Johto...\rJust like Mr. Pokémon was saying\nover the phone.\rYou seem to be there when\nsomething exciting happens,\f{STRVAR_1 3, 0, 0}!\rYou are making me all excited!\nI’ll give you a present for that.\fPlease take it.\r
+Hmm...\nAs far as I know, there are no\fPokémon like this in Johto...\rJust like Mr. Pokémon was saying\nover the phone.\rYou seem to be there when\nsomething exciting happens,\f{STRVAR_1 3, 0, 0}!\rYou are making me all excited!\nI’ll give you a present for that.\fPlease take it.\r
 Don’t forget some candy for the\ntrip! It will increase a Pokémon’s level!\r
