@@ -264,7 +264,7 @@ s32 Party_GetIllusionImitatedIndex(struct Party *party, s32 illusionIndex)
  *  @param side client sending the Illusion mon out
  *  @param pos party slot of the Illusion mon
  *  @param copiedPos party slot of the mon the disguise copies
- *  @param disguised TRUE if the copied mon looks different from the Illusion mon; FALSE drops the disguise
+ *  @param disguised TRUE if the disguise copies another party mon (its nickname shows even when the species matches); FALSE drops the disguise
  */
 static void ClientIllusionStateUpdate(void *bw, u32 side, u32 pos, s32 copiedPos, BOOL disguised)
 {
@@ -350,7 +350,7 @@ void ClientPokemonEncount(void *bw, struct CLIENT_PARAM *cp)
         newform = GetMonData(Party_GetMonByIndex(party, illusionIndex), MON_DATA_FORM, NULL);
         newshiny = MonIsShiny(Party_GetMonByIndex(party, illusionIndex));
 
-        disguised = newmon != pep->monsno || newform != pep->form_no;
+        disguised = illusionIndex != 0;
         if (disguised)
         {
             pep->monsno = newmon;
@@ -397,7 +397,7 @@ void ClientPokemonEncountAppear(void *bw, struct CLIENT_PARAM *cp)
         newform = GetMonData(Party_GetMonByIndex(party, illusionIndex), MON_DATA_FORM, NULL);
         newshiny = MonIsShiny(Party_GetMonByIndex(party, illusionIndex));
 
-        disguised = newmon != pap->monsno || newform != pap->form_no;
+        disguised = illusionIndex != pap->sel_mons_no;
         if (disguised)
         {
             pap->monsno = newmon;
@@ -444,7 +444,7 @@ void ClientPokemonAppear(void *bw, struct CLIENT_PARAM *cp)
         newform = GetMonData(Party_GetMonByIndex(party, illusionIndex), MON_DATA_FORM, NULL);
         newshiny = MonIsShiny(Party_GetMonByIndex(party, illusionIndex));
 
-        disguised = newmon != pap->monsno || newform != pap->form_no;
+        disguised = illusionIndex != pap->sel_mons_no;
         if (disguised)
         {
             pap->monsno = newmon;
@@ -945,23 +945,23 @@ void BattleEndRevertFormChange(struct BattleSystem *bw)
     newBS.ChangeBgFlag = 0;
     newBS.MegaIconLight = 0;
 
-    for (i = 0; i < 2; i++)
+    // the illusion state is indexed by team and holds the owning client, so every team is reverted through its own client
+    for (i = 0; i < 4; i++)
     {
         // revert illusion
-        if (gIllusionStruct.isSideInIllusion & No2Bit(SanitizeClientForTeamAccess(bw, i))
-         && gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, i)] == i)
+        if (gIllusionStruct.isSideInIllusion & No2Bit(i))
         {
-            pp = BattleWorkPokemonParamGet(bw, i, gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, i)]);
-            SetMonData(pp, MON_DATA_NICKNAME, gIllusionStruct.illusionNameBuf[SanitizeClientForTeamAccess(bw, i)]);
+            pp = BattleWorkPokemonParamGet(bw, gIllusionStruct.illusionClient[i], gIllusionStruct.illusionPos[i]);
+            SetMonData(pp, MON_DATA_NICKNAME, gIllusionStruct.illusionNameBuf[i]);
         }
 
         // clear the illusion structure
-        gIllusionStruct.isSideInIllusion &= ~No2Bit(SanitizeClientForTeamAccess(bw, i));
-        gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, i)] = CLIENT_MAX;
-        gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, i)] = 6;
-        gIllusionStruct.illusionCopiedPos[SanitizeClientForTeamAccess(bw, i)] = 6;
-        for (j = 0; j < 11; j++)
-            gIllusionStruct.illusionNameBuf[SanitizeClientForTeamAccess(bw, i)][j] = 0;
+        gIllusionStruct.isSideInIllusion &= ~No2Bit(i);
+        gIllusionStruct.illusionClient[i] = CLIENT_MAX;
+        gIllusionStruct.illusionPos[i] = 6;
+        gIllusionStruct.illusionCopiedPos[i] = 6;
+        for (j = 0; j < 12; j++)
+            gIllusionStruct.illusionNameBuf[i][j] = 0;
     }
 
     for (i = 0; i < BattleWorkPokeCountGet(bw, 0); i++)
@@ -1056,6 +1056,23 @@ void BattleEndRevertFormChange(struct BattleSystem *bw)
                 // debug_printf("Form matches expectation\n");
                 currentScenario->expectationPassCount++;
             }
+        } else if (currentScenario->expectations[currentScenario->expectationPassCount].expectationType == EXPECTATION_END_OF_BATTLE_NICKNAME) {
+            // the battle party after the illusion revert above: the mon at the slot must carry the default name of the expected species
+            struct Expectations *expectation = &currentScenario->expectations[currentScenario->expectationPassCount];
+            u16 nickname[12], expectedName[12];
+            GetMonData(BattleWorkPokemonParamGet(bw, BATTLER_PLAYER_FIRST, expectation->battlerIDOrPartySlot), MON_DATA_NICKNAME, nickname);
+            GetSpeciesNameIntoArray(expectation->expectationValue.nicknameSpecies, 0, expectedName);
+            BOOL nameMatches = TRUE;
+            for (i = 0; nameMatches && i < 11; i++) {
+                nameMatches = nickname[i] == expectedName[i];
+                if (nickname[i] == 0xFFFF) {
+                    break;
+                }
+            }
+            if (!nameMatches) {
+                break;
+            }
+            currentScenario->expectationPassCount++;
         } else {
             // debug_printf("Break\n");
             break;
