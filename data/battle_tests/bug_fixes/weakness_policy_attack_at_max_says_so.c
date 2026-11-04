@@ -1,4 +1,4 @@
-// Test: Weakness Policy at +6 Attack must report that Attack will not go higher and still raise Sp. Atk
+// Test: Weakness Policy at +6 Attack must report that Attack will not go higher and still raise Sp. Atk naming the item
 #include "../battle_tests.h"
 BEGIN_TEST
 {
@@ -27,7 +27,7 @@ BEGIN_TEST
             .form = 0,
             .ability = ABILITY_GUTS,
             .item = ITEM_NONE,
-            .moves = { MOVE_CROSS_CHOP, MOVE_SPLASH, MOVE_NONE, MOVE_NONE },
+            .moves = { MOVE_AURA_SPHERE, MOVE_SPLASH, MOVE_NONE, MOVE_NONE },
             .hp = FULL_HP,
             .status = 0,
             .condition2 = 0,
@@ -60,7 +60,7 @@ BEGIN_TEST
     },
     .expectations = {
         { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "Snorlax's Attack won't go any higher!" },
-        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "Snorlax's Sp. Atk rose sharply!" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The Weakness Policy sharply boosted Snorlax's Sp. Atk!" },
     },
 }
 END_TEST

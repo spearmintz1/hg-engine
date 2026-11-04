@@ -27,7 +27,7 @@ BEGIN_TEST
             .form = 0,
             .ability = ABILITY_GUTS,
             .item = ITEM_NONE,
-            .moves = { MOVE_CROSS_CHOP, MOVE_NONE, MOVE_NONE, MOVE_NONE },
+            .moves = { MOVE_AURA_SPHERE, MOVE_NONE, MOVE_NONE, MOVE_NONE },
             .hp = FULL_HP,
             .status = 0,
             .condition2 = 0,

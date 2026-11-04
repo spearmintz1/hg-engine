@@ -287,14 +287,14 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
             if ((sp->battlemon[sp->defence_client].hp)
                 // Defender was hit by a Super Effective attack
                 && (sp->waza_status_flag & MOVE_STATUS_FLAG_SUPER_EFFECTIVE)
-                // Defender has less than +6 stages to either of Attack or Special Attack
-                && (((sp->battlemon[sp->defence_client].states[STAT_ATTACK] < 12)
-                     || (sp->battlemon[sp->defence_client].states[STAT_SPATK] < 12))
-                    // Or the defender has Contrary and more than -6 stages to either of Attack or Special Attack
-                    || ((GetBattlerAbility(sp, sp->defence_client) == ABILITY_CONTRARY)
-                        && ((sp->battlemon[sp->defence_client].states[STAT_ATTACK] > 0)
-                            || (sp->battlemon[sp->defence_client].states[STAT_SPATK] > 0))))) {
+                // Defender can still move either of Attack or Special Attack: below +6 stages, or above -6 stages under Contrary (which inverts the boost)
+                && ((GetBattlerAbility(sp, sp->defence_client) == ABILITY_CONTRARY)
+                    ? ((sp->battlemon[sp->defence_client].states[STAT_ATTACK] > 0)
+                       || (sp->battlemon[sp->defence_client].states[STAT_SPATK] > 0))
+                    : ((sp->battlemon[sp->defence_client].states[STAT_ATTACK] < 12)
+                       || (sp->battlemon[sp->defence_client].states[STAT_SPATK] < 12)))) {
                 sp->state_client     = sp->defence_client;
+                sp->item_work        = sp->battlemon[sp->defence_client].item;
                 seq_no[0]            = SUB_SEQ_HANDLE_RAISE_ATTACK_AND_SP_ATK_ON_HIT;
                 ret                  = TRUE;
             }

@@ -1,4 +1,4 @@
-// Test: In doubles a Zoroark disguised as the mon that later faints on the field must stay disguised as it (the last living mon, not the fainted last slot)
+// Test: In doubles a Zoroark disguised as the mon that later faints on the field must stay disguised as it (the last party mon, not a copy recomputed once it has fainted)
 #include "../battle_tests.h"
 BEGIN_TEST
 {
@@ -13,7 +13,7 @@ BEGIN_TEST
             .form = 0,
             .ability = ABILITY_GUTS,
             .item = ITEM_NONE,
-            .moves = { MOVE_CROSS_CHOP, MOVE_SPLASH, MOVE_NONE, MOVE_NONE },
+            .moves = { MOVE_AURA_SPHERE, MOVE_SPLASH, MOVE_NONE, MOVE_NONE },
             .hp = FULL_HP,
             .status = 0,
             .condition2 = 0,
@@ -25,7 +25,7 @@ BEGIN_TEST
             .form = 0,
             .ability = ABILITY_GUTS,
             .item = ITEM_NONE,
-            .moves = { MOVE_SPLASH, MOVE_NONE, MOVE_NONE, MOVE_NONE },
+            .moves = { MOVE_SPLASH, MOVE_CONFUSE_RAY, MOVE_NONE, MOVE_NONE },
             .hp = FULL_HP,
             .status = 0,
             .condition2 = 0,
@@ -76,7 +76,7 @@ BEGIN_TEST
             .ability = ABILITY_GUTS,
             .item = ITEM_NONE,
             .moves = { MOVE_SPLASH, MOVE_NONE, MOVE_NONE, MOVE_NONE },
-            .hp = 0,
+            .hp = FULL_HP,
             .status = 0,
             .condition2 = 0,
             .moveEffectFlags = 0,
@@ -92,7 +92,7 @@ BEGIN_TEST
     {
         { ACTION_MOVE_SLOT_1, BATTLER_ENEMY_FIRST },
         { ACTION_MOVE_SLOT_1, BATTLER_ENEMY_FIRST },
-        { ACTION_MOVE_SLOT_1, BATTLER_ENEMY_FIRST },
+        { ACTION_MOVE_SLOT_2, BATTLER_ENEMY_FIRST },
         { ACTION_NONE, 0 },
     },
     },
@@ -104,14 +104,15 @@ BEGIN_TEST
         { ACTION_NONE, 0 },
     },
     {
-        { ACTION_SWITCH_SLOT_2, 0 },
+        { ACTION_SWITCH_SLOT_3, 0 },
         { ACTION_MOVE_SLOT_1, BATTLER_PLAYER_FIRST },
         { ACTION_MOVE_SLOT_1, BATTLER_PLAYER_FIRST },
         { ACTION_NONE, 0 },
     },
     },
     .expectations = {
-        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The opposing Pikachu used Splash!" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The opposing Rattata fainted!" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The opposing Rattata became confused!" },
     },
 }
 END_TEST

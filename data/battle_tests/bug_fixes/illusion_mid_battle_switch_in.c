@@ -1,19 +1,31 @@
-// Test: A Zoroark switched in mid-battle must disguise as the last non-fainted party mon in the switch-in and move messages
+// Test: A Zoroark switched in mid-battle in doubles must stay disguised as the last mon when it is sent out and faints while another living mon sits before it (the copy is fixed at switch-in, not recomputed from the party)
 #include "../battle_tests.h"
 BEGIN_TEST
 {
-    .battleType = BATTLE_TYPE_TRAINER,
+    .battleType = BATTLE_TYPE_DOUBLES,
     .weather = FIELD_CONDITION_NONE,
     .fieldCondition = 0,
     .terrain = TERRAIN_NONE,
     .playerParty = {
         {
             .species = SPECIES_MACHAMP,
-            .level = 50,
+            .level = 100,
             .form = 0,
             .ability = ABILITY_GUTS,
             .item = ITEM_NONE,
-            .moves = { MOVE_SPLASH, MOVE_NONE, MOVE_NONE, MOVE_NONE },
+            .moves = { MOVE_SPLASH, MOVE_AURA_SPHERE, MOVE_NONE, MOVE_NONE },
+            .hp = FULL_HP,
+            .status = 0,
+            .condition2 = 0,
+            .moveEffectFlags = 0,
+        },
+        {
+            .species = SPECIES_MACHAMP,
+            .level = 100,
+            .form = 0,
+            .ability = ABILITY_GUTS,
+            .item = ITEM_NONE,
+            .moves = { MOVE_SPLASH, MOVE_CONFUSE_RAY, MOVE_NONE, MOVE_NONE },
             .hp = FULL_HP,
             .status = 0,
             .condition2 = 0,
@@ -23,7 +35,7 @@ BEGIN_TEST
     .enemyParty = {
         {
             .species = SPECIES_RATTATA,
-            .level = 50,
+            .level = 5,
             .form = 0,
             .ability = ABILITY_GUTS,
             .item = ITEM_NONE,
@@ -34,8 +46,20 @@ BEGIN_TEST
             .moveEffectFlags = 0,
         },
         {
+            .species = SPECIES_EEVEE,
+            .level = 5,
+            .form = 0,
+            .ability = ABILITY_RUN_AWAY,
+            .item = ITEM_NONE,
+            .moves = { MOVE_SPLASH, MOVE_NONE, MOVE_NONE, MOVE_NONE },
+            .hp = FULL_HP,
+            .status = 0,
+            .condition2 = 0,
+            .moveEffectFlags = 0,
+        },
+        {
             .species = SPECIES_ZOROARK,
-            .level = 50,
+            .level = 5,
             .form = 0,
             .ability = ABILITY_ILLUSION,
             .item = ITEM_NONE,
@@ -47,7 +71,7 @@ BEGIN_TEST
         },
         {
             .species = SPECIES_PIKACHU,
-            .level = 50,
+            .level = 5,
             .form = 0,
             .ability = ABILITY_STATIC,
             .item = ITEM_NONE,
@@ -58,13 +82,13 @@ BEGIN_TEST
             .moveEffectFlags = 0,
         },
         {
-            .species = SPECIES_EEVEE,
-            .level = 50,
+            .species = SPECIES_MEOWTH,
+            .level = 5,
             .form = 0,
-            .ability = ABILITY_RUN_AWAY,
+            .ability = ABILITY_PICKUP,
             .item = ITEM_NONE,
             .moves = { MOVE_SPLASH, MOVE_NONE, MOVE_NONE, MOVE_NONE },
-            .hp = 0,
+            .hp = FULL_HP,
             .status = 0,
             .condition2 = 0,
             .moveEffectFlags = 0,
@@ -74,26 +98,38 @@ BEGIN_TEST
     {
         { ACTION_MOVE_SLOT_1, BATTLER_ENEMY_FIRST },
         { ACTION_MOVE_SLOT_1, BATTLER_ENEMY_FIRST },
+        { ACTION_MOVE_SLOT_2, BATTLER_ENEMY_SECOND },
+        { ACTION_MOVE_SLOT_1, BATTLER_ENEMY_FIRST },
         { ACTION_NONE, 0 },
     },
     {
+        { ACTION_MOVE_SLOT_1, BATTLER_ENEMY_FIRST },
+        { ACTION_MOVE_SLOT_1, BATTLER_ENEMY_FIRST },
+        { ACTION_MOVE_SLOT_1, BATTLER_ENEMY_FIRST },
+        { ACTION_MOVE_SLOT_2, BATTLER_ENEMY_FIRST },
         { ACTION_NONE, 0 },
     },
     },
     .enemyScript = {
     {
+        { ACTION_SWITCH_SLOT_2, 0 },
         { ACTION_MOVE_SLOT_1, BATTLER_PLAYER_FIRST },
-        { ACTION_SWITCH_SLOT_1, 0 },
+        { ACTION_MOVE_SLOT_1, BATTLER_PLAYER_FIRST },
         { ACTION_MOVE_SLOT_1, BATTLER_PLAYER_FIRST },
         { ACTION_NONE, 0 },
     },
     {
+        { ACTION_MOVE_SLOT_1, BATTLER_PLAYER_FIRST },
+        { ACTION_SWITCH_SLOT_4, 0 },
+        { ACTION_MOVE_SLOT_1, BATTLER_PLAYER_FIRST },
+        { ACTION_MOVE_SLOT_1, BATTLER_PLAYER_FIRST },
         { ACTION_NONE, 0 },
     },
     },
     .expectations = {
-        { .expectationType = EXPECTATION_TYPE_MESSAGE_CONTAINS, .expectationValue.message = "sent out Pikachu!" },
-        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The opposing Pikachu used Splash!" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE_CONTAINS, .expectationValue.message = "sent out Meowth!" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The opposing Meowth fainted!" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The opposing Meowth became confused!" },
     },
 }
 END_TEST

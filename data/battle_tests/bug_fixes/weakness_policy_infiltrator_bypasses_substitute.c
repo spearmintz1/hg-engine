@@ -27,7 +27,7 @@ BEGIN_TEST
             .form = 0,
             .ability = ABILITY_INFILTRATOR,
             .item = ITEM_NONE,
-            .moves = { MOVE_CROSS_CHOP, MOVE_SPLASH, MOVE_NONE, MOVE_NONE },
+            .moves = { MOVE_AURA_SPHERE, MOVE_SPLASH, MOVE_NONE, MOVE_NONE },
             .hp = FULL_HP,
             .status = 0,
             .condition2 = 0,
@@ -55,8 +55,8 @@ BEGIN_TEST
     },
     },
     .expectations = {
-        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "Snorlax's Attack rose sharply!" },
-        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "Snorlax's Sp. Atk rose sharply!" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The Weakness Policy sharply boosted Snorlax's Attack!" },
+        { .expectationType = EXPECTATION_TYPE_MESSAGE, .expectationValue.message = "The Weakness Policy sharply boosted Snorlax's Sp. Atk!" },
     },
 }
 END_TEST
