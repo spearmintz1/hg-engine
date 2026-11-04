@@ -535,3 +535,269 @@ Lock Capsules
 Red Orbs
 Blue Orbs
 Enigma Stones
+Venusaurites
+Charizardite X
+Charizardite Y
+Blastoisites
+Beedrillites
+Pidgeotites
+Alakazites
+Slowbronites
+Gengarites
+Kangaskhites
+Pinsirites
+Gyaradosites
+Aerodactites
+Mewtwonite X
+Mewtwonite Y
+Ampharosites
+Steelixites
+Scizorites
+Heracronites
+Houndoomites
+Tyranitarites
+Sceptilites
+Blazikenites
+Swampertites
+Gardevoirites
+Sablenites
+Mawilites
+Aggronites
+Medichamites
+Manectites
+Sharpedonites
+Cameruptites
+Altarianites
+Banettites
+Absolites
+Glalitites
+Salamencites
+Metagrossites
+Latiasites
+Latiosites
+Lopunnites
+Garchompites
+Lucarionites
+Abomasites
+Galladites
+Audinites
+Diancites
+Pixie Plates
+Absorb Bulbs
+Air Balloons
+Balm Mushrooms
+Big Nuggets
+Binding Bands
+Casteliacones
+Cell Batteries
+Comet Shards
+Dream Balls
+Eject Buttons
+Eviolites
+Float Stones
+Pearl Strings
+Prism Scales
+Red Cards
+Ring Targets
+Rocky Helmets
+Sweet Hearts
+Ability Capsules
+Assault Vests
+Luminous Mosses
+Lumiose Galettes
+Sachets
+Safety Goggles
+Shalour Sables
+Snowballs
+Weakness Policies
+Whipped Dreams
+Adrenaline Orbs
+Beast Balls
+Big Malasadas
+Bottle Caps
+Gold Bottle Caps
+Electric Seeds
+Grassy Seeds
+Misty Seeds
+Psychic Seeds
+Ice Stones
+Protective Pads
+Terrain Ext.
+Ability Patches
+Black Augurites
+Berry Sweets
+Clover Sweets
+Flower Sweets
+Love Sweets
+Ribbon Sweets
+Star Sweets
+StrawberrySweets
+Blunder Policies
+Chipped Pots
+Cracked Pots
+Eject Packs
+Exp. Candy S
+Exp. Candy M
+Exp. Candy L
+Exp. Candy XS
+Exp. Candy XL
+Galarica Cuffs
+Galarica Twigs
+Galarica Wreaths
+HeavyDutyBoots
+Linking Cords
+Moomoo Cheese
+Peat Blocks
+Room Services
+Rusted Shields
+Rusted Swords
+Sweet Apples
+Tart Apples
+Throat Sprays
+Utility Umbrellas
+Ability Shields
+Auspicious Armors
+Booster Energies
+Clear Amulets
+Covert Cloaks
+Gimmighoul Coins
+Leader’s Crests
+Loaded Dice
+Malicious Armors
+Mirror Herbs
+Punching Gloves
+Roseli Berries
+Kee Berries
+Maranga Berries
+Burn Drives
+Chill Drives
+Douse Drives
+Shock Drives
+Cover Fossils
+Plume Fossils
+Jaw Fossils
+Sail Fossils
+Fossilized Birds
+Fossilized Dinos
+Fossilized Drakes
+Fossilized Fishes
+Normal Gems
+Fighting Gems
+Flying Gems
+Poison Gems
+Ground Gems
+Rock Gems
+Bug Gems
+Ghost Gems
+Steel Gems
+Fire Gems
+Water Gems
+Grass Gems
+Electric Gems
+Psychic Gems
+Ice Gems
+Dragon Gems
+Dark Gems
+Fairy Gems
+Fighting Memories
+Flying Memories
+Poison Memories
+Ground Memories
+Rock Memories
+Bug Memories
+Ghost Memories
+Steel Memories
+Fire Memories
+Water Memories
+Grass Memories
+Electric Memories
+Psychic Memories
+Ice Memories
+Dragon Memories
+Dark Memories
+Fairy Memories
+Red Nectars
+Yellow Nectars
+Pink Nectars
+Purple Nectars
+Blank Plates
+Legend Plates
+Relic Coppers
+Relic Silvers
+Relic Golds
+Relic Vases
+Relic Bands
+Relic Statues
+Relic Crowns
+Health Feathers
+Muscle Feathers
+Resist Feathers
+Genius Feathers
+Clever Feathers
+Swift Feathers
+Pretty Feathers
+DNA Splicers
+Reveal Glasses
+Prison Bottles
+Catching Charms
+Exp. Charms
+Oval Charms
+Shiny Charms
+N Solarizers
+N Lunarizers
+Box Links
+Zygarde Cubes
+Sun Flutes
+Moon Flutes
+Light Stones
+Dark Stones
+Iceroot Carrots
+Shady Carrots
+Reins of Unity
+Wooden Crowns
+Rotom Catalogs
+Adamant Crystals
+Lustrous Globes
+Griseous Cores
+Darkness Scrolls
+Waters Scrolls
+Mega Rings
+Autographs
+Gold Teeth
+Key Stones
+Lift Keys
+Pewter Snacks
+Silph Scopes
+Teas
+Lonely Mints
+Adamant Mints
+Naughty Mints
+Brave Mints
+Bold Mints
+Impish Mints
+Lax Mints
+Relaxed Mints
+Modest Mints
+Mild Mints
+Rash Mints
+Quiet Mints
+Calm Mints
+Gentle Mints
+Careful Mints
+Sassy Mints
+Timid Mints
+Hasty Mints
+Jolly Mints
+Naive Mints
+Serious Mints
+Fairy Feathers
+Syrupy Apples
+Mediocre Teacups
+Masterful Teacups
+Cornerstone Masks
+Wellspring Masks
+Hearthflame Masks
+Metal Alloys
+Infinite Candies
+Infinite Rejuvs
+Infinite Ashes

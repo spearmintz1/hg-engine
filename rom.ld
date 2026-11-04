@@ -95,6 +95,7 @@ sub_02017FE4 = 0x02017FE4 | 1;
 SetEggStats = 0x0206C8B8 | 1;
 SaveMisc_SetTogepiPersonalityGender = 0x0202ABB0 | 1;
 SaveMisc_GetTogepiPersonalityGender = 0x0202ABBC | 1;
+CalcLevelBySpeciesAndExp = 0x0206FDA8 | 1;
 
 SaveData_GetRepelPtr = 0x0202DB05;
 SaveData_GetEventPtr = 0x020503D0 | 1;
@@ -105,6 +106,7 @@ LoadHallOfFame = 0x02027104 | 1;
 AddHallOfFameEntry = 0x02052A50 | 1;
 
 GetVarAdrs = 0x020504A4 | 1;
+FieldSystem_CreateTask = 0x020504F0 | 1;
 EncDataSave_GetSaveDataPtr = 0x0202D9C4 | 1;
 GetVarPointer = 0x02040374 |1;
 VarSet = 0x020403C0 | 1;
@@ -112,6 +114,7 @@ VarGet = 0x020403AC | 1;
 GF_CpuCopy8 = 0x0204D450;
 GetEvScriptWorkMemberAdrs = 0x020402F0 |1;
 WORDSET_RegisterAbilityName = 0x0200C060|1;
+BufferIntegerAsString = 0x0200BFCC | 1;
 EventSet_Script = 0x0203FE74 |1;
 
 sys_AllocMemory = 0x0201AA8C | 1;
@@ -505,12 +508,14 @@ ItemFieldUseFunc_UnownReport = 0x020654A4 | 1;
 ItemMenuUseFunc_DowsingMchn = 0x020654C0 | 1;
 ItemFieldUseFunc_DowsingMchn = 0x020654F4 | 1;
 ItemFieldUseFunc_GbSounds = 0x02065560 | 1;
+Task_ItemUsePrintMessage = 0x0206518C | 1;
 ItemMenuUseFunc_Gracidea = 0x020655B8 | 1;
 ItemFieldUseFunc_Gracidea = 0x020655F0 | 1;
 ItemMenuUseFunc_VSRecorder = 0x02065614 | 1;
 ItemFieldUseFunc_VSRecorder = 0x02065648 | 1;
 sub_0203FAE8 = 0x0203FAE8 | 1;
 sub_0203C8F0 = 0x0203C8F0 | 1;
+sub_020505C0 = 0x020505C0 | 1;
 RegisteredItem_CreateGoToAppTask = 0x020658B8 | 1;
 
 PaletteRAMArray = 0x05000000;
@@ -667,7 +672,7 @@ GetNaturalGiftType = 0x022558A4 | 1;
 
 BattleContext_CheckMoveImprisoned = 0x02252C74 | 1;
 BattleContext_CheckMoveUnuseableInGravity = 0x02252DC4 | 1;
-BattleContext_CheckMoveHealBlocked = 0x02252DF8 | 1;
+BattleContext_CheckMoveHealBlockedBase = 0x02252DF8 | 1;
 
 CanUseItemOnPokemon = 0x0208FD9C | 1;
 
@@ -753,3 +758,15 @@ particleEmitCallback = 0x021E5C28 | 1;
 
 BattleSystem_GetTrainer = 0x0223A9F4 | 1;
 PartyMenu_PrintMessageOnWindow32 = 0x0207DAC4 | 1;
+
+GetMoveMaxPP = 0x0207332C | 1;
+MaskOfFlagNo = 0x020726C0 | 1;
+BattleBuffer_GetNext = 0x0225682C | 1;
+BattleController_EmitShowMonList = 0x022632DC | 1;
+BattleController_EmitShowWaitMessage = 0x02263F30 | 1;
+ov12_0223BDDC = 0x0223BDDC | 1;
+NewString_ReadMsgData = 0x0200BBA0 | 1;
+StringExpandPlaceholders = 0x0200CBBC | 1;
+BufferBoxMonNickname = 0x0200BF8C | 1;
+BattleSystem_SetBattleOutcomeFlags = 0x0223BD20 | 1;
+InitMartUI = 0x02256D34 | 1;

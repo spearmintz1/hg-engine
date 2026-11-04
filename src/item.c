@@ -2,6 +2,8 @@
 #include "../include/item.h"
 #include "../include/script.h"
 #include "../include/config.h"
+#include "../include/msgdata.h"
+#include "../include/save.h"
 #include "../include/constants/file.h"
 #include "../include/constants/item.h"
 
@@ -21,6 +23,8 @@ void *_CreateDNASplicersWork(FieldSystem *fieldSystem);
 void ItemMenuUseFunc_AbilityCapsule(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2);
 void ItemMenuUseFunc_Mint(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2 UNUSED);
 void ItemMenuUseFunc_Nectar(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2 UNUSED);
+void ItemMenuUseFunc_ExpShare(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2 UNUSED);
+BOOL ItemFieldUseFunc_ExpShare(struct ItemFieldUseData *data);
 
 const struct ItemUseFuncDat sItemFieldUseFuncs[] = {
     { NULL, ItemFieldUseFunc_Generic, NULL },
@@ -59,6 +63,7 @@ const struct ItemUseFuncDat sItemFieldUseFuncs[] = {
     { ItemMenuUseFunc_AbilityCapsule, NULL, NULL },
     { ItemMenuUseFunc_Mint, NULL, NULL },
     { ItemMenuUseFunc_Nectar, NULL, NULL },
+    { ItemMenuUseFunc_ExpShare, ItemFieldUseFunc_ExpShare, NULL },
 };
 
 u16 GetItemIndex(u16 item, u16 type)
@@ -154,7 +159,7 @@ void *LONG_CALL ItemDataTableLoad(int heapID)
 {
     int max;
 
-    max = GetItemIndex(NEW_ITEM_MAX, ITEM_GET_DATA);
+    max = GetItemIndex(NEW_ITEM_MAX, ITEM_GET_DATA) + 1; // entry count, not last index
 
     return ArchiveDataLoadMallocOfs(ARC_ITEM_DATA, 0, heapID, 0, sizeof(ITEMDATA) * max);//800757Ch
 }
@@ -219,4 +224,52 @@ void ItemMenuUseFunc_Nectar(struct ItemMenuUseData *data, const struct ItemCheck
     struct BagViewAppWork *env = data->taskManager->env; //TaskManager_GetEnvironment(data->taskManager);
     env->atexit_TaskEnv = sub_0203FAE8(fieldSystem, HEAPID_WORLD, data->itemId);
     sub_0203C8F0(env, 0x0203CA9C | 1);
+}
+
+// Same message task and work layout as ItemFieldUseFunc_GbSounds: the task prints the string, waits for a button, then frees the string and the work.
+struct ItemUseMessageWork {
+    u32 window[4];
+    String *message;
+    u16 printerId;
+    u16 state;
+};
+
+#define MSG_EXP_SHARE_ON 129
+#define MSG_EXP_SHARE_OFF 130
+
+static struct ItemUseMessageWork *ExpShare_ToggleAndBuildMessage(void)
+{
+    struct ItemUseMessageWork *work = sys_AllocMemory(HEAPID_WORLD, sizeof(struct ItemUseMessageWork));
+    MsgData *msgData = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, 27, 10, HEAPID_WORLD); // bank 010: system messages, alongside the GB Sounds ones
+    u32 message;
+
+    if (CheckScriptFlag(FLAG_EXP_SHARE_OFF)) {
+        ClearScriptFlag(FLAG_EXP_SHARE_OFF);
+        message = MSG_EXP_SHARE_ON;
+    } else {
+        SetScriptFlag(FLAG_EXP_SHARE_OFF);
+        message = MSG_EXP_SHARE_OFF;
+    }
+    work->state = 0;
+    work->message = NewString_ReadMsgData(msgData, message);
+    DestroyMsgData(msgData);
+    return work;
+}
+
+// Used from the bag: like the Bicycle and Dowsing Machine, the bag closes back to the field first and runs the message task as its exit task.
+void ItemMenuUseFunc_ExpShare(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2 UNUSED)
+{
+    FieldSystem *fieldSystem = data->taskManager->fieldSystem; //TaskManager_GetFieldSystem(data->taskManager);
+    struct BagViewAppWork *env = data->taskManager->env; //TaskManager_GetEnvironment(data->taskManager);
+    sub_020505C0(fieldSystem);
+    env->atexit_TaskFunc = Task_ItemUsePrintMessage;
+    env->atexit_TaskEnv = ExpShare_ToggleAndBuildMessage();
+    env->state = 12;
+}
+
+// Used when registered to a button and used from the field.
+BOOL ItemFieldUseFunc_ExpShare(struct ItemFieldUseData *data)
+{
+    FieldSystem_CreateTask(data->fieldSystem, Task_ItemUsePrintMessage, ExpShare_ToggleAndBuildMessage());
+    return FALSE;
 }

@@ -290,6 +290,179 @@ u8 LONG_CALL BeastBoostGreatestStatHelper(struct BattleStruct *sp, u32 client)
     return max;
 }
 
+/**
+ *  @brief grab which of the client's stats after stat stages (excluding HP) is the highest for the paradox abilities
+ *
+ *  @param ctx global battle structure
+ *  @param client battler whose stats to compare among themselves
+ *  @return the highest stat (STAT_ATTACK to STAT_SPDEF)
+ */
+u8 LONG_CALL ParadoxGreatestStatHelper(struct BattleStruct *ctx, u32 client)
+{
+    u8 highestId = STAT_ATTACK;
+    u16 highestStat = GetStatValueWithStages(ctx, client, STAT_ATTACK);
+
+    // Order internally is: Attack, Defense, Speed, Sp. Attack, Sp. Defense.
+    // Actual priority is: Attack, Defense, Sp. Attack, Sp. Defense, Speed
+    // Skip Speed and then check it later.
+    for (u8 stat = STAT_DEFENSE; stat < STAT_ACCURACY; stat++) {
+        if (stat == STAT_SPEED) {
+            continue;
+        }
+
+        u16 statValue = GetStatValueWithStages(ctx, client, stat);
+        if (statValue > highestStat) {
+            highestStat = statValue;
+            highestId = stat;
+        }
+    }
+
+    u16 speed = GetStatValueWithStages(ctx, client, STAT_SPEED);
+    if (speed > highestStat) {
+        highestId = STAT_SPEED;
+    }
+
+    return highestId;
+}
+
+/**
+ *  @brief Get stat value with stat stages.
+ *
+ *  @param ctx BattleContext
+ *  @param client battlemon whose stat with stat stages to get
+ *  @param stat STAT_ATTACK to STAT_SPDEF
+ *
+ *  @return stat value
+ */
+u16 LONG_CALL GetStatValueWithStages(struct BattleStruct *ctx, u32 client, u8 stat)
+{
+    u16 statValue;
+
+    statValue = BattlePokemonParamGet(ctx, client, stat, NULL);
+    statValue *= StatBoostModifiers[ctx->battlemon[client].states[stat]][0];
+    statValue /= StatBoostModifiers[ctx->battlemon[client].states[stat]][1];
+
+    return statValue;
+}
+
+/**
+ *  @brief Set the terrain overlay and its duration.  Takes the client explicitly so that abilities
+ *         can set a terrain mid-move without touching current_move_index or calc_work.
+ *
+ *  @param ctx global battle structure
+ *  @param client battler whose Terrain Extender applies
+ *  @param terrainType the terrain to set, or TERRAIN_NONE to clear it
+ */
+void LONG_CALL UpdateTerrainOverlay(struct BattleStruct *ctx, u8 client, enum TerrainOverlayType terrainType)
+{
+    ctx->terrainOverlay.type = terrainType;
+
+    if (terrainType != TERRAIN_NONE) {
+        int item = GetBattleMonItem(ctx, client);
+        ctx->terrainOverlay.numberOfTurnsLeft = 5;
+        if (item == ITEM_TERRAIN_EXTENDER) {
+            ctx->terrainOverlay.numberOfTurnsLeft += BattleItemDataGet(ctx, item, 2);
+        }
+    } else {
+        ctx->terrainOverlay.numberOfTurnsLeft = 0;
+    }
+}
+
+/**
+ *  @brief Function to activate paradox abilities Protosynthesis and Quark Drive.
+ *         Used in multiple stages of SwitchInAbilityCheck and in the weather and terrain subscripts,
+ *         due to it activating after any weather or terrain is changed respectively.
+ *
+ *  @param bsys BattleSystem
+ *  @param ctx BattleContext
+ *  @param client client to activate paradox ability
+ *  @return seq_no message that activates the ability
+ */
+u16 LONG_CALL ActivateParadoxAbility(void *bsys, struct BattleStruct *ctx, u8 client)
+{
+    int seq_no = 0;
+    BOOL isHarshSunlight = FALSE;
+
+    if ((ctx->paradoxBoostedStat[client] == 0)
+        && (ctx->boosterEnergyActivated[client] == FALSE)
+        && (ctx->battlemon[client].hp)
+        // Transformed Paradox Pokemon cannot activate their Paradox ability
+        && !(ctx->battlemon[client].condition2 & STATUS2_TRANSFORMED)) {
+        switch (GetBattlerAbility(ctx, client)) {
+        case ABILITY_PROTOSYNTHESIS:
+            // Desolate Land doesn't activate Protosynthesis, but whether or not this is intentional or desired is another question.
+            // Just change to WEATHER_SUNNY_ANY if you want Desolate Land to activate this
+            if ((CheckSideAbility(bsys, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) == 0)
+                && (CheckSideAbility(bsys, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK) == 0)
+                && (ctx->field_condition & (WEATHER_SUNNY | WEATHER_SUNNY_PERMANENT))) {
+                isHarshSunlight = TRUE;
+            }
+
+            if ((BattleItemDataGet(ctx, ctx->battlemon[client].item, 1) == HOLD_EFFECT_ACTIVATE_PARADOX_ABILITIES)
+                && !(isHarshSunlight)) {
+                seq_no = SUB_SEQ_BOOSTER_ENERGY;
+                ctx->boosterEnergyActivated[client] = TRUE;
+            }
+
+            if (isHarshSunlight) {
+                seq_no = SUB_SEQ_FIELD_CONDITION_PARADOX_ABILITY;
+            }
+            break;
+        case ABILITY_QUARK_DRIVE:
+            if ((BattleItemDataGet(ctx, ctx->battlemon[client].item, 1) == HOLD_EFFECT_ACTIVATE_PARADOX_ABILITIES)
+                && (ctx->terrainOverlay.type != ELECTRIC_TERRAIN || ctx->terrainOverlay.numberOfTurnsLeft == 0)) {
+                seq_no = SUB_SEQ_BOOSTER_ENERGY;
+                ctx->boosterEnergyActivated[client] = TRUE;
+            }
+
+            if (ctx->terrainOverlay.type == ELECTRIC_TERRAIN
+                && ctx->terrainOverlay.numberOfTurnsLeft > 0) {
+                seq_no = SUB_SEQ_FIELD_CONDITION_PARADOX_ABILITY;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (seq_no) {
+        u8 stat = ParadoxGreatestStatHelper(ctx, client);
+        ctx->paradoxBoostedStat[client] = stat;
+        ctx->battlerIdTemp = client;
+        ctx->msg_work = stat;
+        return seq_no;
+    } else {
+        return 0;
+    }
+}
+
+/**
+ *  @brief Hospitality: restore 1/4 of the ally's max HP when the ability holder enters the field
+ *
+ *  @param bsys BattleSystem
+ *  @param ctx BattleContext
+ *  @param client client with Hospitality
+ *  @return seq_no message that activates the ability, or 0 if it does not activate
+ */
+u16 LONG_CALL ActivateHospitality(void *bsys, struct BattleStruct *ctx, u8 client)
+{
+    int ally = BATTLER_ALLY(client);
+
+    if ((BattleTypeGet(bsys) & (BATTLE_TYPE_DOUBLE | BATTLE_TYPE_MULTI))
+        && (ctx->battlemon[client].ability_activated_flag == 0)
+        && (ctx->battlemon[client].hp)
+        && (GetBattlerAbility(ctx, client) == ABILITY_HOSPITALITY)
+        && (ctx->battlemon[ally].hp)
+        && ((u32)ctx->battlemon[ally].hp != ctx->battlemon[ally].maxhp)) {
+        ctx->battlemon[client].ability_activated_flag = 1;
+        ctx->hp_calc_work = ctx->battlemon[ally].maxhp / 4;
+        ctx->battlerIdTemp = client;
+        ctx->state_client = ally;
+        return SUB_SEQ_HANDLE_HOSPITALITY;
+    }
+    return 0;
+}
+
 
 /**
  *  @brief check if the attacker's ability should queue up a subscript or not.

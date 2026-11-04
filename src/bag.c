@@ -1,10 +1,16 @@
 #include "../include/config.h"
+#include "../include/constants/file.h"
 #include "../include/constants/item.h"
 #include "../include/bag.h"
 #include "../include/item.h"
 #include "../include/map_events_internal.h"
+#include "../include/pokemon.h"
 #include "../include/save.h"
 #include "../include/script.h"
+
+#ifdef DEBUG_BATTLE_SCENARIOS
+#include "../include/test_battle.h"
+#endif
 
 
 // file is directly from pokeheartgold but without the bag_cursor stuff + sPocketCounts right here
@@ -436,11 +442,81 @@ u32 IsPlayerOnIce(u32 collision) // run to determine if the player is on ice
     return FALSE;
 }
 
+#ifdef DEBUG_BATTLE_SCENARIOS
+u32 queueUpAutoBattleScript = 0;
+u8 pendingNextTest = 0;
+#endif
+
 BOOL IsPlayerOnLadder(void)
 {
     if (gFieldSysPtr == NULL)
         return TRUE;
     u32 collision = GetMetatileBehaviorAt(gFieldSysPtr, gFieldSysPtr->location->x, gFieldSysPtr->location->z);
     u32 mapId = gFieldSysPtr->location->mapId;
-    return (collision == 0x3C || collision == 0x3D || collision == 0x3E || mapId == 114 || mapId == 180);
+#ifdef DEBUG_BATTLE_SCENARIOS
+    // this is run every frame in the overworld, so use it to start the next test battle
+    queueUpAutoBattleScript++;
+    if (queueUpAutoBattleScript == 30) {
+        EventSet_Script(gFieldSysPtr, 2073, NULL);
+        TestBattle_QueueNextTest();
+        queueUpAutoBattleScript = 31;
+    } else if (pendingNextTest >= 20) {
+        // delay some frames to give time for memory to clean up
+        EventSet_Script(gFieldSysPtr, 2073, NULL);
+        TestBattle_QueueNextTest();
+        pendingNextTest = 0;
+    } else if (TestBattle_HasMoreTests()) {
+        pendingNextTest++;
+    }
+#endif
+    // ladder collisions
+    // bugsy gym
+    // slowpoke well entry
+    // battle tower
+    return (collision == 0x3C || collision == 0x3D || collision == 0x3E || mapId == 114 || mapId == 180 || (mapId >= 265 && mapId <= 271));
+}
+
+/**
+ *  @brief moves the Exp. Share of a v2.0 save into the Key Items pocket
+ *
+ *  v2.0 sold it as an ordinary held item, so saves can carry item 216 in the Items pocket and on party pokémon, where the
+ *  key item lookups never see it and it can no longer be tossed or sold. Keeps one copy as the key item (none if the player
+ *  already owns it) and removes every other one. Party only: the PC boxes are left alone. Idempotent and cheap, so it runs
+ *  from every entry point that needs the Exp. Share (field start, Elm's catch-up check) instead of trusting one of them.
+ */
+void LONG_CALL Bag_MigrateExpShare(void)
+{
+    void *saveData = SaveBlock2_get();
+    BAG_DATA *bag = Sav2_Bag_get(saveData);
+    struct Party *party = SaveData_GetPlayerPartyPtr(saveData);
+    u32 noItem = ITEM_NONE;
+    BOOL stray = FALSE;
+    int i;
+
+    for (i = 0; i < NUM_BAG_ITEMS; i++) {
+        stray |= bag->items[i].id == ITEM_EXP_SHARE;
+    }
+    for (i = 0; i < party->count; i++) {
+        stray |= GetMonData(Party_GetMonByIndex(party, i), MON_DATA_HELD_ITEM, NULL) == ITEM_EXP_SHARE;
+    }
+    if (!stray) {
+        return;
+    }
+    // a full Key Items pocket leaves everything where it is, so the player never loses the only copy; it retries next time
+    if (Pocket_GetItemSlotForRemove(bag->keyItems, NUM_BAG_KEY_ITEMS, ITEM_EXP_SHARE, 1) == NULL && !Bag_AddItem(bag, ITEM_EXP_SHARE, 1, HEAPID_WORLD)) {
+        return;
+    }
+    for (i = 0; i < NUM_BAG_ITEMS; i++) {
+        if (bag->items[i].id == ITEM_EXP_SHARE) {
+            bag->items[i].id = ITEM_NONE;
+            bag->items[i].quantity = 0;
+        }
+    }
+    PocketCompaction(bag->items, NUM_BAG_ITEMS);
+    for (i = 0; i < party->count; i++) {
+        struct PartyPokemon *mon = Party_GetMonByIndex(party, i);
+        if (GetMonData(mon, MON_DATA_HELD_ITEM, NULL) == ITEM_EXP_SHARE) {
+            SetMonData(mon, MON_DATA_HELD_ITEM, &noItem);
+        }
+    }
 }

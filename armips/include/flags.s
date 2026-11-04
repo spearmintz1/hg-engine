@@ -1829,7 +1829,7 @@ FLAG_MEGA_EVOLUTION_ENABLED                               equ 2518
 FLAG_Z_MOVE_ENABLED                                       equ 2519
 FLAG_DYNAMAX_ENABLED                                      equ 2520
 FLAG_TERASTALIZATION_ENABLED                              equ 2521
-FLAG_UNK_9DA                                              equ 2522
+FLAG_EXP_SHARE_OFF                                        equ 2522
 FLAG_UNK_9DB                                              equ 2523
 FLAG_UNK_9DC                                              equ 2524
 FLAG_UNK_9DD                                              equ 2525

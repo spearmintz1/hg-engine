@@ -262,6 +262,40 @@ mov r1, r7
 ldr r5, =0x02247B4C | 1
 bx r5
 
+// 0206CA02 - the day care egg's pid is final here, right before it is handed to PokeParaSet
+// r4 is the pid, r6 the OT id, [sp, #0x10] the species, [sp, #0x30] the form
+// the Shiny Charm gets its extra shiny rolls; then redo the five instructions the hook overwrote
+.global egg_shiny_charm_hook
+egg_shiny_charm_hook:
+mov r0, r4
+mov r1, r6
+ldr r2, [sp, #0x10]
+ldr r3, [sp, #0x30]
+bl ApplyShinyCharmRolls
+mov r4, r0
+mov r2, #1
+str r2, [sp, #0x0]
+str r4, [sp, #0x4]
+mov r0, #0
+str r0, [sp, #0x8]
+ldr r5, =0x0206CA0C | 1
+bx r5
+.pool
+
+// 020677B2 - the roamer builder run by the create_roamer script command: r7 is the temporary mon whose pid the roamer is saved with
+// r4 is the roamer's save data; the hook overwrites GetMonData(r7, MON_DATA_PERSONALITY) and the setup of SetData(r4, 3, pid)
+// the pid gets the Shiny Charm's extra shiny rolls here, once; then redo that setup and go on to the SetData
+.global roamer_shiny_charm_hook
+roamer_shiny_charm_hook:
+mov r0, r7
+bl GetNewRoamerPersonality
+mov r2, r0
+mov r0, r4
+mov r1, #3
+ldr r5, =0x020677BC | 1
+bx r5
+.pool
+
 call_setmondata:
 ldr r3, =0x0206EC40 | 1
 call_via_r3:
@@ -369,6 +403,11 @@ mov r1, #0
 str r1, [r0]
 ldr r0, [r4]
 mov r6, #0x7C
+
+// every field start (so after each save load): bring a v2.0 save's Exp. Share into the Key Items pocket
+bl Bag_MigrateExpShare
+mov r1, #0
+ldr r0, [r4]
 
 ldr r2, =0x0203E030 | 1
 bx r2
@@ -721,6 +760,250 @@ mov pc, r1
 .global AllocFromHeapInternal_return_address
 AllocFromHeapInternal_return_address:
 .word 0
+
+
+.global GetBoxMonData_EditedCases_hook
+GetBoxMonData_EditedCases_hook:
+sub sp, #0x14
+
+mov r3, sp
+str r5, [r3, #0x0] // blockA
+str r6, [r3, #0x4] // blockB
+str r7, [r3, #0x8] // blockC
+str r0, [r3, #0xC] // blockD
+ldr r1, [r3, #(0x14+0x4)] // field from before sp adjust
+ldr r2, [r3, #(0x14+0x8)] // data from before sp adjust
+mov r0, r3
+add r3, #0x10 // retBool
+bl GetBoxMonData_EditedCases // (blocks, field, data, retBool)
+ldr r1, [sp, #0x10]
+cmp r1, #1
+bne _retBoolFalse
+
+// if retBoot is not false, jump to return function
+add sp, #0x14
+mov r4, r0
+ldr r0, =0x0206EC36|1
+bx r0
+
+_retBoolFalse:
+// get blockD back in r1
+ldr r1, [sp, #0xC]
+
+add sp, #0x14
+
+// mov r1, r0 // blockD
+ldr r0, [sp, #0x4] // field as stored in stack
+ldr r2, =0x0206E6EA | 1
+bx r2
+
+.pool
+
+
+.global SetBoxMonData_EditedCases_hook
+SetBoxMonData_EditedCases_hook:
+sub sp, #0x10
+mov r0, sp
+str r7, [r0, #0x0] // blockA
+str r5, [r0, #0x4] // blockB
+ldr r1, [r0, #(0x10+0x8)]
+str r1, [r0, #0x8] // blockC
+str r6, [r0, #0xC] // blockD
+ldr r1, [r0, #(0x10+0x4)] // field
+mov r2, r4 // data
+
+bl SetBoxMonData_EditedCases // (blocks, field, data)
+cmp r0, #1
+bne _vanillaBoxMonHandling
+add sp, #0x10
+ldr r0, =0x0206F554 | 1
+bx r0
+
+_vanillaBoxMonHandling:
+add sp, #0x10
+ldr r0, [sp, #0x4] // field
+ldr r1, =0x0206EE30 | 1
+bx r1
+
+.pool
+
+.global AddBoxMonData_EditedCases_hook
+AddBoxMonData_EditedCases_hook:
+sub sp, #0x14
+mov r3, sp
+str r4, [r3, #0x0]   // blockA
+str r5, [r3, #0x4]   // blockB
+str r1, [r3, #0x8]   // blockC
+str r0, [r3, #0xC]   // blockD
+ldr r1, [r3, #(0x14 + 0x4)]  // field
+mov r2, r6                   // data
+mov r0, r3                   // blocks
+bl AddBoxMonData_EditedCases
+cmp r0, #1
+bne _vanillaAddBoxMonHandling
+add sp, #0x14
+ldr r0, =0x0206FA54 | 1
+bx  r0
+
+_vanillaAddBoxMonHandling:
+add sp, #0x14
+cmp r7, #0xba
+bls _returnTo0206F684
+ldr r0, =0x0206FA50 | 1
+bx  r0
+
+_returnTo0206F684:
+mov r0, r7
+lsl r0, #1
+ldr r1, =0x0206F684 | 1
+bx  r1
+
+.pool
+
+
+// actually just store the ability to 0x021E73B8.  that should do lol
+.global BoxDisplayMon_StoreAbility
+BoxDisplayMon_StoreAbility:
+mov r0, r7
+mov r1, #0xA // MON_DATA_ABILITY
+mov r2, #0
+ldr r3, =0x0206E640 | 1 // GetBoxMonData
+bl bx_r3
+ldr r1, =0x021E73B8
+strh r0, [r1]
+ldr r1, =0x021E73BC | 1
+bx r1
+
+.global BoxDisplayMon_GrabAbility
+BoxDisplayMon_GrabAbility:
+ldr r2, =0x021E73B8
+ldrh r2, [r2]
+ldr r0, [r5, #0x24]
+mov r1, #0
+ldr r3, =0x0200C060 | 1
+bl bx_r3
+ldr r1, =0x021F52B8 | 1
+bx r1
+
+// 022417C8 in BtlCmd_Transform, right after the loop copying battlemon bytes 0..0x27 from the defender (r2) to the attacker (r3)
+// ability moved to 0x7a, outside that loop; r0/r1 are dead here
+.global BtlCmd_Transform_CopyAbility
+BtlCmd_Transform_CopyAbility:
+mov r0, #0x7a
+ldrh r1, [r2, r0]
+strh r1, [r3, r0]
+// the 8 bytes overwritten by the hook
+ldr r3, [r4, #0x64]
+ldr r1, =0x2D68
+mov r6, r3
+mov r2, #0xc0
+ldr r0, =0x022417D0 | 1
+bx r0
+
+.pool
+
+// 0221D1D0 in the trainer AI, the second reader of the AI's ability memory (see ov12 0x02248648)
+// replaces: movs r1, #57; adds r2, r5, r0; lsls r1, r1, #4; ldrb r4, [r2, r1]   (r0 = client, r5 = BattleStruct)
+// the memory is u16 at 0x3E0 + client * 2 now; r1 is left at 0x3E0 for the subs at 0221D1DC, r2 is dead
+.global AI_AbilityMemoryRead_hook
+AI_AbilityMemoryRead_hook:
+lsl r2, r0, #1
+add r2, r5, r2
+mov r1, #0xf8
+lsl r1, r1, #2
+ldrh r4, [r2, r1]
+ldr r2, =0x0221D1D8 | 1
+bx r2
+
+.pool
+
+// 0225859C is AI_ClearBattlerAbility(btx, client) in overlay 12, replaced whole (the u8 at 0x390 became the u16 at 0x3E0)
+.global AI_ClearBattlerAbility_u16
+AI_ClearBattlerAbility_u16:
+lsl r1, r1, #1
+add r1, r0, r1
+mov r0, #0xf8
+lsl r0, r0, #2
+mov r2, #0
+strh r2, [r1, r0]
+bx lr
+
+// Battle Frontier conversion into a PartyPokemon: the Frontier struct keeps its ability as a u8 followed by friendship,
+// so SetMonData(MON_DATA_ABILITY, &u8) would read friendship bit 0 as the high ability bit.  the C helper recovers the
+// full id from the mon's species and form instead
+// 0222A298 in overlay 80 (r5 = mon, r6 = frontier mon), replaces: adds r2, #32; bl SetMonData; adds r2, r6, #0
+.global Frontier_SetAbility_ov80
+Frontier_SetAbility_ov80:
+mov r0, r5
+mov r1, r6
+add r1, #32
+ldr r3, =Frontier_SetMonAbility
+bl bx_r3
+mov r2, r6
+ldr r3, =0x0222A2A0 | 1
+bx r3
+
+.pool
+
+// 02259C7A in overlay 25 (r4 = mon, r6 = frontier mon), replaces: adds r2, #32; bl SetMonData; adds r2, r6, #0; adds r0, r4, #0
+.global Frontier_SetAbility_ov25
+Frontier_SetAbility_ov25:
+mov r0, r4
+mov r1, r6
+add r1, #32
+ldr r3, =Frontier_SetMonAbility
+bl bx_r3
+mov r2, r6
+mov r0, r4
+ldr r3, =0x02259C84 | 1
+bx r3
+
+.pool
+
+
+// the Frontier display structs in overlay 83 keep the ability as a u8 beside the species (u16) and form (u8), so the
+// full id is recovered from them before it is buffered into the message
+// 02242382 (r4 = display struct, ability +0x810, species +0x80c, form +0x826), replaces: movs r2, #0x81; lsls r2, r2, #4; ldrb r2, [r4, r2]; ldr r0, [r4, #0x24]; movs r1, #0
+.global Frontier_DisplayAbility_ov83_a
+Frontier_DisplayAbility_ov83_a:
+mov r2, #0x81
+lsl r2, r2, #4
+sub r3, r2, #4
+ldrh r0, [r4, r3]
+mov r1, #0x82
+lsl r1, r1, #4
+add r1, #6
+ldrb r1, [r4, r1]
+ldrb r2, [r4, r2]
+ldr r3, =ResolveAbilityFromLowByte
+bl bx_r3
+mov r2, r0
+ldr r0, [r4, #0x24]
+mov r1, #0
+ldr r3, =0x0224238C | 1
+bx r3
+
+.pool
+
+// 02246328 (r5 = display struct, r2 = 0x554, ability +0x5C8, species +0x5C4, form +0x5DE), replaces: adds r2, #0x74; ldrb r2, [r5, r2]; ldr r0, [r5, #0x24]; movs r1, #0
+.global Frontier_DisplayAbility_ov83_b
+Frontier_DisplayAbility_ov83_b:
+add r2, #0x74
+sub r3, r2, #4
+ldrh r0, [r5, r3]
+mov r1, #0x16
+add r1, r1, r2
+ldrb r1, [r5, r1]
+ldrb r2, [r5, r2]
+ldr r3, =ResolveAbilityFromLowByte
+bl bx_r3
+mov r2, r0
+ldr r0, [r5, #0x24]
+mov r1, #0
+ldr r3, =0x02246330 | 1
+bx r3
+
+.pool
 
 
 .data

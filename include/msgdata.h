@@ -40,6 +40,8 @@ typedef struct MsgData {
 MsgData *LONG_CALL NewMsgDataFromNarc(MsgDataLoadType type, u32 narc, s32 fileId, u32 heapId);
 void LONG_CALL ReadMsgDataIntoU16Array(MsgData *msgData, u32 msgno, u16 *dest);
 void LONG_CALL DestroyMsgData(MsgData * msgData);
+String *LONG_CALL NewString_ReadMsgData(MsgData *msgData, s32 strno);
+void LONG_CALL StringExpandPlaceholders(u32 *messageFormat, String *dest, String *src);
 void LONG_CALL CopyU16ArrayToString(String *string, const u16 *src);
 void LONG_CALL CopyStringToU16Array(const String *string, u16 *dest, u32 n);
 

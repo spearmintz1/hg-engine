@@ -35,9 +35,8 @@ arm9 sPocketCounts 08077C14
 0012 TypeEffectivenessTable+2 02252648
 0012 TypeEffectivenessTable 02252694
 
-# metronome and mimic banlist
+# mimic banlist (metronome, assist and copycat read it in BattleContext_CheckMoveCallable)
 0012 sMetronomeMimicMoveBanList 02257D9C
-0012 sMetronomeMimicMoveBanList 02257DF4
 
 # item use func table
 arm9 sItemFieldUseFuncs 020649AC
@@ -77,3 +76,37 @@ arm9 PokemonBattleMusic 080518D4
 
 # camouflage type table
 0012 sCamouflageTypeTable 0800CB60
+
+# special mart pointer table, one entry per mart id
+#ifdef MART_EXPANSION
+arm9 sCherrygroveCityMart 0210FA3C
+arm9 sVioletCityMart 0210FA40
+arm9 sAzaleaCityMart 0210FA44
+arm9 sGoldenrodDepartmentUpper2F 0210FA48
+arm9 sGoldenrodDepartmentLower2F 0210FA4C
+arm9 sGoldenrodDepartment3F 0210FA50
+arm9 sGoldenrodDepartment4F 0210FA54
+arm9 sGoldenrodDepartment5F 0210FA58
+arm9 sGoldenrodHerbs 0210FA5C
+arm9 sEcruteakMart 0210FA60
+arm9 sOlivineMart 0210FA64
+arm9 sCianwoodPharmacy 0210FA68
+arm9 sBlackthornAndBattleFrontierMart 0210FA6C
+arm9 sIndigoPlateau 0210FA70
+arm9 sVermilionAndSafariMart 0210FA74
+arm9 sSaffronMart 0210FA78
+arm9 sLavenderMart 0210FA7C
+arm9 sCeruleanMart 0210FA80
+arm9 sCeladonDepartmentUpper2F 0210FA84
+arm9 sCeladonDepartmentLower2F 0210FA88
+arm9 sCeladonDepartment3F 0210FA8C
+arm9 sCeladonDepartment4F 0210FA90
+arm9 sCeladonDepartmentLeft5F 0210FA94
+arm9 sCeladonDepartmentRight5F 0210FA98
+arm9 sFuschiaMart 0210FA9C
+arm9 sPewterMart 0210FAA0
+arm9 sViridianMart 0210FAA4
+arm9 sMtMoonSquare 0210FAA8
+arm9 sMahoganyPreRocketHideout 0210FAAC
+arm9 sMahoganyPostRocketHideout 0210FAB0
+#endif

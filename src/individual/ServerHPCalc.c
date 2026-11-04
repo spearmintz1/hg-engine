@@ -14,6 +14,10 @@
 #include "../../include/constants/file.h"
 #include "../../include/overlay.h"
 
+#ifdef DEBUG_BATTLE_SCENARIOS
+#include "../../include/test_battle.h"
+#endif
+
 void ServerHPCalc(struct BattleSystem *bw, struct BattleStruct *sp)
 {
     int eqp;
@@ -110,6 +114,35 @@ void ServerHPCalc(struct BattleSystem *bw, struct BattleStruct *sp)
                     }
                 }
             }
+
+#ifdef DEBUG_BATTLE_SCENARIOS
+            // this fork clamps damage to the target's HP later than upstream does, so clamp here to compare like upstream's scenarios
+            s32 testDamage = sp->damage;
+            if (testDamage < 0 && sp->battlemon[sp->defence_client].hp + testDamage < 0)
+            {
+                testDamage = sp->battlemon[sp->defence_client].hp * -1;
+            }
+            debug_printf("[Move %d     Damage %d%s]", sp->current_move_index, testDamage, (sp->critical > 1) ? " (crit)" : "");
+            struct TestBattleScenario *scenario = TestBattle_GetCurrentScenario();
+            if (scenario != NULL && TestBattle_HasMoreExpectations())
+            {
+                if (scenario->expectations[scenario->expectationPassCount].expectationType == EXPECTATION_TYPE_HP_BAR
+                    && sp->defence_client == scenario->expectations[scenario->expectationPassCount].battlerIDOrPartySlot)
+                {
+                    for (int i = 0; i < 16; i++)
+                    {
+                        if ((u32)testDamage == scenario->expectations[scenario->expectationPassCount].expectationValue.hpRecovered[i]
+                            || (u32)(testDamage * -1) == scenario->expectations[scenario->expectationPassCount].expectationValue.hpTaken[i])
+                        {
+                            debug_printf(" ✅");
+                            scenario->expectationPassCount++;
+                            break;
+                        }
+                    }
+                }
+            }
+            debug_printf("\n");
+#endif
 
             /**
              * END OF ORIGINAL AND USER-DEFINED DAMAGE CALCULATIONS.

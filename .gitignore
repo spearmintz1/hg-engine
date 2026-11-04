@@ -91,3 +91,8 @@ tools/swav2swar.exe
 *.gbapal
 *.4bpp
 changelog
+
+# battle test framework outputs
+/include/constants/generated/
+test_logs.txt
+test_filter.txt

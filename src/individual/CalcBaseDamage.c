@@ -908,12 +908,13 @@ int UNUSED CalcBaseDamage(void *bw, struct BattleStruct *sp, int moveno, u32 sid
 
             // handle Analytic
             if (AttackingMon.ability == ABILITY_ANALYTIC) {
-                for (i = 0; i < 4; i++) {
-                    if (attacker != i && sp->battlemon[i].hp != 0 && CalcSpeed(bw, sp, attacker, i, 0) == 0) {
+                int k;
+                for (k = 0; k < 4; k++) {
+                    if (attacker != k && sp->battlemon[k].hp != 0 && CalcSpeed(bw, sp, attacker, k, 0) == 0) {
                         break;
                     }
                 }
-                if (i == 4) {
+                if (k == 4) {
                     basePowerModifier = QMul_RoundUp(basePowerModifier, UQ412__1_3);
                     continue;
                 }
@@ -1263,6 +1264,16 @@ int UNUSED CalcBaseDamage(void *bw, struct BattleStruct *sp, int moveno, u32 sid
                     flowerGiftAppliedForAttackModifier = TRUE;
                     attackModifier = QMul_RoundUp(attackModifier, UQ412__1_5);
                 }
+                // handle Orichalcum Pulse
+                // https://www.smogon.com/forums/threads/scarlet-violet-battle-mechanics-research.3709545/page-20#post-9423025
+                if ((AttackingMon.ability == ABILITY_ORICHALCUM_PULSE)
+                && (field_cond & WEATHER_SUNNY_ANY)
+                // https://www.smogon.com/forums/threads/scarlet-violet-battle-mechanics-research.3709545/post-9426805
+                // TODO: For Orichalcum Pulse itself - still shows "sending its ancient pulse into a frenzy!" message even with Utility Umbrella disabling the attack boost.
+                && !(AttackingMon.item_held_effect == HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN)
+                && (movesplit == SPLIT_PHYSICAL)) {
+                    attackModifier = QMul_RoundUp(attackModifier, UQ412__1_3333);
+                }
             }
 
             // handle Guts
@@ -1343,6 +1354,22 @@ int UNUSED CalcBaseDamage(void *bw, struct BattleStruct *sp, int moveno, u32 sid
             // handle Rocky Payload
             if (AttackingMon.ability == ABILITY_ROCKY_PAYLOAD && (movetype == TYPE_ROCK)) {
                 attackModifier = QMul_RoundUp(attackModifier, UQ412__1_5);
+            }
+
+            // handle Protosynthesis and Quark Drive
+            // https://www.smogon.com/forums/threads/scarlet-violet-battle-mechanics-research.3709545/page-20#post-9423025
+            if ((AttackingMon.ability == ABILITY_PROTOSYNTHESIS || AttackingMon.ability == ABILITY_QUARK_DRIVE)
+                && ((movesplit == SPLIT_PHYSICAL && sp->paradoxBoostedStat[attacker] == STAT_ATTACK) || (movesplit == SPLIT_SPECIAL && sp->paradoxBoostedStat[attacker] == STAT_SPATK))) {
+                attackModifier = QMul_RoundUp(attackModifier, UQ412__1_3);
+            }
+
+            // handle Hadron Engine
+            // https://www.smogon.com/forums/threads/scarlet-violet-battle-mechanics-research.3709545/page-20#post-9423025
+            if ((AttackingMon.ability == ABILITY_HADRON_ENGINE)
+                && (movesplit == SPLIT_SPECIAL)
+                && (sp->terrainOverlay.type == ELECTRIC_TERRAIN)
+                && (sp->terrainOverlay.numberOfTurnsLeft > 0)) {
+                attackModifier = QMul_RoundUp(attackModifier, UQ412__1_3333);
             }
         }
 
@@ -1508,8 +1535,10 @@ int UNUSED CalcBaseDamage(void *bw, struct BattleStruct *sp, int moveno, u32 sid
 #endif
 
     // Step 4.3. Psyshock / Psystrike / Secret Sword
+    u8 defensiveSplit = movesplit;
     if ((moveno == MOVE_PSYSHOCK) || (moveno == MOVE_PSYSTRIKE) || (moveno == MOVE_SECRET_SWORD)) {
         DefendingMon.sp_defense = DefendingMon.defense;
+        defensiveSplit = SPLIT_PHYSICAL;
     }
 
 #ifdef DEBUG_DAMAGE_CALC
@@ -1620,6 +1649,13 @@ int UNUSED CalcBaseDamage(void *bw, struct BattleStruct *sp, int moveno, u32 sid
             && (movesplit == SPLIT_PHYSICAL)) {
                 defenseModifier = QMul_RoundUp(defenseModifier, UQ412__2_0);
             }
+
+            // handle Protosynthesis and Quark Drive
+            // https://www.smogon.com/forums/threads/scarlet-violet-battle-mechanics-research.3709545/page-20#post-9423025
+            if ((DefendingMon.ability == ABILITY_PROTOSYNTHESIS || DefendingMon.ability == ABILITY_QUARK_DRIVE)
+                && ((defensiveSplit == SPLIT_PHYSICAL && sp->paradoxBoostedStat[defender] == STAT_DEFENSE) || (defensiveSplit == SPLIT_SPECIAL && sp->paradoxBoostedStat[defender] == STAT_SPDEF))) {
+                defenseModifier = QMul_RoundUp(defenseModifier, UQ412__1_3);
+            }
         }
 
         if (BATTLER_ALLY(defender) == sp->rawSpeedNonRNGClientOrder[i]) {
@@ -1646,7 +1682,7 @@ int UNUSED CalcBaseDamage(void *bw, struct BattleStruct *sp, int moveno, u32 sid
                 speciesWithForm = PokeOtherFormMonsNoGet(sp->battlemon[defender].species, sp->battlemon[defender].form_no);
 
                 struct Evolution *evoTable;
-                evoTable = sys_AllocMemory(0, MAX_EVOS_PER_POKE * sizeof(struct Evolution));
+                evoTable = sys_AllocMemory(0, EVOLUTION_TABLE_FILE_SIZE);
                 ArchiveDataLoad(evoTable, ARC_EVOLUTIONS, speciesWithForm);
 
                 // If a Pokémon has any evolutions, there should be an entry at the top that isn't EVO_NONE.

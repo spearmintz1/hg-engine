@@ -12,6 +12,11 @@
 #include "../../include/constants/moves.h"
 #include "../../include/constants/species.h"
 
+#ifdef DEBUG_BATTLE_SCENARIOS
+#include "../../include/save.h"
+#include "../../include/test_battle.h"
+#endif
+
 // function declarations
 //BOOL BattleFormChangeCheck(void *bw, struct BattleStruct *sp, int *seq_no);
 void ClientPokemonEncount(void *bw, struct CLIENT_PARAM *cp);
@@ -31,6 +36,7 @@ ALIGN4 struct ILLUSION_STRUCT gIllusionStruct =
 {
     .illusionClient = {CLIENT_MAX, CLIENT_MAX, CLIENT_MAX, CLIENT_MAX},
     .illusionPos = {6, 6, 6, 6},
+    .illusionCopiedPos = {6, 6, 6, 6},
 };
 
 /**
@@ -228,6 +234,90 @@ BOOL LONG_CALL BattleFormChangeCheck(void *bw, struct BattleStruct *sp, int *seq
 }
 
 /**
+ *  @brief grab the illusion party index of a passed Party structure
+ *
+ *  @param party party structure to assess for illusion validity
+ *  @param illusionIndex index of the mon that is setting up the illusion
+ *  @return index in the party that an illusion mon would copy; illusionIndex if there is not a valid index
+ */
+s32 Party_GetIllusionImitatedIndex(struct Party *party, s32 illusionIndex)
+{
+    s32 count = party->count, ret = illusionIndex, i = 0;
+
+    for (i = illusionIndex + 1; i < count; i++)
+    {
+        struct PartyPokemon *mon = Party_GetMonByIndex(party, i);
+        // illusion can not copy eggs or fainted mons
+        if (GetMonData(mon, MON_DATA_HP, NULL) != 0 && GetMonData(mon, MON_DATA_IS_EGG, NULL) != TRUE) {
+            ret = i;
+        }
+    }
+    return ret;
+}
+
+/**
+ *  @brief rebuild the illusion state of a side for the Illusion mon being sent out
+ *         it is rebuilt on every send out, so it never outlives the party it was copied from
+ *         the state is only meaningful for the mon at illusionPos; readers must check the slot
+ *
+ *  @param bw battle work structure
+ *  @param side client sending the Illusion mon out
+ *  @param pos party slot of the Illusion mon
+ *  @param copiedPos party slot of the mon the disguise copies
+ *  @param disguised TRUE if the disguise copies another party mon (its nickname shows even when the species matches); FALSE drops the disguise
+ */
+static void ClientIllusionStateUpdate(void *bw, u32 side, u32 pos, s32 copiedPos, BOOL disguised)
+{
+    u32 team = SanitizeClientForTeamAccess(bw, side);
+    struct Party *party = BattleWorkPokePartyGet(bw, side);
+    struct PartyPokemon *illusionMon = Party_GetMonByIndex(party, pos);
+    u16 strbuf[11];
+
+    if (disguised)
+    {
+        gIllusionStruct.illusionClient[team] = side;
+        gIllusionStruct.illusionCopiedPos[team] = copiedPos;
+        if (!(gIllusionStruct.isSideInIllusion & No2Bit(team)))
+        {
+            gIllusionStruct.isSideInIllusion |= No2Bit(team);
+            GetMonData(illusionMon, MON_DATA_NICKNAME, gIllusionStruct.illusionNameBuf[team]);
+            gIllusionStruct.illusionPos[team] = pos;
+        }
+        GetMonData(Party_GetMonByIndex(party, copiedPos), MON_DATA_NICKNAME, strbuf);
+        SetMonData(illusionMon, MON_DATA_NICKNAME, strbuf);
+    }
+    else if (gIllusionStruct.isSideInIllusion & No2Bit(team))
+    {
+        SetMonData(illusionMon, MON_DATA_NICKNAME, gIllusionStruct.illusionNameBuf[team]);
+        gIllusionStruct.isSideInIllusion &= ~No2Bit(team);
+        gIllusionStruct.illusionClient[team] = CLIENT_MAX;
+        gIllusionStruct.illusionPos[team] = 6;
+        gIllusionStruct.illusionCopiedPos[team] = 6;
+    }
+}
+
+/**
+ *  @brief party slot a switch in message shows for an Illusion mon being sent out
+ *         the message reads its nickname from the party, so a disguise with nothing left to copy is dropped here, before the message prints
+ *
+ *  @param bw battle work structure
+ *  @param client client sending the Illusion mon out
+ *  @param party party of the client
+ *  @param slot party slot of the Illusion mon
+ *  @return party slot of the mon the message names
+ */
+static s32 IllusionSwitchInIndex(void *bw, u32 client, struct Party *party, s32 slot)
+{
+    s32 copiedPos = Party_GetIllusionImitatedIndex(party, slot);
+
+    if (copiedPos == slot)
+    {
+        ClientIllusionStateUpdate(bw, client, slot, copiedPos, FALSE);
+    }
+    return copiedPos;
+}
+
+/**
  *  @brief one of a number of functions that control how a battler appears
  *         this one is for wild encounters
  *
@@ -249,33 +339,25 @@ void ClientPokemonEncount(void *bw, struct CLIENT_PARAM *cp)
     // if a side has 2 battlers, the logic can run regardless--the "last mon" is worst-case the one being sent out so nothing changes
      && ((DoesSideHave2Battlers(bw, side))
     // if the side does not have 2 battlers and the battle type is doubles, then the party count must be greater than 2
-      || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && party->count > 2)
+      || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && count > 2)
     // else single battles are fine to pass through here too
       || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE)) == 0))
     {
-        u16 strbuf[11];
+        BOOL disguised;
+        s32 illusionIndex = Party_GetIllusionImitatedIndex(party, 0);
 
-        newmon = GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1), MON_DATA_SPECIES, NULL);
-        newform = GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1), MON_DATA_FORM, NULL);
-        newshiny = MonIsShiny(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1));
+        newmon = GetMonData(Party_GetMonByIndex(party, illusionIndex), MON_DATA_SPECIES, NULL);
+        newform = GetMonData(Party_GetMonByIndex(party, illusionIndex), MON_DATA_FORM, NULL);
+        newshiny = MonIsShiny(Party_GetMonByIndex(party, illusionIndex));
 
-        if (newmon != pep->monsno || newform != pep->form_no)
+        disguised = illusionIndex != 0;
+        if (disguised)
         {
             pep->monsno = newmon;
             pep->form_no = newform;
             pep->rare = newshiny;
-
-            gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, side)] = side;
-            if (!(gIllusionStruct.isSideInIllusion & No2Bit(SanitizeClientForTeamAccess(bw, side))))
-            {
-                gIllusionStruct.isSideInIllusion |= No2Bit(SanitizeClientForTeamAccess(bw, side));
-                GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1), MON_DATA_NICKNAME, strbuf);
-                GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), 0), MON_DATA_NICKNAME, gIllusionStruct.illusionNameBuf[SanitizeClientForTeamAccess(bw, side)]);
-                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, side)] = 0;
-
-                SetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), 0), MON_DATA_NICKNAME, strbuf);
-            }
         }
+        ClientIllusionStateUpdate(bw, side, 0, illusionIndex, disguised);
     }
 
     CT_PokemonEncountSet(bw, cp, pep);
@@ -304,33 +386,25 @@ void ClientPokemonEncountAppear(void *bw, struct CLIENT_PARAM *cp)
     // if a side has 2 battlers, the logic can run regardless--the "last mon" worst-case is the one being sent out so nothing changes
      && ((DoesSideHave2Battlers(bw, side))
     // if the side does not have 2 battlers and the battle type is doubles, then the party count must be greater than 2
-      || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && party->count > 2)
+      || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && count > 2)
     // else single battles are fine to pass through here too
       || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE)) == 0))
     {
-        u16 strbuf[11];
+        BOOL disguised;
+        s32 illusionIndex = Party_GetIllusionImitatedIndex(party, pap->sel_mons_no);
 
-        newmon = GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1), MON_DATA_SPECIES, NULL);
-        newform = GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1), MON_DATA_FORM, NULL);
-        newshiny = MonIsShiny(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1));
+        newmon = GetMonData(Party_GetMonByIndex(party, illusionIndex), MON_DATA_SPECIES, NULL);
+        newform = GetMonData(Party_GetMonByIndex(party, illusionIndex), MON_DATA_FORM, NULL);
+        newshiny = MonIsShiny(Party_GetMonByIndex(party, illusionIndex));
 
-        if (newmon != pap->monsno || newform != pap->form_no)
+        disguised = illusionIndex != pap->sel_mons_no;
+        if (disguised)
         {
             pap->monsno = newmon;
             pap->form_no = newform;
             pap->rare = newshiny;
-
-            gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, side)] = side;
-            if (!(gIllusionStruct.isSideInIllusion & No2Bit(SanitizeClientForTeamAccess(bw, side))))
-            {
-                gIllusionStruct.isSideInIllusion |= No2Bit(SanitizeClientForTeamAccess(bw, side));
-                GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1), MON_DATA_NICKNAME, strbuf);
-                GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), pap->sel_mons_no), MON_DATA_NICKNAME, gIllusionStruct.illusionNameBuf[SanitizeClientForTeamAccess(bw, side)]);
-                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, side)] = pap->sel_mons_no;
-
-                SetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), pap->sel_mons_no), MON_DATA_NICKNAME, strbuf);
-            }
         }
+        ClientIllusionStateUpdate(bw, side, pap->sel_mons_no, illusionIndex, disguised);
     }
 
     CT_PokemonEncountAppearSet(bw, cp, pap);
@@ -359,33 +433,25 @@ void ClientPokemonAppear(void *bw, struct CLIENT_PARAM *cp)
     // if a side has 2 battlers, the logic can run regardless--the "last mon" is worst-case the one being sent out so nothing changes
      && ((DoesSideHave2Battlers(bw, side))
     // if the side does not have 2 battlers and the battle type is doubles, then the party count must be greater than 2
-      || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && party->count > 2)
+      || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && count > 2)
     // else single battles are fine to pass through here too
       || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE)) == 0))
     {
-        u16 strbuf[11];
+        BOOL disguised;
+        s32 illusionIndex = Party_GetIllusionImitatedIndex(party, pap->sel_mons_no);
 
-        newmon = GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1), MON_DATA_SPECIES, NULL);
-        newform = GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1), MON_DATA_FORM, NULL);
-        newshiny = MonIsShiny(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1));
+        newmon = GetMonData(Party_GetMonByIndex(party, illusionIndex), MON_DATA_SPECIES, NULL);
+        newform = GetMonData(Party_GetMonByIndex(party, illusionIndex), MON_DATA_FORM, NULL);
+        newshiny = MonIsShiny(Party_GetMonByIndex(party, illusionIndex));
 
-        if (newmon != pap->monsno || newform != pap->form_no)
+        disguised = illusionIndex != pap->sel_mons_no;
+        if (disguised)
         {
             pap->monsno = newmon;
             pap->form_no = newform;
             pap->rare = newshiny;
-
-            gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, side)] = side;
-            if (!(gIllusionStruct.isSideInIllusion & No2Bit(SanitizeClientForTeamAccess(bw, side))))
-            {
-                gIllusionStruct.isSideInIllusion |= No2Bit(SanitizeClientForTeamAccess(bw, side));
-                GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), count - 1), MON_DATA_NICKNAME, strbuf);
-                GetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), pap->sel_mons_no), MON_DATA_NICKNAME, gIllusionStruct.illusionNameBuf[SanitizeClientForTeamAccess(bw, side)]);
-                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, side)] = pap->sel_mons_no;
-
-                SetMonData(Party_GetMonByIndex(BattleWorkPokePartyGet(bw, side), pap->sel_mons_no), MON_DATA_NICKNAME, strbuf);
-            }
         }
+        ClientIllusionStateUpdate(bw, side, pap->sel_mons_no, illusionIndex, disguised);
     }
 
     CT_PokemonAppearSet(bw, cp, pap);
@@ -414,13 +480,7 @@ int MessageParam_GetNickname(void *bw, struct BattleStruct *sp, int para)
      && gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, client)] == client
      && gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client)] == sp->sel_mons_no[client])
     {
-        struct Party *party;
-        u32 count;
-
-        party = BattleWorkPokePartyGet(bw, client);
-        count = party->count - 1;
-
-        ret |= count << 8;
+        ret |= gIllusionStruct.illusionCopiedPos[SanitizeClientForTeamAccess(bw, client)] << 8;
     }
     else if (para == 0x16) // switch after the attack?
     {
@@ -460,7 +520,7 @@ void CT_SwitchInMessageParamMake(void *bw, struct CLIENT_PARAM *cp, struct SWITC
           || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE)) == 0)
          && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == smp->sel_mons_no))
         {
-            smp->sel_mons_no = party->count - 1;
+            smp->sel_mons_no = IllusionSwitchInIndex(bw, cp->client_no, party, smp->sel_mons_no);
         }
 
         if ((BattleTypeGet(bw) & BATTLE_TYPE_WIRELESS) == 0)
@@ -493,7 +553,7 @@ void CT_SwitchInMessageParamMake(void *bw, struct CLIENT_PARAM *cp, struct SWITC
           || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE)) == 0)
          && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == smp->sel_mons_no))
         {
-            smp->sel_mons_no = party->count - 1;
+            smp->sel_mons_no = IllusionSwitchInIndex(bw, cp->client_no, party, smp->sel_mons_no);
         }
 
         if (((BattleTypeGet(bw) & BATTLE_TYPE_DOUBLE) == 0)
@@ -566,13 +626,13 @@ void CT_EncountSendOutMessageParamMake(void *bw, struct CLIENT_PARAM *cp, struct
 
             ability = GetMonData(Party_GetMonByIndex(party, esomp->sel_mons_no[client1]), MON_DATA_ABILITY, NULL);
             if (ability == ABILITY_ILLUSION
-             && ((DoesSideHave2Battlers(bw, cp->client_no))
+             && ((DoesSideHave2Battlers(bw, client1))
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && party->count > 2)
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE)) == 0)
-             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == esomp->sel_mons_no[client1]))
+             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client1)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client1)] == esomp->sel_mons_no[client1]))
             {
-                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] = esomp->sel_mons_no[client1];
-                esomp->sel_mons_no[client1] = party->count - 1;
+                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client1)] = esomp->sel_mons_no[client1];
+                esomp->sel_mons_no[client1] = Party_GetIllusionImitatedIndex(party, esomp->sel_mons_no[client1]);
             }
         }
 
@@ -585,13 +645,13 @@ void CT_EncountSendOutMessageParamMake(void *bw, struct CLIENT_PARAM *cp, struct
 
             ability = GetMonData(Party_GetMonByIndex(party, esomp->sel_mons_no[client2]), MON_DATA_ABILITY, NULL);
             if (ability == ABILITY_ILLUSION
-             && ((DoesSideHave2Battlers(bw, cp->client_no))
+             && ((DoesSideHave2Battlers(bw, client2))
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && party->count > 2)
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE)) == 0)
-             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == esomp->sel_mons_no[client2]))
+             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] == esomp->sel_mons_no[client2]))
             {
-                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] = esomp->sel_mons_no[client2];
-                esomp->sel_mons_no[client2] = party->count - 1;
+                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] = esomp->sel_mons_no[client2];
+                esomp->sel_mons_no[client2] = Party_GetIllusionImitatedIndex(party, esomp->sel_mons_no[client2]);
             }
         }
 
@@ -724,13 +784,13 @@ void CT_EncountSendOutMessageParamMake(void *bw, struct CLIENT_PARAM *cp, struct
 
             ability = GetMonData(Party_GetMonByIndex(party, esomp->sel_mons_no[client1]), MON_DATA_ABILITY, NULL);
             if (ability == ABILITY_ILLUSION
-             && ((DoesSideHave2Battlers(bw, cp->client_no))
+             && ((DoesSideHave2Battlers(bw, client1))
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && party->count > 2)
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE)) == 0)
-             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == esomp->sel_mons_no[client1]))
+             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client1)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client1)] == esomp->sel_mons_no[client1]))
             {
-                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] = esomp->sel_mons_no[client1];
-                esomp->sel_mons_no[client1] = party->count - 1;
+                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client1)] = esomp->sel_mons_no[client1];
+                esomp->sel_mons_no[client1] = Party_GetIllusionImitatedIndex(party, esomp->sel_mons_no[client1]);
             }
         }
 
@@ -743,13 +803,13 @@ void CT_EncountSendOutMessageParamMake(void *bw, struct CLIENT_PARAM *cp, struct
 
             ability = GetMonData(Party_GetMonByIndex(party, esomp->sel_mons_no[client2]), MON_DATA_ABILITY, NULL);
             if (ability == ABILITY_ILLUSION
-             && ((DoesSideHave2Battlers(bw, cp->client_no))
+             && ((DoesSideHave2Battlers(bw, client2))
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE) && party->count > 2)
               || (BattleTypeGet(bw) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_DOUBLE)) == 0)
-             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] == esomp->sel_mons_no[client2]))
+             && (gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] == 6 || gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] == esomp->sel_mons_no[client2]))
             {
-                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, cp->client_no)] = esomp->sel_mons_no[client2];
-                esomp->sel_mons_no[client2] = party->count - 1;
+                gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client2)] = esomp->sel_mons_no[client2];
+                esomp->sel_mons_no[client2] = Party_GetIllusionImitatedIndex(party, esomp->sel_mons_no[client2]);
             }
         }
 
@@ -885,22 +945,23 @@ void BattleEndRevertFormChange(struct BattleSystem *bw)
     newBS.ChangeBgFlag = 0;
     newBS.MegaIconLight = 0;
 
-    for (i = 0; i < 2; i++)
+    // the illusion state is indexed by team and holds the owning client, so every team is reverted through its own client
+    for (i = 0; i < 4; i++)
     {
         // revert illusion
-        if (gIllusionStruct.isSideInIllusion & No2Bit(SanitizeClientForTeamAccess(bw, i))
-         && gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, i)] == i)
+        if (gIllusionStruct.isSideInIllusion & No2Bit(i))
         {
-            pp = BattleWorkPokemonParamGet(bw, 0, gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, i)]);
-            SetMonData(pp, MON_DATA_NICKNAME, gIllusionStruct.illusionNameBuf[SanitizeClientForTeamAccess(bw, i)]);
+            pp = BattleWorkPokemonParamGet(bw, gIllusionStruct.illusionClient[i], gIllusionStruct.illusionPos[i]);
+            SetMonData(pp, MON_DATA_NICKNAME, gIllusionStruct.illusionNameBuf[i]);
         }
 
         // clear the illusion structure
-        gIllusionStruct.isSideInIllusion &= ~No2Bit(SanitizeClientForTeamAccess(bw, i));
-        gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, i)] = CLIENT_MAX;
-        gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, i)] = 6;
-        for (j = 0; j < 11; j++)
-            gIllusionStruct.illusionNameBuf[SanitizeClientForTeamAccess(bw, i)][j] = 0;
+        gIllusionStruct.isSideInIllusion &= ~No2Bit(i);
+        gIllusionStruct.illusionClient[i] = CLIENT_MAX;
+        gIllusionStruct.illusionPos[i] = 6;
+        gIllusionStruct.illusionCopiedPos[i] = 6;
+        for (j = 0; j < 12; j++)
+            gIllusionStruct.illusionNameBuf[i][j] = 0;
     }
 
     for (i = 0; i < BattleWorkPokeCountGet(bw, 0); i++)
@@ -977,6 +1038,60 @@ void BattleEndRevertFormChange(struct BattleSystem *bw)
         newBS.itemsToRestore[i] = 0;
     }
 #endif // RESTORE_ITEMS_AT_BATTLE_END
+
+#ifdef DEBUG_BATTLE_SCENARIOS
+
+    struct TestBattleScenario *currentScenario = TestBattle_GetCurrentScenario();
+
+    while (currentScenario != NULL && TestBattle_HasMoreExpectations()) {
+        // debug_printf("Has more expectations\n");
+        // debug_printf("expectation: %d\n", currentScenario->expectations[currentScenario->expectationPassCount].expectationType);
+        if (currentScenario->expectations[currentScenario->expectationPassCount].expectationType == EXPECTATION_OVERWORLD_FORM) {
+            // debug_printf("Checking form\n");
+            struct Party *party = SaveData_GetPlayerPartyPtr(SaveBlock2_get());
+            struct PartyPokemon partyPokemon = party->members[currentScenario->expectations[currentScenario->expectationPassCount].battlerIDOrPartySlot];
+            u32 expectedForm = currentScenario->expectations[currentScenario->expectationPassCount].expectationValue.formID;
+            // debug_printf("expected form %d\n", expectedForm);
+            if (GetMonData(&partyPokemon, MON_DATA_FORM, NULL) == expectedForm) {
+                // debug_printf("Form matches expectation\n");
+                currentScenario->expectationPassCount++;
+            }
+        } else if (currentScenario->expectations[currentScenario->expectationPassCount].expectationType == EXPECTATION_END_OF_BATTLE_NICKNAME) {
+            // the battle party after the illusion revert above: the mon at the slot must carry the default name of the expected species
+            struct Expectations *expectation = &currentScenario->expectations[currentScenario->expectationPassCount];
+            u16 nickname[12], expectedName[12];
+            GetMonData(BattleWorkPokemonParamGet(bw, BATTLER_PLAYER_FIRST, expectation->battlerIDOrPartySlot), MON_DATA_NICKNAME, nickname);
+            GetSpeciesNameIntoArray(expectation->expectationValue.nicknameSpecies, 0, expectedName);
+            BOOL nameMatches = TRUE;
+            for (i = 0; nameMatches && i < 11; i++) {
+                nameMatches = nickname[i] == expectedName[i];
+                if (nickname[i] == 0xFFFF) {
+                    break;
+                }
+            }
+            if (!nameMatches) {
+                break;
+            }
+            currentScenario->expectationPassCount++;
+        } else {
+            // debug_printf("Break\n");
+            break;
+        }
+    }
+
+    if (TestBattle_HasMoreExpectations()) {
+        debug_printf("expectation[%d] ❌\n", currentScenario->expectationPassCount);
+        if (currentScenario->knownFailing) {
+            SendValueThroughCommunicationSendHole(TEST_CASE_KNOWN_FAILING);
+        } else {
+            SendValueThroughCommunicationSendHole(TEST_CASE_FAIL);
+        }
+    } else {
+        SendValueThroughCommunicationSendHole(TEST_CASE_PASS);
+    }
+    TestBattle_MarkComplete();
+
+#endif // DEBUG_BATTLE_SCENARIOS
 }
 
 /**
@@ -1010,6 +1125,8 @@ void LONG_CALL ClearBattleMonFlags(struct BattleStruct *sp, int client)
     sp->log_hail_for_ice_face &= ~(1 << client); // unset log_hail_for_ice_face for client
     sp->binding_turns[client] = 0;
     sp->protectSuccessTurns[client] = 0;
+    sp->paradoxBoostedStat[client] = 0;
+    sp->boosterEnergyActivated[client] = FALSE;
 
     if (gBattleSystem != NULL)
     {
@@ -1157,8 +1274,9 @@ struct PartyPokemon *TargetSelectGrabIllusionPartyPokemon(void *bw, u32 client, 
     struct PartyPokemon *pp;
 
     if (gIllusionStruct.isSideInIllusion & No2Bit(SanitizeClientForTeamAccess(bw, client))
-     && gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, client)] == client) {
-        pp = BattleWorkPokemonParamGet(bw, client, BattleWorkPokePartyGet(bw, client)->count - 1);
+     && gIllusionStruct.illusionClient[SanitizeClientForTeamAccess(bw, client)] == client
+     && gIllusionStruct.illusionPos[SanitizeClientForTeamAccess(bw, client)] == pos) {
+        pp = BattleWorkPokemonParamGet(bw, client, gIllusionStruct.illusionCopiedPos[SanitizeClientForTeamAccess(bw, client)]);
     } else {
         pp = BattleWorkPokemonParamGet(bw, client, pos);
     }

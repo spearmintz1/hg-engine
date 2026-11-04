@@ -359,11 +359,24 @@ void SetOverworldRequestFlags(OVERWORLD_REQUEST_FLAGS *req, u16 trg)
  *  @brief handle overworld request flags
  *
  *  @param req OVERWORLD_REQUEST_FLAGS structure to set flags in
+ *  @param fsys field system
+ *  @return TRUE if an event was started and the field input must not process any further this frame; FALSE otherwise
  */
-void CheckOverworldRequestFlags(OVERWORLD_REQUEST_FLAGS *req, FieldSystem *fsys)
+BOOL CheckOverworldRequestFlags(OVERWORLD_REQUEST_FLAGS *req, FieldSystem *fsys)
 {
-    if (req->OpenPCCheck) {
-        SetScriptFlag(0x18F); // some random flag that should be set by script 2010 (file 3 script 10)
-        EventSet_Script(fsys, 2010, NULL); // set up script 2010
+    if (!req->OpenPCCheck) {
+        return FALSE;
     }
+    // the bug-catching contest backs up the party and restores it afterwards, which deletes anything withdrawn in between
+    if (CheckScriptFlag(FLAG_BUG_CONTEST_ACTIVE)) {
+        return FALSE;
+    }
+    // no party means no starter yet, so there is nothing to swap with
+    struct Party *party = SaveData_GetPlayerPartyPtr(fsys->savedata);
+    if (party->count == 0) {
+        return FALSE;
+    }
+    SetScriptFlag(0x18F); // some random flag that should be set by script 2010 (file 3 script 10)
+    EventSet_Script(fsys, 2010, NULL); // set up script 2010
+    return TRUE;
 }

@@ -127,3 +127,5 @@ Mail Pocket\nFor sorting and storing vibrant\nstationery.
 Battle Items Pocket\nFor items that are useful during battle.
 Key Items Pocket\nFor items that are indispensable for\nyour adventure.
 STOP
+The Exp. Share was turned on.
+The Exp. Share was turned off.

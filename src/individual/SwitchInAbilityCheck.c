@@ -594,10 +594,11 @@ int UNUSED SwitchInAbilityCheck(void *bw, struct BattleStruct *sp)
                             src = (u8 *)&sp->battlemon[sp->attack_client];
                             dest = (u8 *)&sp->battlemon[sp->defence_client];
 
-                            for (num = 0; num <= (int)offsetof(struct BattlePokemon, ability); num++) {
+                            for (num = 0; num <= 0x26; num++) {
                                 src[num] = dest[num];
                             }
 
+                            sp->battlemon[sp->attack_client].ability = sp->battlemon[sp->defence_client].ability; // lives outside the copied range
                             sp->battlemon[sp->attack_client].ability_activated_flag = 0;
                             sp->battlemon[sp->attack_client].ability_activated_flag = 0;
                             sp->battlemon[sp->attack_client].moveeffect.truantFlag = sp->total_turn & 1;
@@ -723,6 +724,42 @@ int UNUSED SwitchInAbilityCheck(void *bw, struct BattleStruct *sp)
                             sp->battlerIdTemp = client_no;
                             sp->current_move_index = MOVE_TAILWIND;
                             scriptnum = SUB_SEQ_BOOST_STATS;
+                            ret = SWITCH_IN_CHECK_MOVE_SCRIPT;
+                            break;
+                        }
+                    }
+
+                    // Orichalcum Pulse
+                    {
+                        if ((sp->battlemon[client_no].hp)
+                            && (sp->battlemon[client_no].ability_activated_flag == 0)
+                            && (GetBattlerAbility(sp, client_no) == ABILITY_ORICHALCUM_PULSE)) {
+                            sp->battlemon[client_no].ability_activated_flag = 1;
+                            sp->ability_client = client_no; // Use ability_client instead of battlerIdTemp so ActivateParadoxAbility doesn't interfere
+                            scriptnum = SUB_SEQ_ORICHALCUM_PULSE;
+                            ret = SWITCH_IN_CHECK_MOVE_SCRIPT;
+                            break;
+                        }
+                    }
+
+                    // Hadron Engine
+                    {
+                        if ((sp->battlemon[client_no].hp)
+                            && (sp->battlemon[client_no].ability_activated_flag == 0)
+                            && (GetBattlerAbility(sp, client_no) == ABILITY_HADRON_ENGINE)) {
+                            sp->battlemon[client_no].ability_activated_flag = 1;
+                            sp->battlerIdTemp = client_no;
+                            sp->attack_client = client_no;
+                            if (sp->terrainOverlay.type == ELECTRIC_TERRAIN
+                                && sp->terrainOverlay.numberOfTurnsLeft > 0) {
+                                sp->ability_client = client_no;
+                                scriptnum = SUB_SEQ_HADRON_ENGINE_NO_TERRAIN_SETUP;
+                            } else {
+                                sp->calc_work = sp->current_move_index;
+                                sp->current_move_index = MOVE_ELECTRIC_TERRAIN;  // need this for UpdateTerrainOverlay
+                                sp->addeffect_type = ADD_EFFECT_ABILITY; // need to restore the current move index after the animation has played
+                                scriptnum = SUB_SEQ_CREATE_TERRAIN_OVERLAY;
+                            }
                             ret = SWITCH_IN_CHECK_MOVE_SCRIPT;
                             break;
                         }
@@ -863,19 +900,22 @@ int UNUSED SwitchInAbilityCheck(void *bw, struct BattleStruct *sp)
 
                     }
 
-                    // Protosynthesis
+                    // Protosynthesis and Quark Drive
                     {
-
-                    }
-
-                    // Quark Drive
-                    {
-
+                        scriptnum = ActivateParadoxAbility(bw, sp, client_no);
+                        if (scriptnum > 0) {
+                            ret = SWITCH_IN_CHECK_MOVE_SCRIPT;
+                            break;
+                        }
                     }
 
                     // Hospitality
                     {
-
+                        scriptnum = ActivateHospitality(bw, sp, client_no);
+                        if (scriptnum > 0) {
+                            ret = SWITCH_IN_CHECK_MOVE_SCRIPT;
+                            break;
+                        }
                     }
 
                     // Eject Pack

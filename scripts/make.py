@@ -282,6 +282,9 @@ def install():
     if os.path.isfile(BYTE_REPLACEMENT):
         with open(BYTE_REPLACEMENT, 'r') as replacelist:
             definesDict = {}
+            additionalFlags = [flag.removeprefix('-D') for flag in sys.argv if flag.startswith('-D')]
+            for flag in additionalFlags:
+                definesDict[flag] = True
             conditionals = []
             for line in replacelist:
                 if TryProcessFileInclusion(line, definesDict):
@@ -330,6 +333,9 @@ def hook():
         table = GetSymbols()
         with open(HOOKS, 'r') as hookList:
             definesDict = {}
+            additionalFlags = [flag.removeprefix('-D') for flag in sys.argv if flag.startswith('-D')]
+            for flag in additionalFlags:
+                definesDict[flag] = True
             conditionals = []
             for line in hookList:
                 if TryProcessFileInclusion(line, definesDict):
@@ -348,8 +354,7 @@ def hook():
                 try:
                     code = table[symbol]
                 except KeyError:
-                    print('Symbol missing:', symbol)
-                    continue
+                    sys.exit('Symbol missing: ' + symbol)
                 if files == "arm9":
                     rom2 = open("base/arm9.bin", 'rb+')
                     offset = int(address, 16) - 0x02000000 if int(address, 16) & 0x02000000 else int(address, 16) - 0x08000000
@@ -380,8 +385,7 @@ def hook():
                 try:
                     code = table[symbol]
                 except KeyError:
-                    print('Symbol missing:', symbol)
-                    continue
+                    sys.exit('Symbol missing: ' + symbol)
                 if files == "arm9":
                     rom2 = open("base/arm9.bin", 'rb+')
                     offset = int(address, 16) - 0x02000000 if int(address, 16) & 0x02000000 else int(address, 16) - 0x08000000
@@ -513,8 +517,7 @@ def repoint():
                 try:
                     code = table[symbol]
                 except KeyError:
-                    print('Symbol missing:', symbol)
-                    continue
+                    sys.exit('Symbol missing: ' + symbol)
                 if files == "arm9":
                     rom2 = open("base/arm9.bin", 'rb+')
                     offset = int(address, 16) - 0x02000000 if int(address, 16) & 0x02000000 else int(address, 16) - 0x08000000
@@ -550,8 +553,7 @@ def offset():
                         addOffset = int(addOffsetStr, 16)
                     code = table[symbol]
                 except KeyError:
-                    print('Symbol missing:', symbol)
-                    continue
+                    sys.exit('Symbol missing: ' + symbol)
                 if files == "arm9":
                     rom = open("base/arm9.bin", 'rb+')
                     offset = int(address, 16) - 0x02000000 if int(address, 16) & 0x02000000 else int(address, 16) - 0x08000000
@@ -564,7 +566,7 @@ def offset():
                 rom.close()
 
 
-OVERLAYS_TO_DECOMPRESS = [1, 2, 6, 7, 8, 10, 12, 14, 15, 18, 23, 61, 63, 64, 68, 94, 96, 112]
+OVERLAYS_TO_DECOMPRESS = [1, 2, 6, 7, 8, 10, 12, 14, 15, 18, 23, 25, 31, 61, 63, 64, 68, 80, 83, 94, 96, 112, 123]
 
 
 def decompress():

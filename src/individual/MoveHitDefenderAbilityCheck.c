@@ -591,6 +591,18 @@ BOOL MoveHitDefenderAbilityCheckInternal(void *bw, struct BattleStruct *sp, int 
                 ret = TRUE;
             }
             break;
+        case ABILITY_SEED_SOWER:
+            if ((sp->terrainOverlay.type != GRASSY_TERRAIN)
+                && ((sp->oneSelfFlag[sp->defence_client].physical_damage) || (sp->oneSelfFlag[sp->defence_client].special_damage)))
+            {
+                UpdateTerrainOverlay(sp, sp->defence_client, GRASSY_TERRAIN);  // the holder's Terrain Extender applies, the move in flight is untouched
+                sp->addeffect_type = ADD_EFFECT_ABILITY;
+                sp->state_client = sp->defence_client;
+                sp->battlerIdTemp = sp->defence_client;
+                seq_no[0] = SUB_SEQ_SEED_SOWER;
+                ret = TRUE;
+            }
+            break;
         default:
             break;
     }

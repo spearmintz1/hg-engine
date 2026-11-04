@@ -25,8 +25,10 @@ CheckOverworldRequestFlags_hook:
 push {r0-r7}
 
 bl CheckOverworldRequestFlags
+cmp r0, #0
 
-pop {r0-r7}
+pop {r0-r7} // pop leaves the flags from the cmp above untouched
+bne returnTrueFromFieldInput_Process // an event was started, so stop processing input this frame
 mov r5, r0
 ldrh r0, [r5]
 mov r4, r1
@@ -39,3 +41,7 @@ bx r2
 returnTo21E6B12:
 ldr r0, =0x021E6B12 | 1
 bx r0
+
+returnTrueFromFieldInput_Process:
+mov r0, #1
+pop {r3-r7, pc}

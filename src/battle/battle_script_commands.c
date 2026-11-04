@@ -1,4 +1,5 @@
 #include "../../include/types.h"
+#include "../../include/bag.h"
 #include "../../include/battle.h"
 #include "../../include/config.h"
 #include "../../include/debug.h"
@@ -92,6 +93,9 @@ BOOL btl_scr_cmd_101_addentryhazardtoqueue(void *bsys UNUSED, struct BattleStruc
 void BattleContext_RemoveEntryHazardFromQueue(struct BattleStruct *ctx, u32 side, u32 hazard);
 BOOL btl_scr_cmd_102_removeentryhazardfromqueue(void *bsys UNUSED, struct BattleStruct *ctx);
 BOOL btl_scr_cmd_103_checkprotectcontactmoves(void *bsys, struct BattleStruct *ctx);
+BOOL btl_scr_cmd_104_getallyasmsgbattler(void *bw, struct BattleStruct *sp);
+BOOL btl_scr_cmd_105_activateparadoxability(void *bsys, struct BattleStruct *ctx);
+BOOL btl_scr_cmd_106_resetparadoxability(void *bsys, struct BattleStruct *ctx);
 BOOL BtlCmd_GoToMoveScript(struct BattleSystem *bsys, struct BattleStruct *ctx);
 BOOL BtlCmd_WeatherHPRecovery(void *bw, struct BattleStruct *sp);
 BOOL BtlCmd_CalcWeatherBallParams(void *bw, struct BattleStruct *sp);
@@ -375,6 +379,9 @@ const u8 *BattleScrCmdNames[] =
     "AddEntryHazardToQueue",
     "RemoveEntryHazardFromQueue",
     "CheckProtectContactMoves",
+    "GetAllyAsMsgBattler",
+    "ActivateParadoxAbility",
+    "ResetParadoxAbility",
     // "YourCustomCommand",
 };
 
@@ -421,6 +428,9 @@ const btl_scr_cmd_func NewBattleScriptCmdTable[] =
     [0x101 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_101_addentryhazardtoqueue,
     [0x102 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_102_removeentryhazardfromqueue,
     [0x103 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_103_checkprotectcontactmoves,
+    [0x104 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_104_getallyasmsgbattler,
+    [0x105 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_105_activateparadoxability,
+    [0x106 - START_OF_NEW_BTL_SCR_CMDS] = btl_scr_cmd_106_resetparadoxability,
     // [BASE_ENGINE_BTL_SCR_CMDS_MAX - START_OF_NEW_BTL_SCR_CMDS + 1] = btl_scr_cmd_custom_01_your_custom_command,
 };
 
@@ -1337,9 +1347,59 @@ BOOL btl_scr_cmd_27_shouldgetexp(void *bw, struct BattleStruct *sp)
 // global variables to track experience
 u8 ALIGN4 scratchpad[4] = {0, 0, 0, 0};
 
-#define monCount scratchpad[0]
-#define monCountFromItem scratchpad[1]
 #define trackPartyExperience scratchpad[2]
+
+/**
+ *  @brief whether the Exp. Share gives experience to the party: the player owns the key item and has not switched it off
+ *
+ *  @return TRUE if the pokémon that did not battle gain experience
+ */
+static BOOL IsExpShareActive(void)
+{
+    return !CheckScriptFlag(FLAG_EXP_SHARE_OFF) && Bag_HasItem(Sav2_Bag_get(SaveBlock2_get()), ITEM_EXP_SHARE, 1, HEAPID_BATTLE_HEAP);
+}
+
+/**
+ *  @brief party slots that gain experience from the Exp. Share key item: the healthy, non-egg pokémon that did not battle
+ *
+ *  @param expcalc exp calculator structure
+ *  @param firstSlot first party slot that has not been paid yet
+ *  @return bit mask of party slots, 0 if the Exp. Share is not active
+ */
+static u32 GetExpShareBenchMask(struct EXP_CALCULATOR *expcalc, int firstSlot)
+{
+    u32 participants = expcalc->sp->obtained_exp_right_flag[(expcalc->sp->fainting_client >> 1) & 1];
+    u32 mask = 0;
+
+    if (!IsExpShareActive())
+    {
+        return 0;
+    }
+    for (int i = firstSlot; i < BattleWorkPokeCountGet(expcalc->bw, 0); i++)
+    {
+        struct PartyPokemon *pp = BattleWorkPokemonParamGet(expcalc->bw, 0, i);
+        if (pp != NULL && !(participants & No2Bit(i)) && GetMonData(pp, MON_DATA_SPECIES, NULL) && GetMonData(pp, MON_DATA_HP, NULL) && !GetMonData(pp, MON_DATA_IS_EGG, NULL))
+        {
+            mask |= No2Bit(i);
+        }
+    }
+    return mask;
+}
+
+/**
+ *  @brief set the experience the pokémon being paid gains before the multipliers of Task_DistributeExp
+ *
+ *  @param sp global battle structure
+ *  @param totalexp experience of the fainted pokémon; every pokémon that battled gets all of it
+ *  @param isExpShareOnly whether the pokémon being paid did not battle, so it only gets half
+ */
+static void SetObtainedExp(struct BattleStruct *sp, u32 totalexp, BOOL isExpShareOnly)
+{
+    u32 share = isExpShareOnly ? totalexp / 2 : totalexp;
+
+    sp->obtained_exp = share ? share : 1;
+    sp->exp_share_obtained_exp = 0; // only read for pokémon holding the old Exp. Share, which no longer exists
+}
 
 /**
  *  @brief task to distribute experience
@@ -1351,14 +1411,15 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
 {
     int sel_mons_no = 0;
     int client_no;
-    int item;
-    int eqp;
     struct PartyPokemon *pp = NULL;
     struct EXP_CALCULATOR *expcalc = work;
     int exp_client_no = 0;
     struct BattleStruct *sp = expcalc->sp;
+    u32 benchMask;
 
     client_no = (sp->fainting_client >> 1) & 1;
+    // rebuilt on every call from the slots still unpaid, so the pokémon picked here and by Task_DistributeExp stay the same until the slot is paid
+    benchMask = GetExpShareBenchMask(expcalc, expcalc->work[6]);
 
     if (expcalc->seq_no < 37)
     {
@@ -1368,10 +1429,8 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
             pp = BattleWorkPokemonParamGet(expcalc->bw, exp_client_no, sel_mons_no);
             if (pp == NULL)
                 goto _skipAllThis;
-            item = GetMonData(pp, MON_DATA_HELD_ITEM, NULL);
-            eqp = GetItemData(item, ITEM_PARAM_HOLD_EFFECT, 5);
 
-            if ((eqp == HOLD_EFFECT_EXP_SHARE) || (sp->obtained_exp_right_flag[client_no] & No2Bit(sel_mons_no)))
+            if ((sp->obtained_exp_right_flag[client_no] | benchMask) & No2Bit(sel_mons_no))
             {
                 break;
             }
@@ -1379,36 +1438,7 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
     }
 
 #if EXPERIENCE_FORMULA_GEN == 5 || EXPERIENCE_FORMULA_GEN > 6 // scaled exp rate
-    struct Party *party = BattleWorkPokePartyGet(expcalc->bw, 0);
-    //u32 mons_getting_exp_from_item = 0;
-    //u32 mons_getting_exp = 0;
     u32 totalexp = 0;
-
-    // count how many pokémon are getting experience
-    if (!expcalc->work[6])
-    {
-        monCount = 0;
-        monCountFromItem = 0;
-        for (int i = 0; i < party->count; i++)
-        {
-            struct PartyPokemon *pploop = BattleWorkPokemonParamGet(expcalc->bw, exp_client_no, i);
-            if ((GetMonData(pploop, MON_DATA_SPECIES, NULL)) && (GetMonData(pploop, MON_DATA_HP, NULL)))
-            {
-                if (sp->obtained_exp_right_flag[client_no /*(sp->fainting_client >> 1) & 1*/] & No2Bit(i))
-                {
-                    monCount++;
-                }
-
-                item = GetMonData(pploop, MON_DATA_HELD_ITEM, NULL);
-                eqp = BattleItemDataGet(sp, item, 1);
-
-                if (eqp == HOLD_EFFECT_EXP_SHARE)
-                {
-                    monCountFromItem++;
-                }
-            }
-        }
-    }
 
     if (expcalc->seq_no < 37) // either this or switch to below.  this prevents NULL access though (ideally)
     {
@@ -1445,28 +1475,7 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
 
             //debug_printf("[Task_DistributeExp_Extend] L = %d, Lp = %d, b = %d, top = %d, bottom = %d, exp = %d\n", level, Lp, base, top, bottom, totalexp);
 
-            if (monCountFromItem)
-            {
-                sp->obtained_exp = (totalexp / 2) / monCount;
-                if (sp->obtained_exp == 0)
-                {
-                    sp->obtained_exp = 1;
-                }
-                sp->exp_share_obtained_exp = (totalexp / 2) / monCountFromItem;
-                if (sp->exp_share_obtained_exp == 0)
-                {
-                    sp->exp_share_obtained_exp = 1;
-                }
-            }
-            else
-            {
-                sp->obtained_exp = totalexp / monCount;
-                if (sp->obtained_exp == 0)
-                {
-                    sp->obtained_exp = 1;
-                }
-                sp->exp_share_obtained_exp = 0;
-            }
+            SetObtainedExp(sp, totalexp, !(sp->obtained_exp_right_flag[client_no] & No2Bit(sel_mons_no)));
         }
     }
 
@@ -1484,58 +1493,10 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
     if (expcalc->seq_no < 37) // prevents NULL access
     {
         u32 totalexp;
-        struct Party *party = BattleWorkPokePartyGet(expcalc->bw, 0);
-
-        // count how many pokémon are getting experience
-        if (!expcalc->work[6])
-        {
-            monCount = 0;
-            monCountFromItem = 0;
-            for (int i = 0; i < party->count; i++)
-            {
-                struct PartyPokemon *pploop = BattleWorkPokemonParamGet(expcalc->bw, exp_client_no, i);
-                if ((GetMonData(pploop, MON_DATA_SPECIES, NULL)) && (GetMonData(pploop, MON_DATA_HP, NULL)))
-                {
-                    if (sp->obtained_exp_right_flag[client_no /*(sp->fainting_client >> 1) & 1*/] & No2Bit(i))
-                    {
-                        monCount++;
-                    }
-
-                    item = GetMonData(pploop, MON_DATA_HELD_ITEM, NULL);
-                    eqp = BattleItemDataGet(sp, item, 1);
-
-                    if (eqp == HOLD_EFFECT_EXP_SHARE)
-                    {
-                        monCountFromItem++;
-                    }
-                }
-            }
-        }
         // multiply by 255/390 (map audino to 255) to not get massively inflated experience rates
         totalexp = 255 * GetSpeciesBaseExp(sp->battlemon[sp->fainting_client].species, sp->battlemon[sp->fainting_client].form_no) / 390;//PokePersonalParaGet(sp->battlemon[sp->fainting_client].species, PERSONAL_EXP_YIELD);
         totalexp = (totalexp * sp->battlemon[sp->fainting_client].level) / 7;
-        if (monCountFromItem)
-        {
-            sp->obtained_exp = (totalexp / 2) / monCount;
-            if (sp->obtained_exp == 0)
-            {
-                sp->obtained_exp = 1;
-            }
-            sp->exp_share_obtained_exp = (totalexp / 2) / monCountFromItem;
-            if (sp->exp_share_obtained_exp == 0)
-            {
-                sp->exp_share_obtained_exp = 1;
-            }
-        }
-        else
-        {
-            sp->obtained_exp = totalexp / monCount;
-            if (sp->obtained_exp == 0)
-            {
-                sp->obtained_exp = 1;
-            }
-            sp->exp_share_obtained_exp = 0;
-        }
+        SetObtainedExp(sp, totalexp, !(sp->obtained_exp_right_flag[client_no] & No2Bit(sel_mons_no)));
     }
 
 #ifdef DEBUG_PRINT_EXPERIENCE_VALUES
@@ -1547,7 +1508,7 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
 
     //distribute effort values to level_cap pokémon who would otherwise not get it
     //把基础点数分配给已经到达等级上限的宝可梦。
-    if (expcalc->seq_no == 0 && sel_mons_no < BattleWorkPokeCountGet(expcalc->bw, exp_client_no) && GetMonData(BattleWorkPokemonParamGet(expcalc->bw, exp_client_no, sel_mons_no), MON_DATA_LEVEL, NULL) == GetLevelCap())
+    if (expcalc->seq_no == 0 && sel_mons_no < BattleWorkPokeCountGet(expcalc->bw, exp_client_no) && IsLevelAtLevelCap(GetMonData(BattleWorkPokemonParamGet(expcalc->bw, exp_client_no, sel_mons_no), MON_DATA_LEVEL, NULL)))
     {
         DistributeEffortValues(BattleWorkPokePartyGet(expcalc->bw, exp_client_no),
                                sel_mons_no,
@@ -1556,7 +1517,10 @@ void Task_DistributeExp_Extend(void *arg0, void *work)
     }
 
 _skipAllThis:
+    // the bench slots join the flags only for the duration of the call: Task_DistributeExp clears the flag of the slot it pays, and nothing may stay set afterwards
+    sp->obtained_exp_right_flag[client_no] |= benchMask;
     Task_DistributeExp(arg0, work);
+    sp->obtained_exp_right_flag[client_no] &= ~benchMask;
 }
 
 
@@ -1607,8 +1571,9 @@ BOOL Task_DistributeExp_capture_experience(void *arg0, void *work, u32 get_clien
 
     if (expcalc->seq_no == 0) // set first pokemon gaining experience to a specific one so that it doesn't try to give experience to something that doesn't need it
     {
-        int sel_mons_no, item, eqp;
+        int sel_mons_no;
         struct PartyPokemon *pp;
+        u32 benchMask = GetExpShareBenchMask(expcalc, 0);
 
         // grab the pokémon that is actually gaining the experience, factor in experience share here because i don't want to expose the whole main task
         for (sel_mons_no = 0; sel_mons_no < BattleWorkPokeCountGet(expcalc->bw, 0); sel_mons_no++)
@@ -1621,10 +1586,8 @@ BOOL Task_DistributeExp_capture_experience(void *arg0, void *work, u32 get_clien
                     expcalc->work[6] = BattleWorkPokeCountGet(expcalc->bw, 0);
                     break;
                 }
-                item = GetMonData(pp, MON_DATA_HELD_ITEM, NULL);
-                eqp = GetItemData(item, ITEM_PARAM_HOLD_EFFECT, 5);
 
-                if ((eqp == HOLD_EFFECT_EXP_SHARE) || (expcalc->sp->obtained_exp_right_flag[(expcalc->sp->fainting_client >> 1) & 1] & No2Bit(sel_mons_no)))
+                if ((expcalc->sp->obtained_exp_right_flag[(expcalc->sp->fainting_client >> 1) & 1] | benchMask) & No2Bit(sel_mons_no))
                 {
                     expcalc->work[6] = sel_mons_no;
                     trackPartyExperience |= No2Bit(sel_mons_no);
@@ -1646,6 +1609,7 @@ BOOL Task_DistributeExp_capture_experience(void *arg0, void *work, u32 get_clien
         ret = TRUE;
 
         store_current_exp_step = 0;
+        trackPartyExperience = 0; // otherwise the next capture would skip every slot paid by this one
         for (int i = 0; i < (s32)NELEMS(store_work_params); i++) // reset and pass back to main func
         {
             store_work_params[i] = 0;
@@ -1793,6 +1757,8 @@ BOOL CheckMoveIsChargeMove(struct BattleStruct *sp, int moveNo) {
     case MOVE_EFFECT_CHARGE_TURN_ATK_SP_ATK_SPEED_UP_2:
     case MOVE_EFFECT_CHARGE_TURN_SP_ATK_UP:
     case MOVE_EFFECT_CHARGE_TURN_SP_ATK_UP_RAIN_SKIPS:
+    case MOVE_EFFECT_CHARGE_TURN_BURN_HIT:
+    case MOVE_EFFECT_CHARGE_TURN_PARALYZE_HIT:
         return TRUE;
     }
     return FALSE;
@@ -2455,47 +2421,36 @@ BOOL btl_scr_cmd_EC_updateterrainoverlay(void *bw UNUSED, struct BattleStruct *s
 
     u8 endTerrainFlag = read_battle_script_param(sp);
     int address = read_battle_script_param(sp);
-    int item, itemPower;
-
-    enum TerrainOverlayType oldTerrainOverlay = sp->terrainOverlay.type;
+    enum TerrainOverlayType terrainType;
 
     switch (sp->current_move_index) {
         case MOVE_GRASSY_TERRAIN:
-            sp->terrainOverlay.type = GRASSY_TERRAIN;
+            terrainType = GRASSY_TERRAIN;
             break;
         case MOVE_MISTY_TERRAIN:
-            sp->terrainOverlay.type = MISTY_TERRAIN;
+            terrainType = MISTY_TERRAIN;
             break;
         case MOVE_ELECTRIC_TERRAIN:
-            sp->terrainOverlay.type = ELECTRIC_TERRAIN;
+            terrainType = ELECTRIC_TERRAIN;
             break;
         case MOVE_PSYCHIC_TERRAIN:
-            sp->terrainOverlay.type = PSYCHIC_TERRAIN;
+            terrainType = PSYCHIC_TERRAIN;
             break;
         default:
             // I think this could work for moves that remove terrain
-            sp->terrainOverlay.type = TERRAIN_NONE;
+            terrainType = TERRAIN_NONE;
             break;
     }
 
     if (endTerrainFlag == TRUE) {
-        sp->terrainOverlay.type = TERRAIN_NONE;
+        terrainType = TERRAIN_NONE;
     }
 
     // if the new terrain is the same as the old one, the move should fail
-    if (oldTerrainOverlay == sp->terrainOverlay.type) {
+    if (sp->terrainOverlay.type == terrainType) {
         IncrementBattleScriptPtr(sp, address);
     } else {
-        if (sp->terrainOverlay.type != TERRAIN_NONE) {
-            item = GetBattleMonItem(sp, sp->attack_client);
-            itemPower = BattleItemDataGet(sp, item, 2);
-            sp->terrainOverlay.numberOfTurnsLeft = 5;
-            if (item == ITEM_TERRAIN_EXTENDER) {
-                sp->terrainOverlay.numberOfTurnsLeft += itemPower;
-            }
-        } else {
-            sp->terrainOverlay.numberOfTurnsLeft = 0;
-        }
+        UpdateTerrainOverlay(sp, sp->attack_client, terrainType);
     }
 
     return FALSE;
@@ -3282,6 +3237,8 @@ BOOL BtlCmd_WeatherHPRecovery(void *bw, struct BattleStruct *sp) {
         // sprintf(buf, "Recover half\n");
         // debugsyscall(buf);
         sp->hp_calc_work = sp->battlemon[sp->attack_client].maxhp / 2;
+    } else if (sp->current_move_index == MOVE_SHORE_UP) {
+        sp->hp_calc_work = (sp->field_condition & WEATHER_SANDSTORM_ANY) ? BattleDamageDivide(sp->battlemon[sp->attack_client].maxhp * 20, 30) : sp->battlemon[sp->attack_client].maxhp / 2;
     } else if (sp->field_condition & WEATHER_SUNNY_ANY) {
         // sprintf(buf, "Recover 2/3\n");
         // debugsyscall(buf);
@@ -3850,7 +3807,8 @@ extern const u8 sHoneyGatherChanceTable[10];
 BOOL BtlCmd_GenerateEndOfBattleItem(struct BattleSystem *bw, struct BattleStruct *sp) {
     int rnd, i, j, k;
     u16 species, item;
-    u8 ability, lvl;
+    u16 ability;
+    u8 lvl;
     struct PartyPokemon *mon;
 
     IncrementBattleScriptPtr(sp, 1);
@@ -3980,6 +3938,111 @@ BOOL BtlCmd_TrySwapItems(void* bw, struct BattleStruct *sp)
         IncrementBattleScriptPtr(sp, attack);
     else if (MoldBreakerAbilityCheck(sp, sp->attack_client, sp->defence_client, ABILITY_STICKY_HOLD) == TRUE)
         IncrementBattleScriptPtr(sp, defence);
+
+    return FALSE;
+}
+
+/**
+ *  @brief script command to set the attacker's ally as the message battler, or jump if it has no valid ally
+ *
+ *  @param bw battle work structure
+ *  @param sp global battle structure
+ *  @return FALSE
+ */
+BOOL btl_scr_cmd_104_getallyasmsgbattler(void *bw, struct BattleStruct *sp)
+{
+    IncrementBattleScriptPtr(sp, 1);
+
+    int address = read_battle_script_param(sp);
+    int ally = BATTLER_ALLY(sp->attack_client);
+
+    if ((BattleTypeGet(bw) & (BATTLE_TYPE_DOUBLE | BATTLE_TYPE_MULTI)) && sp->battlemon[ally].hp) {
+        sp->battlerIdTemp = ally;
+    } else {
+        IncrementBattleScriptPtr(sp, address);
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief Activate all clients' Paradox Abilities depending on input.
+ *        ActivateParadoxAbility will do the other checks
+ *
+ * Inputs:
+ * 1. ABILITY_PROTOSYNTHESIS or ABILITY_QUARK_DRIVE
+ *
+ * @param bsys BattleSystem
+ * @param ctx BattleContext
+ * @return FALSE
+ */
+BOOL btl_scr_cmd_105_activateparadoxability(void *bsys, struct BattleStruct *ctx)
+{
+    IncrementBattleScriptPtr(ctx, 1);
+
+    // ABILITY_PROTOSYNTHESIS or ABILITY_QUARK_DRIVE
+    u32 abilityToCheck = read_battle_script_param(ctx);
+
+    u8 i;
+    u8 maxBattlers = BattleWorkClientSetMaxGet(bsys);
+    u16 seq_no;
+    u8 client;
+
+    SortRawSpeedNonRNGArray(bsys, ctx);
+    for (i = 0; i < maxBattlers; i++) {
+        seq_no = 0;
+        client = ctx->rawSpeedNonRNGClientOrder[i];
+        if (GetBattlerAbility(ctx, client) == abilityToCheck) {
+            // this function will do the other checks (Sunny/Elec Terrain or Booster Energy)
+            seq_no = ActivateParadoxAbility(bsys, ctx, client);
+        }
+        if (seq_no == SUB_SEQ_FIELD_CONDITION_PARADOX_ABILITY
+            || seq_no == SUB_SEQ_BOOSTER_ENERGY) {
+            // Jump back to instruction to rerun this command on the next client
+            IncrementBattleScriptPtr(ctx, -2);
+            SkillSequenceGosub(ctx, ARC_BATTLE_SUB_SEQ, seq_no);
+            break;
+        }
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief Reset all clients' Paradox Abilities depending on input.
+ *
+ * Inputs:
+ * 1. ABILITY_PROTOSYNTHESIS or ABILITY_QUARK_DRIVE
+ *
+ * @param bsys BattleSystem
+ * @param ctx BattleContext
+ * @return FALSE
+ */
+BOOL btl_scr_cmd_106_resetparadoxability(void *bsys, struct BattleStruct *ctx)
+{
+    IncrementBattleScriptPtr(ctx, 1);
+
+    // ABILITY_PROTOSYNTHESIS or ABILITY_QUARK_DRIVE
+    u32 abilityToCheck = read_battle_script_param(ctx);
+
+    u8 i;
+    u8 maxBattlers = BattleWorkClientSetMaxGet(bsys);
+    u8 client;
+
+    SortRawSpeedNonRNGArray(bsys, ctx);
+    for (i = 0; i < maxBattlers; i++) {
+        client = ctx->rawSpeedNonRNGClientOrder[i];
+        if (GetBattlerAbility(ctx, client) == abilityToCheck
+            && !ctx->boosterEnergyActivated[client]
+            && (ctx->paradoxBoostedStat[client] > 0)) {
+            // jump back to instruction to rerun this command on the next client
+            IncrementBattleScriptPtr(ctx, -2);
+            ctx->paradoxBoostedStat[client] = 0;
+            ctx->battlerIdTemp = client;
+            SkillSequenceGosub(ctx, ARC_BATTLE_SUB_SEQ, SUB_SEQ_PARADOX_ABILITY_END);
+            return FALSE;
+        }
+    }
 
     return FALSE;
 }

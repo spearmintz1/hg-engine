@@ -27,7 +27,7 @@
 
  ``NO_PARTNER_DOUBLE_BATTLES`` (``armips/include/config.s`` only) removes the requirement to put in a partner NPC in the overworld for trainers with double battles.  Note that the entry in `armips/data/trainers/trainertext.s` has to use `TEXT_DOUBLE_DEFEATED_IN_BATTLE_1`, but the overworld entries can remain the same.
 
- ``APPLY_ANTIPIRACY`` (``armips/include/config.s`` only) is a toggle that will apply the typical anti-piracy code changes to your ROM.  This will allow it to work on hardware (R4, TWLmenu) better, preventing various crashes and softlocks.
+ ``APPLY_ANTIPIRACY`` (``include/config.h`` only) is a toggle that will apply the typical anti-piracy code changes to your ROM.  This will allow it to work on hardware (R4, TWLmenu) better, preventing various crashes and softlocks.
 
  ``EXPERIENCE_FORMULA_GEN`` (``include/config.h`` only) is a number that determines whether or not the experience formula used will take into account the difference in levels in experience distribution.  Setting this to 5, 7, or 8 will scale the experience with the level difference.  Setting this to 1, 2, 3, 4, and 6 will use a flat experience rate.
 
@@ -49,7 +49,7 @@
 
  ``IMPLEMENT_NEW_EV_IV_VIEWER`` (``include/config.h`` only) is a toggle that will enable an EV/IV viewer on the summary screen using the L, R, and Select buttons to swap between the EV's, IV's, and normal stats respectively.  This also adds up and down arrows to the stat names to make it clear which is boosted and which is nerfed.
 
- ``IMPLEMENT_LEVEL_CAP`` (``include/config.h`` only) is a toggle that will enable a hard level cap past which no Pokémon can gain experience or levels via any method.  The level is read from a script variable as defined by ``LEVEL_CAP_VARIABLE``.  If the Pokémon is at or above that level, the experience gain is disabled and Rare Candies stop working.  If the variable is set to 0 (i.e. the level cap is not set to anything), the cap is returned as 100.  ``UNCAP_CANDIES_FROM_LEVEL_CAP`` further decouples Rare Candies from this requirement, allowing Rare Candies to level Pokémon beyond the level cap.  Contrarily, ``ALLOW_LEVEL_CAP_EVOLVE`` allows Rare Candies used to trigger an evolution if the mon would have otherwise evolved upon leveling up.
+ ``IMPLEMENT_LEVEL_CAP`` (``include/config.h`` only) is a toggle that will enable a hard level cap past which no Pokémon can gain experience or levels via any method.  The level cap is computed from the Johto badges owned before ``FLAG_GAME_CLEAR`` is set and from the Kanto badges owned afterwards, using the ``sLevelCaps`` table in ``src/pokemon.c``.  If the Pokémon is at or above that level, the experience gain is disabled and Rare Candies stop working.  ``UNCAP_CANDIES_FROM_LEVEL_CAP`` further decouples Rare Candies from this requirement, allowing Rare Candies to level Pokémon beyond the level cap.  Contrarily, ``ALLOW_LEVEL_CAP_EVOLVE`` allows Rare Candies used to trigger an evolution if the mon would have otherwise evolved upon leveling up.
 
  ``UPDATE_OVERWORLD_POISON`` (``include/config.h`` only) is a toggle that disables overworld poison when enabled.  Overworld poison is disabled by default.
 

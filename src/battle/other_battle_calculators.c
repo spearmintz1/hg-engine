@@ -478,6 +478,10 @@ BOOL CalcAccuracy(void *bw, struct BattleStruct *sp, int attacker, int defender,
         return FALSE;
     }
 
+#ifdef DEBUG_BATTLE_SCENARIOS
+    accuracy = 100;
+#endif // DEBUG_BATTLE_SCENARIOS
+
     // 5. If the move is a status move, has greater than 50% accuracy, and the target has Wonder Skin, or the move is Thunder / Hurricane and the weather is sun, set the move's accuracy to 50.
 
     // handle wonder skin
@@ -680,7 +684,7 @@ BOOL CalcAccuracy(void *bw, struct BattleStruct *sp, int attacker, int defender,
     // 13. If the affection of the target is 4 hearts or more, subtract 10. You can't go below 0.
     // https://bulbapedia.bulbagarden.net/wiki/Friendship
 
-#ifdef FRIENDSHIP_EFFECTS
+#if defined(FRIENDSHIP_EFFECTS) && !defined(DEBUG_BATTLE_SCENARIOS)
     if ((sp->battlemon[defender].friendship == 255)
     && !(BattleTypeGet(bw) & BATTLE_TYPE_NO_EXPERIENCE)
     && ClientBelongsToPlayer(bw, defender)) {
@@ -857,6 +861,18 @@ u8 LONG_CALL CalcSpeed(void *bw, struct BattleStruct *sp, int client1, int clien
     debug_printf("[CalcSpeed] %s's speedModifier1: %d\n", client1Nickname, speedModifier1);
     debug_printf("[CalcSpeed] %s's speedModifier2: %d\n", client2Nickname, speedModifier2);
 #endif
+
+    // Step 3.1: Protosynthesis and Quark Drive
+
+    if ((ability1 == ABILITY_PROTOSYNTHESIS || ability1 == ABILITY_QUARK_DRIVE)
+        && (sp->paradoxBoostedStat[client1] == STAT_SPEED)) {
+        speedModifier1 = QMul_RoundUp(speedModifier1, UQ412__1_5);
+    }
+
+    if ((ability2 == ABILITY_PROTOSYNTHESIS || ability2 == ABILITY_QUARK_DRIVE)
+        && (sp->paradoxBoostedStat[client2] == STAT_SPEED)) {
+        speedModifier2 = QMul_RoundUp(speedModifier2, UQ412__1_5);
+    }
 
     // Step 4: Quick Powder
 
@@ -1397,7 +1413,11 @@ int CalcCritical(void *bw, struct BattleStruct *sp, int attacker, int defender, 
 
     if
     (
+#ifdef DEBUG_BATTLE_SCENARIOS
+        FALSE // test scenarios are deterministic: no random critical hits
+#else
         BattleRand(bw) % CriticalRateTable[temp] == 0
+#endif
         || (ability == ABILITY_MERCILESS && (defender_condition & STATUS_POISON_ALL))
         || (sp->moveTbl[sp->current_move_index].effect == MOVE_EFFECT_ALWAYS_CRITICAL)
         || (sp->moveTbl[sp->current_move_index].effect == MOVE_EFFECT_HIT_THREE_TIMES_ALWAYS_CRITICAL)
@@ -1461,6 +1481,22 @@ u16 gf_p_rand(const u16 denominator)
     }
 }
 
+/**
+ *  @brief apply move-specific overrides to the type chart
+ *
+ *  @param move_no move index
+ *  @param defender_type defending type the chart entry applies to
+ *  @param defaultEffectiveness type chart effectiveness
+ *  @return effectiveness to use
+ */
+u8 UpdateTypeEffectiveness(u32 move_no, u8 defender_type, u8 defaultEffectiveness)
+{
+    if (move_no == MOVE_FREEZE_DRY && defender_type == TYPE_WATER) {
+        return TYPE_MUL_SUPER_EFFECTIVE;
+    }
+    return defaultEffectiveness;
+}
+
 // TODO: Refactor this function
 int LONG_CALL GetTypeEffectiveness(struct BattleSystem *bw, struct BattleStruct *sp, int attack_client, int defence_client, int move_type, u32 *flag) {
     int i = 0;
@@ -1492,14 +1528,14 @@ int LONG_CALL GetTypeEffectiveness(struct BattleSystem *bw, struct BattleStruct 
         if (TypeEffectivenessTable[i][0] == move_type) {
             if (TypeEffectivenessTable[i][1] == defender_type_1) {
                 if (ShouldUseNormalTypeEffCalc(sp, attack_client, defence_client, i) == TRUE && !(!CheckSideAbility(bw, sp, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckSideAbility(bw, sp, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK) && sp->field_condition & WEATHER_STRONG_WINDS && (TypeEffectivenessTable[i][2] == 20) && defender_type_1 == TYPE_FLYING)) {
-                    type1Effectiveness = TypeEffectivenessTable[i][2];
+                    type1Effectiveness = UpdateTypeEffectiveness(sp->current_move_index, TypeEffectivenessTable[i][1], TypeEffectivenessTable[i][2]);
                     TypeCheckCalc(sp, attack_client, type1Effectiveness, 42, 42, flag);
                 }
             }
             if ((TypeEffectivenessTable[i][1] == defender_type_2) && (defender_type_1 != defender_type_2)) {
                 if (ShouldUseNormalTypeEffCalc(sp, attack_client, defence_client, i) == TRUE && !(!CheckSideAbility(bw, sp, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckSideAbility(bw, sp, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK) && sp->field_condition & WEATHER_STRONG_WINDS && (TypeEffectivenessTable[i][2] == 20) && defender_type_2 == TYPE_FLYING)) {
-                    type2Effectiveness = TypeEffectivenessTable[i][2];
-                    TypeCheckCalc(sp, attack_client, type1Effectiveness, 42, 42, flag);
+                    type2Effectiveness = UpdateTypeEffectiveness(sp->current_move_index, TypeEffectivenessTable[i][1], TypeEffectivenessTable[i][2]);
+                    TypeCheckCalc(sp, attack_client, type2Effectiveness, 42, 42, flag);
                 }
             }
             // TODO: Handle type3, Tera Type
@@ -1606,7 +1642,7 @@ int LONG_CALL ServerDoTypeCalcMod(void *bw UNUSED, struct BattleStruct *sp, int 
                     && (TypeEffectivenessTable[i][2] == 20)
                     && defender_type_1 == TYPE_FLYING))
                 {
-                    damage = TypeCheckCalc(sp, attack_client, TypeEffectivenessTable[i][2], damage, base_power, flag);
+                    damage = TypeCheckCalc(sp, attack_client, UpdateTypeEffectiveness(move_no, TypeEffectivenessTable[i][1], TypeEffectivenessTable[i][2]), damage, base_power, flag);
                     if (TypeEffectivenessTable[i][2] == 20) // seems to be useless, modifier isn't used elsewhere
                     {
                         modifier *= 2;
@@ -1622,7 +1658,7 @@ int LONG_CALL ServerDoTypeCalcMod(void *bw UNUSED, struct BattleStruct *sp, int 
                     && (TypeEffectivenessTable[i][2] == 20)
                     && defender_type_2 == TYPE_FLYING))
                 {
-                    damage = TypeCheckCalc(sp, attack_client, TypeEffectivenessTable[i][2], damage, base_power, flag);
+                    damage = TypeCheckCalc(sp, attack_client, UpdateTypeEffectiveness(move_no, TypeEffectivenessTable[i][1], TypeEffectivenessTable[i][2]), damage, base_power, flag);
                     if (TypeEffectivenessTable[i][2] == 20) // seems to be useless, modifier isn't used elsewhere
                     {
                         modifier *= 2;
@@ -2928,6 +2964,65 @@ int LONG_CALL GetDynamicMoveType(struct BattleSystem *bsys, struct BattleStruct 
     return GetAdjustedMoveTypeBasics(ctx, moveNo, GetBattlerAbility(ctx, battlerId), type);
 }
 
+// effects added by this fork; the base game's check only knows its own heal effects
+static const u16 HealBlockUnusableMoveEffects[] = {
+    MOVE_EFFECT_RECOVER_THREE_QUARTERS_DAMAGE_DEALT,
+    MOVE_EFFECT_RECOVER_FULL_DAMAGE_DEALT,
+    MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT,
+    MOVE_EFFECT_HEAL_TARGET,
+    MOVE_EFFECT_LIFE_DEW,
+};
+
+/**
+ *  @brief checks if the move is unusable because the battler is under Heal Block
+ *
+ *  @param bsys battle system
+ *  @param ctx global battle structure
+ *  @param battlerId battler to check
+ *  @param moveNo move index
+ *  @return TRUE if the battler cannot use the move
+ */
+BOOL LONG_CALL BattleContext_CheckMoveHealBlocked(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo)
+{
+    if (BattleContext_CheckMoveHealBlockedBase(bsys, ctx, battlerId, moveNo)) {
+        return TRUE;
+    }
+    if (ctx->battlemon[battlerId].moveeffect.healBlockTurns) {
+        for (u32 i = 0; i < NELEMS(HealBlockUnusableMoveEffects); i++) {
+            if (HealBlockUnusableMoveEffects[i] == ctx->moveTbl[moveNo].effect) {
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
+extern u16 sMetronomeMimicMoveBanList[];
+
+/**
+ *  @brief checks if the battler may call the move through Metronome, Assist or Copycat
+ *
+ *  Replaces the base game's check, which only knew its own Heal Block moves.
+ *
+ *  @param bsys battle system
+ *  @param ctx global battle structure
+ *  @param battlerId battler calling the move
+ *  @param moveNo move index
+ *  @return TRUE if the move can be called
+ */
+BOOL LONG_CALL BattleContext_CheckMoveCallable(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, int moveNo)
+{
+    if (BattleContext_CheckMoveUnuseableInGravity(bsys, ctx, battlerId, moveNo) || BattleContext_CheckMoveHealBlocked(bsys, ctx, battlerId, moveNo)) {
+        return FALSE;
+    }
+    for (u32 i = 0; sMetronomeMimicMoveBanList[i] != 0xFFFF; i++) {
+        if (sMetronomeMimicMoveBanList[i] == moveNo) {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
 u32 LONG_CALL StruggleCheck(struct BattleSystem *bsys, struct BattleStruct *ctx, int battlerId, u32 nonSelectableMoves, u32 struggleCheckFlags) {
     // u8 buf[64];
     // sprintf(buf, "In StruggleCheck\n");
@@ -3524,4 +3619,29 @@ const u8 InternalTypeToHGType[] = {
 
 int GetSanitisedType(int type) {
     return InternalTypeToHGType[HGTypeToInternalType[type] & 0x1F];
+}
+
+/**
+ * Dragon Tail / Circle Throw landed a real hit that can be followed by a drag attempt:
+ * the user and target are alive, the target is not Dynamaxed, and the hit did not land on a Substitute.
+ */
+BOOL LONG_CALL ForceSwitchHitLanded(struct BattleStruct *ctx) {
+    return ctx->moveTbl[ctx->current_move_index].effect == MOVE_EFFECT_FORCE_SWITCH_HIT
+        && ctx->defence_client != BATTLER_NONE
+        && !(ctx->waza_status_flag & MOVE_STATUS_FLAG_FAILURE_ANY)
+        && (ctx->oneSelfFlag[ctx->defence_client].physical_damage || ctx->oneSelfFlag[ctx->defence_client].special_damage)
+        && ctx->battlemon[ctx->attack_client].hp != 0
+        && ctx->battlemon[ctx->defence_client].hp != 0
+        && ctx->battlemon[ctx->defence_client].is_currently_dynamaxed == FALSE
+        && !(ctx->oneSelfFlag[ctx->defence_client].status_flag & SELF_STATUS_FLAG_SUBSTITUTE_HIT);
+}
+
+/**
+ * The target will actually leave the field: a landed Dragon Tail / Circle Throw hit on a target not anchored by Suction Cups or Ingrain.
+ * Red Card and Eject Button stand down when this is true.
+ */
+BOOL LONG_CALL ForceSwitchHitWillDrag(struct BattleStruct *ctx) {
+    return ForceSwitchHitLanded(ctx)
+        && !MoldBreakerAbilityCheck(ctx, ctx->attack_client, ctx->defence_client, ABILITY_SUCTION_CUPS)
+        && !(ctx->battlemon[ctx->defence_client].effect_of_moves & MOVE_EFFECT_FLAG_INGRAIN);
 }

@@ -459,3 +459,32 @@ arm9 020821B0 DB
 
 # nop out selection of cancel when the item won't have an effect
 arm9 0207C3AC 00 00 00 00
+
+#ifdef DEBUG_AUTO_CONTINUE_GAME
+# automatically starts the game.  does not care if there is a save or not
+arm9 02000E54 24 00 00 00 04 5C 1E 02
+#endif
+
+# show 5 digits for mart prices (Cracked Pot and other items at 10000+ printed a garbage first digit)
+0031 0225DE46 05 23
+
+# event-gated legendaries (Arceus, Celebi, spiky-eared Pichu) unlock without distribution events:
+# ScrCmd_FollowerPokeIsEventTrigger only checks the lead species, so wild-caught mons qualify
+# MonMetadataMatchesEvent: nop the "bhi" past the fateful-encounter return, so every non-Hall-of-Origin event matches
+arm9 0208EA0A C0 46
+# ScrCmd_FollowerPokeIsEventTrigger: nop the "beq" that rejects a non-shiny Pichu/Pikachu/Raichu
+arm9 02046AF6 C0 46
+
+# honestly will not have any way to revert this because this is so much less intrusive and Just Works
+#ifdef APPLY_ANTIPIRACY
+
+# card checks return TRUE
+0001 021E662C 01 20 70 47
+# neuter dsprotect
+0123 0225F0CC E0 FC FF FF
+0123 0225F184 E0 FC FF FF
+
+#endif
+
+# make sure that the original antipiracy method is patched to vanilla
+arm9 02000A18 1E FF 2F E1

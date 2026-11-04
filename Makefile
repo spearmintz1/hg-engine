@@ -62,6 +62,7 @@ CC = $(DEVKITARM)/$(PREFIX)gcc
 LD = $(DEVKITARM)/$(PREFIX)ld
 OBJCOPY = $(DEVKITARM)/$(PREFIX)objcopy
 endif
+OBJDUMP = $(patsubst %objcopy,%objdump,$(OBJCOPY))
 PYTHON_NO_VENV = python3
 VENV = .venv
 PYTHON_VENV_VERSION := $(shell $(PYTHON_NO_VENV) -m ensurepip 2>&1 | grep -i -q 'No module named'; echo $$?)
@@ -108,8 +109,19 @@ SDATTOOL := $(PYTHON) tools/SDATTool.py
 
 # Compiler/Assembler/Linker settings
 LDFLAGS = rom.ld -T $(C_SUBDIR)/linker.ld
-ASFLAGS = -mthumb
-CFLAGS = -mthumb -mno-thumb-interwork -mcpu=arm7tdmi -mtune=arm7tdmi -mno-long-calls -march=armv4t -Wall -Wextra -Wno-builtin-declaration-mismatch -Wno-sequence-point -Wno-address-of-packed-member -Os -fira-loop-pressure -fipa-pta
+# the ARM9 is an ARMv5TE: without an -march binutils assembles things like `ldr r1, =const` into Thumb-2 (movw), which it cannot run
+ASFLAGS = -mthumb -march=armv5te
+CFLAGS = -mthumb -mno-thumb-interwork -mcpu=arm7tdmi -mtune=arm7tdmi -mno-long-calls -march=armv4t -Wall -Wextra -Wno-builtin-declaration-mismatch -Wno-sequence-point -Wno-address-of-packed-member -Werror=override-init -Os -fira-loop-pressure -fipa-pta
+
+# `make AUTO_TEST=Y` builds the headless battle-test ROM (see data/battle_tests/README.md).  Objects are not rebuilt when
+# this flag changes, so run `make clean_code` when switching between a normal and an AUTO_TEST build.
+AUTO_TEST_FLAGS =
+ARMIPS_FLAGS = -equ DEBUG_BATTLE_SCENARIOS 0
+ifeq ($(AUTO_TEST),Y)
+    AUTO_TEST_FLAGS = -DDEBUG_BATTLE_SCENARIOS -DDEBUG_AUTO_CONTINUE_GAME
+    ARMIPS_FLAGS = -equ DEBUG_BATTLE_SCENARIOS 1
+    CFLAGS += $(AUTO_TEST_FLAGS)
+endif
 
 ####################### Output #######################
 C_SUBDIR = src
@@ -213,7 +225,7 @@ $(O2NARC): $(wildcard tools/source/o2narc/*.cpp) $(wildcard tools/source/o2narc/
 
 TOOLS += $(O2NARC)
 
-$(ENCODEPWIMG):
+$(ENCODEPWIMG): tools/source/DECODEIMG/ENCODEIMG.c
 	cd tools/source/DECODEIMG ; $(MAKE)
 	mv tools/source/DECODEIMG/ENCODE_IMG $(ENCODEPWIMG)
 
@@ -255,6 +267,8 @@ $(OUTPUT):$(LINK)
 	$(OBJCOPY) -O binary $< $@
 
 all: $(TOOLS) $(OUTPUT) $(OVERLAY_OUTPUTS)
+	$(PYTHON) scripts/check_subscripts.py
+	$(PYTHON) scripts/check_thumb2.py --objdump $(OBJDUMP) $(LINKED_OUTPUTS)
 	rm -rf $(BASE)
 	@mkdir -p $(REQUIRED_DIRECTORIES)
 	@# find and delete macOS files that it creates for some reason
@@ -262,9 +276,11 @@ all: $(TOOLS) $(OUTPUT) $(OVERLAY_OUTPUTS)
 	$(NDSTOOL) -x $(ROMNAME) -9 $(BASE)/arm9.bin -7 $(BASE)/arm7.bin -y9 $(BASE)/overarm9.bin -y7 $(BASE)/overarm7.bin -d $(FILESYS) -y $(BASE)/overlay -t $(BASE)/banner.bin -h $(BASE)/header.bin
 	@echo "$(ROMNAME) Decompression successful!!"
 	$(NARCHIVE) extract $(FILESYS)/a/0/2/8 -o $(BUILD)/a028/ -nf
-	$(PYTHON) scripts/make.py
+	$(PYTHON) scripts/make.py $(AUTO_TEST_FLAGS)
 	$(MAKE) move_narc
+	$(PYTHON) scripts/check_movement_align.py $(SCR_SEQ_TARGET)
 	$(ARMIPS) armips/global.s
+	$(PYTHON) scripts/check_arm9_keys.py $(BASE)/arm9.bin
 	$(NARCHIVE) create $(FILESYS)/a/0/2/8 $(BUILD)/a028/ -nf
 	@echo "Making ROM..."
 	$(NDSTOOL) -c $(BUILDROM) -9 $(BASE)/arm9.bin -7 $(BASE)/arm7.bin -y9 $(BASE)/overarm9.bin -y7 $(BASE)/overarm7.bin -d $(FILESYS) -y $(BASE)/overlay -t $(BASE)/banner.bin -h $(BASE)/header.bin
@@ -295,6 +311,7 @@ ALL_CODE_OBJS := $(patsubst $(C_SUBDIR)/%.c,$(BUILD)/%.o,$(ALL_C_SRCS)) \
 
 clean_code:
 	rm -f $(ALL_CODE_OBJS) $(LINKED_OUTPUTS) $(OUTPUT) $(OVERLAY_OUTPUTS) rom_gen.ld rom_gen_battle.ld
+	rm -rf $(BATTLETESTS_OUTPUT_DIR) $(BATTLETESTS_HEADER)
 
 ####################### Final ROM Build #######################
 CODE_ADDON_ARTIFACTS := $(wildcard $(BUILD)/a028/9_*) $(wildcard $(BUILD)/a028/8_1*) $(wildcard build/$(BUILD)/8_2*) $(BUILD)/a028/8_07 $(BUILD)/a028/8_08 $(BUILD)/a028/8_09
@@ -451,6 +468,11 @@ move_narc: $(NARC_FILES)
 
 	@echo "base experience table:"
 	cp $(BASE_EXPERIENCE_TABLE_BIN) $(BASE_EXPERIENCE_TABLE_TARGET)
+ifeq ($(AUTO_TEST),Y)
+
+	@echo "battle tests:"
+	cp $(BATTLETESTS_BIN) $(BATTLETESTS_TARGET)
+endif
 
 	@echo "mon overworld data:"
 	$(ARMIPS) $(OVERWORLD_DATA_DEPENDENCIES)
