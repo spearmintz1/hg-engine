@@ -1914,13 +1914,23 @@ u8 LONG_CALL GetBoxMonNatureCountMints(struct BoxPokemon *boxMon);
 BOOL LONG_CALL CalcShininessByOtIdAndPersonality(u32 otid, u32 pid);
 
 /**
- *  @brief adjust the pid to be shiny such that it keeps substructures in the same order
+ *  @brief give a freshly generated pid the Shiny Charm's extra shiny rolls, keeping nature, gender and ability slot
  *
- *  @param otid original trainer id
- *  @param pid personality id
- *  @returns adjusted pid to be a shiny without corrupting the mon
+ *  @param pid personality id the mon was generated with
+ *  @param otid original trainer id the mon will have
+ *  @param species species index
+ *  @param form form number
+ *  @returns the pid to use; the shiny one found by the extra rolls, else pid
  */
-u32 LONG_CALL GenerateShinyPIDKeepSubstructuresIntact(u32 otId, u32 pid);
+u32 LONG_CALL ApplyShinyCharmRolls(u32 pid, u32 otid, u32 species, u32 form);
+
+/**
+ *  @brief the pid a new roamer is saved with: the one its temporary PartyPokemon was generated with, plus the Shiny Charm's extra rolls
+ *
+ *  @param roamerMon temporary PartyPokemon the roamer's save data is read from
+ *  @returns the pid to store in the roamer's save data
+ */
+u32 LONG_CALL GetNewRoamerPersonality(struct PartyPokemon *roamerMon);
 
 // defined in src/moves.c--can't just define in battles, sadly.  does need BattleMove structure from battle.h, though
 /**

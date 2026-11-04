@@ -475,6 +475,7 @@ BOOL LONG_CALL AddWildPartyPokemon(int inTarget, EncounterInfo *encounterInfo, s
     u8 change_form = 0;
     u8 form_no;
     u16 species;
+    u32 pid, shinyCharmPid;
 
     if (encounterInfo->isEgg == 0 && encounterInfo->ability == ABILITY_COMPOUND_EYES)
     {
@@ -515,6 +516,13 @@ BOOL LONG_CALL AddWildPartyPokemon(int inTarget, EncounterInfo *encounterInfo, s
         RecalcPartyPokemonStats(encounterPartyPokemon);
         ResetPartyPokemonAbility(encounterPartyPokemon);
         InitBoxMonMoveset(&encounterPartyPokemon->box);
+    }
+
+    pid = GetMonData(encounterPartyPokemon, MON_DATA_PERSONALITY, NULL);
+    shinyCharmPid = ApplyShinyCharmRolls(pid, GetMonData(encounterPartyPokemon, MON_DATA_OTID, NULL), GetMonData(encounterPartyPokemon, MON_DATA_SPECIES, NULL), GetMonData(encounterPartyPokemon, MON_DATA_FORM, NULL));
+    if (shinyCharmPid != pid)
+    {
+        SetMonData(encounterPartyPokemon, MON_DATA_PERSONALITY, &shinyCharmPid);
     }
 
     ChangeToBattleForm(encounterPartyPokemon);
