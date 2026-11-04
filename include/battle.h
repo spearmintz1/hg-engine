@@ -1739,6 +1739,7 @@ struct __attribute__((packed)) ILLUSION_STRUCT
     u8 illusionPos[4];
     u8 illusionClient[4];
     u8 isSideInIllusion;
+    u8 illusionCopiedPos[4]; // party slot of the mon the disguise copies, fixed when the disguise is set
 };
 
 struct __attribute__((packed)) SWITCH_MESSAGE_PARAM

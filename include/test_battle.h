@@ -59,7 +59,8 @@ enum ExpectationType {
     EXPECTATION_TYPE_NOT_MESSAGE,
     EXPECTATION_TYPE_PARTY_FORM,
     EXPECTATION_TYPE_BATTLER_TYPES,
-    EXPECTATION_TYPE_SIDE_CONDITION_ABSENT
+    EXPECTATION_TYPE_SIDE_CONDITION_ABSENT,
+    EXPECTATION_END_OF_BATTLE_NICKNAME
 };
 
 union ExpectationValue {
@@ -70,6 +71,7 @@ union ExpectationValue {
     s32 currentHP;
     u8 types[2];
     u32 sideConditionMask;
+    u16 nicknameSpecies; // EXPECTATION_END_OF_BATTLE_NICKNAME: the party mon must carry this species' default name
 };
 
 struct Expectations {
